@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model JamMusic {
+  jamId         String
+  id            String         @id @default(uuid())
+  musicId       String
+  registrations Registration[]
+  jam           Jam            @relation(fields: [jamId], references: [id], onDelete: Cascade)
+  music         Music          @relation(fields: [musicId], references: [id], onDelete: Cascade)
+
+  @@unique([jamId, musicId])
+  @@map("jamsmusics")
+}
+
+model Jam {
+  id             String         @id @default(uuid())
+  name           String         @map("nome")
+  description    String?        @map("descricao")
+  date           DateTime?      @map("data")
+  qrCode         String?
+  status         JamStatus      @default(ACTIVE) @map("status")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  hostContact    String?        @map("hostContato")
+  hostName       String?        @map("hostNome")
+  hostMusicianId String?        @map("hostMusicianId")
+  location       String?        @map("local")
+  schedules      Schedule[]
+  registrations  Registration[]
+  jamMusics      JamMusic[]
+  hostMusician   Musician?      @relation(fields: [hostMusicianId], references: [id], onDelete: SetNull)
+
+  @@map("jams")
+}
+
+model Music {
+  id            String      @id @default(uuid())
+  title         String      @map("titulo")
+  artist        String      @map("artista")
+  genre         String?     @map("genero")
+  duration      Int?        @map("duracao")
+  description   String?     @map("descricao")
+  link          String?     @map("link")
+  status        MusicStatus @default(SUGGESTED) @map("status")
+  createdAt     DateTime    @default(now())
+  neededDrums   Int         @default(0) @map("neededDrums")
+  neededGuitars Int         @default(0) @map("neededGuitars")
+  neededVocals  Int         @default(0) @map("neededVocals")
+  neededBass    Int         @default(0) @map("neededBass")
+  neededKeys    Int         @default(0) @map("neededKeys")
+  schedules     Schedule[]
+  jamMusics     JamMusic[]
+
+  @@map("musicas")
+}
+
+model Musician {
+  id             String         @id @default(uuid())
+  supabaseUserId String?        @unique @map("supabaseUserId") // Step 2: Link to Supabase auth
+  name           String?        @map("nome")
+  instrument     String?        @map("instrumento")
+  level          MusicianLevel? @map("nivel")
+  contact        String?        @map("contato")
+  createdAt      DateTime       @default(now())
+  email          String?        @unique @map("email")
+  phone          String?        @unique @map("telefone")
+  isHost         Boolean        @default(false) @map("isHost")
+  registrations  Registration[]
+  hostedJams     Jam[]
+
+  @@map("musicos")
+}
+
+model Registration {
+  id         String             @id @default(uuid())
+  musicianId String             @map("musicoId")
+  jamId      String
+  status     RegistrationStatus @default(PENDING) @map("status")
+  createdAt  DateTime           @default(now())
+  jamMusicId String?            @map("jamMusicaId")
+  instrument String?            @map("instrumento")
+  scheduleId String?            @map("escalaId")
+  schedule   Schedule?          @relation(fields: [scheduleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  jam        Jam                @relation(fields: [jamId], references: [id], onDelete: Cascade)
+  jamMusic   JamMusic?          @relation(fields: [jamMusicId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  musician   Musician           @relation(fields: [musicianId], references: [id], onDelete: Cascade)
+
+  @@unique([musicianId, jamId, jamMusicId])
+  @@map("inscricoes")
+}
+
+model Schedule {
+  id            String         @id @default(uuid())
+  jamId         String
+  order         Int            @map("ordem")
+  status        ScheduleStatus @default(SUGGESTED) @map("status")
+  createdAt     DateTime       @default(now())
+  inscricaoId   String?
+  musicId       String
+  jam           Jam            @relation(fields: [jamId], references: [id], onDelete: Cascade)
+  music         Music          @relation(fields: [musicId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  registrations Registration[]
+
+  @@unique([inscricaoId, order])
+  @@map("escalas")
+}
+
+enum JamStatus {
+  ACTIVE   @map("ATIVO")
+  INACTIVE @map("INATIVO")
+  FINISHED @map("FINALIZADO")
+
+  @@map("StatusJam")
+}
+
+enum RegistrationStatus {
+  PENDING  @map("PENDENTE")
+  APPROVED @map("APROVADA")
+  REJECTED @map("REJEITADA")
+
+  @@map("StatusInscricao")
+}
+
+enum ScheduleStatus {
+  SUGGESTED   @map("SUGERIDO")
+  SCHEDULED   @map("AGENDADO")
+  IN_PROGRESS @map("EM_ANDAMENTO")
+  COMPLETED   @map("CONCLUIDO")
+  CANCELED    @map("CANCELADO")
+
+  @@map("StatusEscala")
+}
+
+enum MusicStatus {
+  SUGGESTED @map("SUGERIDA")
+  APPROVED  @map("APROVADA")
+
+  @@map("StatusMusica")
+}
+
+enum MusicianLevel {
+  BEGINNER     @map("INICIANTE")
+  INTERMEDIATE @map("INTERMEDIARIO")
+  ADVANCED     @map("AVANCADO")
+  PROFESSIONAL @map("PROFISSIONAL")
+
+  @@map("NivelMusico")
+}

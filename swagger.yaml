@@ -1,0 +1,1062 @@
+openapi: 3.0.0
+paths:
+  /:
+    get:
+      operationId: AppController_getHello
+      summary: Health check endpoint
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags: &ref_0
+        - Health Check
+  /health:
+    get:
+      operationId: AppController_getHealth
+      summary: API health status
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags: *ref_0
+  /auth/login:
+    post:
+      operationId: AuthController_login
+      summary: Login or auto-register with email or phone
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDto'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseDto'
+        '400':
+          description: Validation error
+        '401':
+          description: Account locked due to too many failed attempts
+        '429':
+          description: Too many requests - rate limited
+      tags: &ref_1
+        - Authentication
+  /auth/sync-user:
+    post:
+      operationId: AuthController_syncSupabaseUser
+      summary: Sync Supabase user to local database
+      description: >-
+        Step 5: Endpoint for Supabase OAuth flow. Verifies Supabase token and
+        syncs user data.
+      parameters: []
+      requestBody:
+        required: true
+        description: Supabase authentication token
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncSupabaseUserDto'
+      responses:
+        '200':
+          description: User synced successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseDto'
+        '400':
+          description: Supabase not configured
+        '401':
+          description: Invalid Supabase token
+      tags: *ref_1
+  /auth/logout:
+    post:
+      operationId: AuthController_logout
+      summary: Logout user
+      parameters: []
+      responses:
+        '200':
+          description: Logged out successfully
+        '401':
+          description: Unauthorized - invalid or missing token
+      tags: *ref_1
+      security:
+        - bearer: []
+  /auth/me:
+    get:
+      operationId: AuthController_getProfile
+      summary: Get current user profile
+      parameters: []
+      responses:
+        '200':
+          description: User profile retrieved
+        '401':
+          description: Unauthorized - invalid or missing token
+      tags: *ref_1
+      security:
+        - bearer: []
+  /auth/health:
+    get:
+      operationId: AuthController_healthCheck
+      summary: Health check endpoint
+      parameters: []
+      responses:
+        '200':
+          description: Service is healthy
+      tags: *ref_1
+  /jams:
+    post:
+      operationId: JamController_create
+      summary: Create a new jam session
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJamDto'
+      responses:
+        '201':
+          description: Jam created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JamResponseDto'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - insufficient permissions
+      tags: &ref_2
+        - Jams
+      security:
+        - bearer: []
+    get:
+      operationId: JamController_findAll
+      summary: List all jams
+      parameters: []
+      responses:
+        '200':
+          description: List of jams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JamResponseDto'
+      tags: *ref_2
+  /jams/{id}:
+    get:
+      operationId: JamController_findOne
+      summary: Get jam by ID
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Jam found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JamResponseDto'
+        '404':
+          description: Jam not found
+      tags: *ref_2
+    patch:
+      operationId: JamController_update
+      summary: Update jam
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateJamDto'
+      responses:
+        '200':
+          description: Jam updated successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - insufficient permissions
+      tags: *ref_2
+      security:
+        - bearer: []
+    delete:
+      operationId: JamController_remove
+      summary: Delete jam
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Jam deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - insufficient permissions
+      tags: *ref_2
+      security:
+        - bearer: []
+  /musicos:
+    post:
+      operationId: MusicoController_create
+      summary: Create a new musician (admin only)
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMusicianDto'
+      responses:
+        '201':
+          description: Musician created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - admin only
+      tags: &ref_3
+        - Musicians
+      security:
+        - bearer: []
+    get:
+      operationId: MusicoController_findAll
+      summary: List all musicians
+      parameters: []
+      responses:
+        '200':
+          description: List of musicians
+      tags: *ref_3
+  /musicos/{id}:
+    get:
+      operationId: MusicoController_findOne
+      summary: Get musician by ID
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Musician found
+        '404':
+          description: Musician not found
+      tags: *ref_3
+    patch:
+      operationId: MusicoController_update
+      summary: Update musician (self or admin)
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMusicianDto'
+      responses:
+        '200':
+          description: Musician updated successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - can only update own profile
+      tags: *ref_3
+      security:
+        - bearer: []
+    delete:
+      operationId: MusicoController_remove
+      summary: Delete musician (admin only)
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Musician deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - admin only
+      tags: *ref_3
+      security:
+        - bearer: []
+  /musicas:
+    post:
+      operationId: MusicaController_create
+      summary: Create a new music
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMusicDto'
+      responses:
+        '201':
+          description: Music created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - insufficient permissions
+      tags: &ref_4
+        - Musicas
+      security:
+        - bearer: []
+    get:
+      operationId: MusicaController_findAll
+      summary: List all musics independent of jam
+      parameters: []
+      responses:
+        '200':
+          description: List of musics
+      tags: *ref_4
+  /musicas/{id}:
+    get:
+      operationId: MusicaController_findOne
+      summary: Get music by ID
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Music found
+        '404':
+          description: Music not found
+      tags: *ref_4
+    patch:
+      operationId: MusicaController_update
+      summary: Update music
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMusicDto'
+      responses:
+        '200':
+          description: Music updated successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - insufficient permissions
+      tags: *ref_4
+      security:
+        - bearer: []
+    delete:
+      operationId: MusicaController_remove
+      summary: Delete music
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Music deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - insufficient permissions
+      tags: *ref_4
+      security:
+        - bearer: []
+  /musicas/jam/{jamId}:
+    get:
+      operationId: MusicaController_findByJam
+      summary: Get musics by jam
+      parameters:
+        - name: jamId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of musics for jam
+      tags: *ref_4
+  /musicas/{id}/link-jam/{jamId}:
+    patch:
+      operationId: MusicaController_linkToJam
+      summary: Link music to a jam
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: jamId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Music linked to jam successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - insufficient permissions
+      tags: *ref_4
+      security:
+        - bearer: []
+  /inscricoes:
+    post:
+      operationId: InscricaoController_create
+      summary: Create a new registration
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRegistrationDto'
+      responses:
+        '201':
+          description: Registration created successfully
+        '401':
+          description: Unauthorized
+      tags: &ref_5
+        - Registrations
+      security:
+        - bearer: []
+  /inscricoes/jam/{jamId}:
+    get:
+      operationId: InscricaoController_findByJam
+      summary: Get registrations by jam
+      parameters:
+        - name: jamId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of registrations for jam
+      tags: *ref_5
+  /inscricoes/{id}/approve:
+    patch:
+      operationId: InscricaoController_approve
+      summary: Approve a registration
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Registration approved
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - host only
+      tags: *ref_5
+      security:
+        - bearer: []
+  /inscricoes/{id}/reject:
+    patch:
+      operationId: InscricaoController_reject
+      summary: Reject a registration
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Registration rejected
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - host only
+      tags: *ref_5
+      security:
+        - bearer: []
+  /inscricoes/{id}:
+    delete:
+      operationId: InscricaoController_remove
+      summary: Cancel registration
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Registration cancelled
+        '401':
+          description: Unauthorized
+      tags: *ref_5
+      security:
+        - bearer: []
+  /escalas:
+    post:
+      operationId: EscalaController_create
+      summary: Create new schedule
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateScheduleDto'
+      responses:
+        '201':
+          description: Schedule created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - insufficient permissions
+      tags: &ref_6
+        - Schedules
+      security:
+        - bearer: []
+  /escalas/jam/{jamId}:
+    get:
+      operationId: EscalaController_findByJam
+      summary: Get schedules by jam
+      parameters:
+        - name: jamId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of schedules for jam
+      tags: *ref_6
+  /escalas/{id}:
+    patch:
+      operationId: EscalaController_update
+      summary: Update schedule
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateScheduleDto'
+      responses:
+        '200':
+          description: Schedule updated successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - host only
+      tags: *ref_6
+      security:
+        - bearer: []
+    delete:
+      operationId: EscalaController_remove
+      summary: Remove from schedule
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Schedule removed successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - host only
+      tags: *ref_6
+      security:
+        - bearer: []
+  /escalas/jam/{jamId}/reorder:
+    put:
+      operationId: EscalaController_reorderSchedule
+      summary: Reorder schedules - array position becomes the order
+      parameters:
+        - name: jamId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      responses:
+        '200':
+          description: Schedules reordered successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - host only
+      tags: *ref_6
+      security:
+        - bearer: []
+info:
+  title: Karaoke Jam API
+  description: Backend API para organização de Jam Sessions presenciais em tempo real
+  version: 0.0.1
+  contact: {}
+tags:
+  - name: jam-sessions
+    description: ''
+servers: []
+components:
+  schemas:
+    LoginDto:
+      type: object
+      properties:
+        email:
+          type: string
+          description: User email address
+          example: user@example.com
+        phone:
+          type: string
+          description: User phone number (E.164 format recommended)
+          example: '+5511999999999'
+    AuthResponseDto:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: User ID
+        name:
+          type: string
+          description: User name
+        email:
+          type: string
+          description: User email
+        phone:
+          type: string
+          description: User phone
+        role:
+          type: string
+          description: User role
+          enum:
+            - user
+        token:
+          type: string
+          description: JWT token
+        isNewUser:
+          type: boolean
+          description: Whether user is newly created
+      required:
+        - userId
+        - name
+        - role
+        - token
+        - isNewUser
+    SyncSupabaseUserDto:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Supabase access token from authentication
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      required:
+        - token
+    CreateJamDto:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Jam session name
+        description:
+          type: string
+          description: Jam session description
+        date:
+          type: string
+          description: Jam session date and time
+        location:
+          type: string
+          description: Jam session location
+        hostName:
+          type: string
+          description: Host name
+        hostContact:
+          type: string
+          description: Host contact
+        qrCode:
+          type: string
+          description: Jam session QR Code
+        status:
+          type: string
+          description: Jam session status
+          enum:
+            - ACTIVE
+            - INACTIVE
+            - FINISHED
+      required:
+        - name
+        - location
+        - hostName
+        - hostContact
+    MusicaResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+        titulo:
+          type: string
+        artista:
+          type: string
+        genero:
+          type: string
+        duracao:
+          type: number
+        neededDrums:
+          type: number
+          example: 0
+          description: Number of drummers needed
+        neededGuitars:
+          type: number
+          example: 0
+          description: Number of guitarists needed
+        neededVocals:
+          type: number
+          example: 0
+          description: Number of vocalists needed
+        neededBass:
+          type: number
+          example: 0
+          description: Number of bassists needed
+        neededKeys:
+          type: number
+          example: 0
+          description: Number of keyboardists needed
+        createdAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - titulo
+        - artista
+        - neededDrums
+        - neededGuitars
+        - neededVocals
+        - neededBass
+        - neededKeys
+        - createdAt
+    JamMusicaResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+        jamId:
+          type: string
+        musicaId:
+          type: string
+        musica:
+          $ref: '#/components/schemas/MusicaResponseDto'
+      required:
+        - id
+        - jamId
+        - musicaId
+        - musica
+    MusicianResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+        nome:
+          type: string
+        instrumento:
+          type: string
+        nivel:
+          type: string
+        contato:
+          type: string
+        telefone:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - nome
+        - instrumento
+        - nivel
+        - createdAt
+    RegistrationResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+        musicianId:
+          type: string
+        jamId:
+          type: string
+        jamMusicId:
+          type: string
+        status:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        musician:
+          $ref: '#/components/schemas/MusicianResponseDto'
+      required:
+        - id
+        - musicianId
+        - jamId
+        - jamMusicId
+        - status
+        - createdAt
+        - musician
+    ScheduleResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+        jamId:
+          type: string
+        musicId:
+          type: string
+        order:
+          type: number
+        status:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        music:
+          $ref: '#/components/schemas/MusicaResponseDto'
+      required:
+        - id
+        - jamId
+        - musicId
+        - order
+        - status
+        - createdAt
+        - music
+    JamResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        hostName:
+          type: string
+        description:
+          type: string
+        date:
+          format: date-time
+          type: string
+        qrCode:
+          type: string
+        status:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+        jamsmusics:
+          type: array
+          items:
+            $ref: '#/components/schemas/JamMusicaResponseDto'
+        registrations:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationResponseDto'
+        schedules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleResponseDto'
+      required:
+        - id
+        - name
+        - hostName
+        - status
+        - createdAt
+        - updatedAt
+    UpdateJamDto:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Jam status
+          enum:
+            - ACTIVE
+            - INACTIVE
+            - FINISHED
+    CreateMusicianDto:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Musician name
+        contact:
+          type: string
+          description: Musician contact
+        instrument:
+          type: string
+          description: Primary instrument
+        level:
+          type: string
+          description: Experience level
+          enum:
+            - BEGINNER
+            - INTERMEDIATE
+            - ADVANCED
+            - PROFESSIONAL
+      required:
+        - name
+        - contact
+        - instrument
+        - level
+    UpdateMusicianDto:
+      type: object
+      properties: {}
+    CreateMusicDto:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Music title
+        artist:
+          type: string
+          description: Artist name
+        genre:
+          type: string
+          description: Music genre
+          nullable: true
+        duration:
+          type: number
+          description: Duration in seconds
+          nullable: true
+        description:
+          type: string
+          description: Music description
+          nullable: true
+        link:
+          type: string
+          description: Link to music (YouTube, Spotify, etc)
+          nullable: true
+        status:
+          type: string
+          description: Music status
+          enum:
+            - SUGGESTED
+            - APPROVED
+          default: SUGGESTED
+        neededDrums:
+          type: number
+          description: Number of drummers needed
+          example: 0
+          default: 0
+        neededGuitars:
+          type: number
+          description: Number of guitarists needed
+          example: 0
+          default: 0
+        neededVocals:
+          type: number
+          description: Number of vocalists needed
+          example: 0
+          default: 0
+        neededBass:
+          type: number
+          description: Number of bassists needed
+          example: 0
+          default: 0
+        neededKeys:
+          type: number
+          description: Number of keyboardists needed
+          example: 0
+          default: 0
+      required:
+        - title
+        - artist
+        - neededDrums
+        - neededGuitars
+        - neededVocals
+        - neededBass
+        - neededKeys
+    UpdateMusicDto:
+      type: object
+      properties: {}
+    CreateRegistrationDto:
+      type: object
+      properties:
+        musicianId:
+          type: string
+          description: Musician ID
+        scheduleId:
+          type: string
+          description: Schedule ID
+        instrument:
+          type: string
+          description: Instrument to play
+      required:
+        - musicianId
+        - scheduleId
+    CreateScheduleDto:
+      type: object
+      properties:
+        jamId:
+          type: string
+          description: Jam session ID
+        musicId:
+          type: string
+          description: Music ID
+        order:
+          type: number
+          description: Order in schedule
+        status:
+          type: string
+          description: Performance status
+          enum:
+            - SUGGESTED
+            - SCHEDULED
+            - IN_PROGRESS
+            - COMPLETED
+            - CANCELED
+      required:
+        - jamId
+        - musicId
+        - order
+    UpdateScheduleDto:
+      type: object
+      properties: {}

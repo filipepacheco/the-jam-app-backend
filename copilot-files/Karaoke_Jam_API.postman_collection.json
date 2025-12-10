@@ -1,0 +1,347 @@
+{
+  "info": {
+    "name": "Karaoke Jam API - Complete",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Complete API testing collection for Karaoke Jam Backend with Supabase integration"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/health",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "health"]
+            }
+          }
+        },
+        {
+          "name": "Login - User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Sync Supabase User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"your-supabase-token-here\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/sync-user",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "sync-user"]
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Jams",
+      "item": [
+        {
+          "name": "Create Jam",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rock Night 2025\",\n  \"description\": \"Amazing rock session\",\n  \"date\": \"2025-12-20T20:00:00Z\",\n  \"location\": \"Studio A\",\n  \"hostName\": \"John Host\",\n  \"hostContact\": \"host@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jams",
+              "host": ["{{base_url}}"],
+              "path": ["jams"]
+            }
+          }
+        },
+        {
+          "name": "Get All Jams",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/jams",
+              "host": ["{{base_url}}"],
+              "path": ["jams"]
+            }
+          }
+        },
+        {
+          "name": "Get Jam by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/jams/{{jam_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["jams", "{{jam_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Jam",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Jam Name\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jams/{{jam_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["jams", "{{jam_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Jam (Admin Only)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jams/{{jam_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["jams", "{{jam_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Registrations",
+      "item": [
+        {
+          "name": "Register for Music",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"musicianId\": \"{{musician_id}}\",\n  \"jamId\": \"{{jam_id}}\",\n  \"scheduleId\": \"{{schedule_id}}\",\n  \"instrument\": \"guitarra\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inscricoes",
+              "host": ["{{base_url}}"],
+              "path": ["inscricoes"]
+            }
+          }
+        },
+        {
+          "name": "Get Registrations for Jam",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inscricoes/jam/{{jam_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["inscricoes", "jam", "{{jam_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Approve Registration (Host)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{host_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inscricoes/{{registration_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["inscricoes", "{{registration_id}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Reject Registration (Host)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{host_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inscricoes/{{registration_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["inscricoes", "{{registration_id}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Registration",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inscricoes/{{registration_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["inscricoes", "{{registration_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001"
+    },
+    {
+      "key": "auth_token",
+      "value": "paste-user-token-here"
+    },
+    {
+      "key": "admin_token",
+      "value": "paste-admin-token-here"
+    },
+    {
+      "key": "host_token",
+      "value": "paste-host-token-here"
+    },
+    {
+      "key": "jam_id",
+      "value": "paste-jam-id-here"
+    },
+    {
+      "key": "musician_id",
+      "value": "paste-musician-id-here"
+    },
+    {
+      "key": "schedule_id",
+      "value": "paste-schedule-id-here"
+    },
+    {
+      "key": "registration_id",
+      "value": "paste-registration-id-here"
+    }
+  ]
+}
+
