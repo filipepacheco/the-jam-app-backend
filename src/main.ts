@@ -2,9 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { Logger } from '@nestjs/common';
 
-async function bootstrap() {
+export async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['log', 'error', 'warn', 'debug', 'verbose'],
   });
@@ -63,9 +62,17 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT || 3001;
-  await app.listen(port);
-  console.log(`🚀 Karaoke Jam API running on: http://localhost:${port}`);
-  console.log(`📚 Swagger docs: http://localhost:${port}/api/docs`);
+  return app;
 }
-bootstrap();
+
+// For local development
+if (require.main === module) {
+  bootstrap().then(app => {
+    const port = process.env.PORT || 3001;
+    app.listen(port);
+    console.log(`🚀 Karaoke Jam API running on: http://localhost:${port}`);
+    console.log(`📚 Swagger docs: http://localhost:${port}/api/docs`);
+  });
+}
+
+
