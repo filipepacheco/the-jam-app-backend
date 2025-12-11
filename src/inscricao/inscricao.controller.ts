@@ -16,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { InscricaoService } from './inscricao.service';
 import { CreateRegistrationDto } from './dto/create-inscricao.dto';
+import { UpdateRegistrationDto } from './dto/update-inscricao.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RoleGuard } from '../auth/guards/role.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -64,6 +65,23 @@ export class InscricaoController {
   @ApiResponse({ status: 403, description: 'Forbidden - host only' })
   reject(@Param('id') id: string) {
     return this.inscricaoService.reject(id);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('host', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update registration details (instrument, status)' })
+  @ApiResponse({ status: 200, description: 'Registration updated successfully' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - host only' })
+  @ApiResponse({ status: 404, description: 'Registration not found' })
+  update(
+    @Param('id') id: string,
+    @Body() updateRegistrationDto: UpdateRegistrationDto,
+  ) {
+    return this.inscricaoService.update(id, updateRegistrationDto);
   }
 
   @Delete(':id')

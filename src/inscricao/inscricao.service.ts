@@ -1,6 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRegistrationDto } from './dto/create-inscricao.dto';
+import { UpdateRegistrationDto } from './dto/update-inscricao.dto';
 import { RegistrationStatus } from '@prisma/client';
 
 @Injectable()
@@ -65,6 +66,36 @@ export class InscricaoService {
   //     },
   //   });
   // }
+
+  async update(id: string, updateRegistrationDto: UpdateRegistrationDto) {
+    const registration = await this.prisma.registration.findUnique({
+      where: { id },
+    });
+
+    if (!registration) {
+      throw new NotFoundException('Registration not found');
+    }
+
+    const updateData: any = {};
+
+    if (updateRegistrationDto.instrument !== undefined) {
+      updateData.instrument = updateRegistrationDto.instrument;
+    }
+
+    if (updateRegistrationDto.status !== undefined) {
+      updateData.status = updateRegistrationDto.status;
+    }
+
+    return this.prisma.registration.update({
+      where: { id },
+      data: updateData,
+      include: {
+        musician: true,
+        jam: true,
+        schedule: true,
+      },
+    });
+  }
 
   async remove(id: string) {
     return this.prisma.registration.delete({
