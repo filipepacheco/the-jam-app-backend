@@ -133,6 +133,7 @@ async function main() {
         neededVocals: Math.floor(Math.random() * 3) + 1,
         neededBass: Math.floor(Math.random() * 2) + 1,
         neededKeys: Math.floor(Math.random() * 2),
+        status: 'APPROVED',
       },
     });
     songs.push(song);
@@ -191,16 +192,16 @@ async function main() {
       .slice(0, songsPerJam);
 
     // Create JamMusic entries
-    const jamMusics = [];
-    for (const song of selectedSongs) {
-      const jamMusic = await prisma.jamMusic.create({
-        data: {
-          jamId: jam.id,
-          musicId: song.id,
-        },
-      });
-      jamMusics.push(jamMusic);
-    }
+    // const jamMusics = [];
+    // for (const song of selectedSongs) {
+    //   const jamMusic = await prisma.jamMusic.create({
+    //     data: {
+    //       jamId: jam.id,
+    //       musicId: song.id,
+    //     },
+    //   });
+    //   jamMusics.push(jamMusic);
+    // }
 
     // Create schedules for each song with varying statuses
     const schedules = [];
@@ -229,13 +230,14 @@ async function main() {
       for (let i = 0; i < selectedMusicians.length; i++) {
         const musician = selectedMusicians[i];
         const status = registrationStatuses[i % registrationStatuses.length];
+        const randomInstrument = instruments[Math.floor(Math.random() * instruments.length)];
 
         await prisma.registration.create({
           data: {
             musicianId: musician.id,
             jamId: jam.id,
             scheduleId: schedule.id,
-            instrument: musician.instrument || 'guitarra',
+            instrument: randomInstrument,
             status: status as any,
           },
         });
