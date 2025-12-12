@@ -11,43 +11,45 @@ async function bootstrap() {
   // Enable CORS
   app.enableCors({
     origin: function (origin, callback) {
-      // Allow all origins in development
-      if (process.env.NODE_ENV === 'development') {
+      // Development: Allow all origins
+      if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+        callback(null, true);
+        return;
+      }
+
+      // Production: Allow specific origins
+      const allowedOrigins = [
+        // localhost variants
+        'http://localhost:3000',
+        'https://localhost:3000',
+        'http://localhost:5174',
+        'https://localhost:5174',
+        'http://127.0.0.1:3000',
+        'https://127.0.0.1:3000',
+        'http://127.0.0.1:5174',
+        'https://127.0.0.1:5174',
+        // Vercel frontend
+        'https://lets-jam-web.vercel.app',
+      ];
+
+      // No origin (direct API calls, mobile apps, etc.)
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      // Check if origin is allowed or is a *.vercel.app domain
+      if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
         callback(null, true);
       } else {
-        // In production, allow:
-        // 1. Requests with no origin (direct API calls, curl, postman)
-        // 2. localhost variants (for testing)
-        // 3. Vercel deployments (*.vercel.app)
-        // 4. Your frontend domain
-        const allowedOrigins = [
-          'http://localhost:3000',
-          'https://localhost:3000',
-          'http://localhost:5174',
-          'https://localhost:5174',
-          'http://127.0.0.1:3000',
-          'https://127.0.0.1:3000',
-          'http://127.0.0.1:5174',
-          'https://127.0.0.1:5174',
-        ];
-
-        // Allow any vercel.app domain
-        if (!origin) {
-          callback(null, true);
-        } else if (origin.includes('vercel.app')) {
-          callback(null, true);
-        } else if (allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          // In production, we still reject but log it
-          console.warn(`CORS rejected origin: ${origin}`);
-          callback(null, false);
-        }
+        console.warn(`CORS rejected origin: ${origin}`);
+        callback(new Error('CORS not allowed'));
       }
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400, // 24 hours
   });
 
   // Global validation pipe
