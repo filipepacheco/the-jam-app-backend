@@ -8,7 +8,55 @@ async function bootstrap() {
     logger: ['log', 'error', 'warn', 'debug', 'verbose'],
   });
 
-  // Enable CORS
+  // Handle preflight OPTIONS requests BEFORE everything else
+  // This ensures CORS headers are sent immediately without redirects
+  app.use((req, res, next) => {
+    // Log for debugging
+    if (req.method === 'OPTIONS') {
+      console.log(`[CORS Preflight] ${req.method} ${req.path} from ${req.get('origin')}`);
+    }
+
+    // Set CORS headers for preflight requests
+    const origin = req.get('origin');
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://localhost:3000',
+      'http://localhost:5174',
+      'https://localhost:5174',
+      'http://127.0.0.1:3000',
+      'https://127.0.0.1:3000',
+      'http://127.0.0.1:5174',
+      'https://127.0.0.1:5174',
+      'https://lets-jam-web.vercel.app',
+    ];
+
+    const isDevelopment = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+    const isAllowed = isDevelopment || !origin || allowedOrigins.includes(origin) || origin?.endsWith('.vercel.app');
+
+    if (isAllowed) {
+      res.header('Access-Control-Allow-Origin', origin || '*');
+      res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header('Access-Control-Max-Age', '86400');
+    }
+
+    // Set security headers
+    res.header('Referrer-Policy', 'no-referrer-when-downgrade');
+    res.header('X-Content-Type-Options', 'nosniff');
+    res.header('X-Frame-Options', 'DENY');
+    res.header('X-XSS-Protection', '1; mode=block');
+
+    // Handle preflight requests immediately
+    if (req.method === 'OPTIONS') {
+      console.log(`[CORS] Preflight request allowed`);
+      return res.sendStatus(200);
+    }
+
+    next();
+  });
+
+  // Enable CORS with NestJS enableCors as a secondary layer
   app.enableCors({
     origin: function (origin, callback) {
       // Development: Allow all origins
@@ -53,11 +101,6 @@ async function bootstrap() {
     maxAge: 86400, // 24 hours
   });
 
-  // Set Referrer-Policy to allow cross-origin requests
-  app.use((req, res, next) => {
-    res.setHeader('Referrer-Policy', 'no-referrer-when-downgrade');
-    next();
-  });
 
   // Global validation pipe
   app.useGlobalPipes(
