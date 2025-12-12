@@ -22,11 +22,15 @@ import { UpdateMusicianDto } from './dto/update-musico.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RoleGuard } from '../auth/guards/role.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { PrismaService } from '../prisma/prisma.service';
 
 @ApiTags('Musicians')
 @Controller('musicos')
 export class MusicoController {
-  constructor(private readonly musicoService: MusicoService) {}
+  constructor(
+    private readonly musicoService: MusicoService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RoleGuard)
@@ -58,25 +62,37 @@ export class MusicoController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update musician (self or admin)' })
+  @ApiOperation({ summary: 'Update musician (self or host)' })
   @ApiResponse({ status: 200, description: 'Musician updated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - can only update own profile' })
+  @ApiResponse({ status: 403, description: 'Forbidden - can only update own profile unless host' })
   async update(
     @Param('id') id: string,
     @Body() updateMusicianDto: UpdateMusicianDto,
     @Request() req,
   ) {
-    // Allow user to update their own profile or admin to update any
-    if (req.user.musicianId !== id && req.user.role !== 'admin') {
+    // Get the authenticated user's musician ID from JWT
+    const authenticatedMusicianId = req.user.musicianId;
+
+    // Get the authenticated user's musician record to check if host
+    const authenticatedMusician = await this.prisma.musician.findUnique({
+      where: { id: authenticatedMusicianId },
+    });
+
+    // Allow user to update their own profile or if they are a host
+    const isUpdatingOwnProfile = authenticatedMusicianId === id;
+    const isHost = authenticatedMusician?.isHost === true;
+
+    if (!isUpdatingOwnProfile && !isHost) {
       throw new ForbiddenException('You can only update your own profile');
     }
+
     return this.musicoService.update(id, updateMusicianDto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RoleGuard)
-  @Roles('admin')
+  @Roles('host')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete musician (admin only)' })
   @ApiResponse({ status: 200, description: 'Musician deleted successfully' })

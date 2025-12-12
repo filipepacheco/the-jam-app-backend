@@ -99,15 +99,17 @@ export class AuthService {
         this.logger.log(`[SUPABASE_NEW_USER] Created musician from Supabase: ${musician.id}`);
       }
 
+      const role = musician.isHost ? 'host' : 'user'
+
       // Generate local JWT token
-      const token = await this.generateToken(musician.id);
+      const token = await this.generateToken(musician.id, role);
 
       return {
         userId: musician.id,
         name: musician.name,
         email: musician.email,
         phone: musician.phone,
-        role: 'user',
+        role,
         isHost: musician.isHost,
         token,
         isNewUser,
@@ -175,15 +177,17 @@ export class AuthService {
       // Clear failed attempts on successful login
       this.clearLoginAttempts(identifier);
 
+      const role = musician.isHost ? 'host' : 'user'
+
       // Generate JWT token
-      const token = await this.generateToken(musician.id);
+      const token = await this.generateToken(musician.id, role);
 
       return {
         userId: musician.id,
         name: musician.name,
         email: musician.email,
         phone: musician.phone,
-        role: 'user',
+        role,
         isHost: musician.isHost,
         token,
         isNewUser,
@@ -361,10 +365,10 @@ export class AuthService {
   /**
    * Generate JWT token for musician
    */
-  async generateToken(musicianId: string): Promise<string> {
+  async generateToken(musicianId: string, role: string): Promise<string> {
     const payload = {
       sub: musicianId,
-      role: 'user',
+      role,
     };
 
     return this.jwtService.sign(payload);
