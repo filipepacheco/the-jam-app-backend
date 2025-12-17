@@ -8,6 +8,8 @@ import {
   Delete,
   UseGuards,
   Request,
+  ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,7 +20,10 @@ import {
 import { JamService } from './jam.service';
 import { CreateJamDto } from './dto/create-jam.dto';
 import { UpdateJamDto } from './dto/update-jam.dto';
+import { ControlJamActionDto } from './dto/control-jam-action.dto';
 import { JamResponseDto } from './dto/jam-response.dto';
+import { LiveStateResponseDto } from './dto/live-state-response.dto';
+import { LiveControlActionResponseDto } from './dto/live-control-action-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RoleGuard } from '../auth/guards/role.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -61,6 +66,81 @@ export class JamController {
   @ApiResponse({ status: 404, description: 'Jam not found' })
   findOne(@Param('id') id: string) {
     return this.jamService.findOne(id);
+  }
+
+  @Get(':id/live/state')
+  @ApiOperation({ summary: 'Get live jam state for polling fallback' })
+  @ApiResponse({
+    status: 200,
+    description: 'Current jam live state',
+    type: LiveStateResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Jam not found' })
+  async getLiveState(@Param('id') id: string): Promise<LiveStateResponseDto> {
+    const jam = await this.jamService.findOne(id);
+
+    if (!jam) {
+      throw new NotFoundException(`Jam with ID ${id} not found`);
+    }
+
+    // Extract current song (IN_PROGRESS)
+    const currentSong = jam.schedules?.find(
+      (s) => s.status === 'IN_PROGRESS',
+    ) || null;
+
+    // Extract next 3 songs (SCHEDULED)
+    const nextSongs = jam.schedules
+      ?.filter((s) => s.status === 'SCHEDULED')
+      .sort((a, b) => a.order - b.order)
+      .slice(0, 3) || [];
+
+    return {
+      currentSong,
+      nextSongs,
+      jamStatus: jam.status,
+      timestamp: Date.now(),
+    };
+  }
+
+  @Post(':id/live/control')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('host', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Execute live jam control action (play/pause/skip/reorder)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Action executed successfully',
+    type: LiveControlActionResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
+  @ApiResponse({ status: 404, description: 'Jam not found' })
+  async executeControlAction(
+    @Param('id') jamId: string,
+    @Body() dto: ControlJamActionDto,
+    @Request() req,
+  ): Promise<LiveControlActionResponseDto> {
+    // Verify user is the jam host
+    const jam = await this.jamService.findOne(jamId);
+
+    if (!jam) {
+      throw new NotFoundException(`Jam with ID ${jamId} not found`);
+    }
+
+    if (jam.hostMusicianId && jam.hostMusicianId !== req.user.musicianId) {
+      throw new ForbiddenException('You are not the host of this jam');
+    }
+
+    const updatedJam = await this.jamService.executeLiveAction(
+      jamId,
+      dto.action,
+      dto.payload,
+    );
+
+    return {
+      success: true,
+      jam: updatedJam,
+    };
   }
 
   @Patch(':id')

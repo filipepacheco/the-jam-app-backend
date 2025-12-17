@@ -1,0 +1,825 @@
+asyncapi: '3.0.0'
+info:
+  title: Karaoke Jam WebSocket API
+  version: 1.0.0
+  description: |
+    Real-time WebSocket API for Karaoke Jam live session management.
+    Supports room-based communication for hosts, musicians, and public viewers.
+  contact:
+    name: Karaoke Jam Team
+  license:
+    name: UNLICENSED
+
+servers:
+  production:
+    host: api.karaokejam.com
+    protocol: wss
+    description: Production WebSocket server
+  development:
+    host: localhost:3000
+    protocol: ws
+    description: Development WebSocket server
+  staging:
+    host: staging-api.karaokejam.com
+    protocol: wss
+    description: Staging WebSocket server
+
+defaultContentType: application/json
+
+channels:
+  jam/{jamId}:
+    address: "jam-{jamId}"
+    title: Jam Session Room
+    description: Main room for all participants in a jam session
+    parameters:
+      jamId:
+        description: Unique identifier for the jam session
+    subscribe:
+      summary: Receive jam session updates
+      description: Subscribe to all events for a specific jam session
+      operationId: subscribeJamUpdates
+      messages:
+        - $ref: '#/components/messages/JoinNotification'
+        - $ref: '#/components/messages/LeaveNotification'
+        - $ref: '#/components/messages/StateSyncMessage'
+        - $ref: '#/components/messages/ScheduleCreated'
+        - $ref: '#/components/messages/ScheduleUpdated'
+        - $ref: '#/components/messages/RegistrationCreated'
+        - $ref: '#/components/messages/RegistrationApproved'
+        - $ref: '#/components/messages/RegistrationRejected'
+        - $ref: '#/components/messages/MusicAdded'
+        - $ref: '#/components/messages/MusicUpdated'
+        - $ref: '#/components/messages/JamStatusUpdate'
+    publish:
+      summary: Send jam session actions
+      description: Emit events to perform actions in a jam session
+      operationId: publishJamActions
+      messages:
+        - $ref: '#/components/messages/JoinJamRequest'
+        - $ref: '#/components/messages/LeaveJamRequest'
+        - $ref: '#/components/messages/HostRequestStateMessage'
+        - $ref: '#/components/messages/MusicianRequestStateMessage'
+        - $ref: '#/components/messages/PublicRequestStateMessage'
+        - $ref: '#/components/messages/MusicianReadyMessage'
+
+  jam/{jamId}/host:
+    address: "jam-{jamId}-host"
+    title: Host Control Room
+    description: Room for host-only operations and notifications
+    parameters:
+      jamId:
+        description: Unique identifier for the jam session
+    subscribe:
+      summary: Host receives notifications
+      description: Host-specific events and notifications
+      operationId: subscribeHostUpdates
+      messages:
+        - $ref: '#/components/messages/MusicianConnected'
+        - $ref: '#/components/messages/MusicianDisconnected'
+        - $ref: '#/components/messages/MusicianReady'
+
+  jam/{jamId}/musicians:
+    address: "jam-{jamId}-musicians"
+    title: Musicians Room
+    description: Room for musician-specific updates
+    parameters:
+      jamId:
+        description: Unique identifier for the jam session
+    subscribe:
+      summary: Musicians receive updates
+      description: Musician-specific events and notifications
+      operationId: subscribeMusicianUpdates
+      messages:
+        - $ref: '#/components/messages/ScheduleStatusChanged'
+        - $ref: '#/components/messages/CurrentPerformance'
+
+  jam/{jamId}/public:
+    address: "jam-{jamId}-public"
+    title: Public Viewer Room
+    description: Room for public viewers
+    parameters:
+      jamId:
+        description: Unique identifier for the jam session
+    subscribe:
+      summary: Public receives updates
+      description: Public-only events (limited data)
+      operationId: subscribePublicUpdates
+      messages:
+        - $ref: '#/components/messages/CurrentPerformance'
+        - $ref: '#/components/messages/JoinNotification'
+
+components:
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT authentication token passed via handshake auth or headers.
+        Optional for public viewers, required for musicians and hosts.
+
+  schemas:
+    Musician:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique musician identifier
+        name:
+          type: string
+          description: Musician name
+        instrument:
+          type: string
+          nullable: true
+          description: Musical instrument played
+        contact:
+          type: string
+          nullable: true
+          description: Contact information
+
+    Schedule:
+      type: object
+      required:
+        - id
+        - jamId
+        - musicId
+        - musicianId
+        - status
+        - performance
+      properties:
+        id:
+          type: string
+          format: uuid
+        jamId:
+          type: string
+          format: uuid
+        musicId:
+          type: string
+          format: uuid
+        musicianId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [ pending, ready, performing, completed, cancelled ]
+        performance:
+          type: object
+          nullable: true
+          properties:
+            startedAt:
+              type: string
+              format: date-time
+            completedAt:
+              type: string
+              format: date-time
+              nullable: true
+
+    Registration:
+      type: object
+      required:
+        - id
+        - jamId
+        - musicianId
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        jamId:
+          type: string
+          format: uuid
+        musicianId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [ pending, approved, rejected, cancelled ]
+        songs:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    Music:
+      type: object
+      required:
+        - id
+        - title
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        artist:
+          type: string
+          nullable: true
+        duration:
+          type: integer
+          description: Duration in seconds
+          nullable: true
+        key:
+          type: string
+          nullable: true
+        tempo:
+          type: integer
+          nullable: true
+
+    Jam:
+      type: object
+      required:
+        - id
+        - name
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [ planning, open, active, closed, completed ]
+        date:
+          type: string
+          format: date-time
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        hostMusicianId:
+          type: string
+          format: uuid
+          nullable: true
+        hostName:
+          type: string
+          nullable: true
+        hostContact:
+          type: string
+          nullable: true
+
+    LiveState:
+      type: object
+      required:
+        - jamId
+        - jam
+        - musicians
+        - schedule
+        - registrations
+      properties:
+        jamId:
+          type: string
+          format: uuid
+        jam:
+          $ref: '#/components/schemas/Jam'
+        musicians:
+          type: array
+          items:
+            $ref: '#/components/schemas/Musician'
+        schedule:
+          type: array
+          items:
+            $ref: '#/components/schemas/Schedule'
+        registrations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Registration'
+        musics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Music'
+
+  messages: # ======== Connection & Room Management ========
+    JoinJamRequest:
+      name: joinJam
+      title: Join Jam Session
+      contentType: application/json
+      description: |
+        Client sends this to join a jam session.
+        Server will verify jam exists, determine role, and send initial state.
+      payload:
+        oneOf:
+          - type: string
+            description: Simple jamId string
+            example: "550e8400-e29b-41d4-a716-446655440000"
+          - type: object
+            required:
+              - jamId
+            properties:
+              jamId:
+                type: string
+                format: uuid
+                description: Jam session ID to join
+              token:
+                type: string
+                description: Optional JWT token for authentication
+      examples:
+        - payload: "550e8400-e29b-41d4-a716-446655440000"
+        - payload:
+            jamId: "550e8400-e29b-41d4-a716-446655440000"
+            token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    LeaveJamRequest:
+      name: leaveJam
+      title: Leave Jam Session
+      contentType: application/json
+      description: Client sends this to leave a jam session
+      payload:
+        type: string
+        format: uuid
+        description: Jam session ID to leave
+      example: "550e8400-e29b-41d4-a716-446655440000"
+
+    # ======== State Requests ========
+    HostRequestStateMessage:
+      name: host:request-state
+      title: Host Request State Sync
+      contentType: application/json
+      description: |
+        Host requests full jam state (private, all data visible)
+        Server responds with 'live:state-sync' event
+      payload:
+        type: object
+        required:
+          - jamId
+        properties:
+          jamId:
+            type: string
+            format: uuid
+      example:
+        jamId: "550e8400-e29b-41d4-a716-446655440000"
+
+    MusicianRequestStateMessage:
+      name: musician:request-state
+      title: Musician Request State Sync
+      contentType: application/json
+      description: |
+        Musician requests jam state filtered for their view.
+        Server responds with 'live:state-sync' event with musician-specific data
+      payload:
+        type: object
+        required:
+          - jamId
+        properties:
+          jamId:
+            type: string
+            format: uuid
+      example:
+        jamId: "550e8400-e29b-41d4-a716-446655440000"
+
+    PublicRequestStateMessage:
+      name: public:request-state
+      title: Public Viewer Request State Sync
+      contentType: application/json
+      description: |
+        Public viewer requests jam state (limited public data only).
+        Server responds with 'live:state-sync' event with public-safe data
+      payload:
+        type: object
+        required:
+          - jamId
+        properties:
+          jamId:
+            type: string
+            format: uuid
+      example:
+        jamId: "550e8400-e29b-41d4-a716-446655440000"
+
+    # ======== State Sync Response ========
+    StateSyncMessage:
+      name: live:state-sync
+      title: Live State Synchronization
+      contentType: application/json
+      description: |
+        Server sends complete jam state to client.
+        Sent immediately on joinJam and in response to state requests.
+        Data visibility varies by role:
+        - Host: All data
+        - Musician: Their schedule, registrations, other musicians
+        - Public: Only current performance and basic jam info
+      payload:
+        type: object
+        required:
+          - jamId
+          - state
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          state:
+            $ref: '#/components/schemas/LiveState'
+          timestamp:
+            type: string
+            format: date-time
+
+    # ======== Musician Actions ========
+    MusicianReadyMessage:
+      name: musician:ready
+      title: Musician Ready Signal
+      contentType: application/json
+      description: |
+        Musician signals they are ready to perform.
+        Only sent to host room.
+      payload:
+        type: object
+        required:
+          - jamId
+          - scheduleId
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          scheduleId:
+            type: string
+            format: uuid
+      example:
+        jamId: "550e8400-e29b-41d4-a716-446655440000"
+        scheduleId: "660e8400-e29b-41d4-a716-446655440001"
+
+    # ======== Join/Leave Notifications ========
+    JoinNotification:
+      name: musicianJoined
+      title: Musician Joined Jam
+      contentType: application/json
+      description: Broadcast when a musician joins the jam session
+      payload:
+        type: object
+        required:
+          - jamId
+          - musicianId
+          - role
+          - timestamp
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          musicianId:
+            type: string
+            format: uuid
+            nullable: true
+          musicianName:
+            type: string
+            nullable: true
+          role:
+            type: string
+            enum: [ host, musician, public ]
+          timestamp:
+            type: string
+            format: date-time
+      example:
+        jamId: "550e8400-e29b-41d4-a716-446655440000"
+        musicianId: "550e8400-e29b-41d4-a716-446655440002"
+        musicianName: "John Doe"
+        role: "musician"
+        timestamp: "2025-12-17T10:30:00Z"
+
+    LeaveNotification:
+      name: musicianLeft
+      title: Musician Left Jam
+      contentType: application/json
+      description: Broadcast when a musician leaves the jam session
+      payload:
+        type: object
+        required:
+          - jamId
+          - role
+          - timestamp
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          musicianId:
+            type: string
+            format: uuid
+            nullable: true
+          musicianName:
+            type: string
+            nullable: true
+          role:
+            type: string
+            enum: [ host, musician, public ]
+          timestamp:
+            type: string
+            format: date-time
+
+    # ======== Host-Only Notifications ========
+    MusicianConnected:
+      name: musician:connected
+      title: Musician Connected (Host Only)
+      contentType: application/json
+      description: |
+        Sent to host when a musician connects.
+        Only visible in jam-{jamId}-host room.
+      payload:
+        type: object
+        required:
+          - jamId
+          - musician
+          - timestamp
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          musician:
+            type: object
+            required:
+              - id
+              - name
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              instrument:
+                type: string
+                nullable: true
+          timestamp:
+            type: string
+            format: date-time
+
+    MusicianDisconnected:
+      name: musician:disconnected
+      title: Musician Disconnected (Host Only)
+      contentType: application/json
+      description: |
+        Sent to host when a musician disconnects.
+        Only visible in jam-{jamId}-host room.
+      payload:
+        type: object
+        required:
+          - jamId
+          - musicianId
+          - disconnectedAt
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          musicianId:
+            type: string
+            format: uuid
+          musicianName:
+            type: string
+            nullable: true
+          disconnectedAt:
+            type: string
+            format: date-time
+
+    MusicianReady:
+      name: musician:ready
+      title: Musician Ready (Host Only)
+      contentType: application/json
+      description: |
+        Sent to host when a musician signals ready.
+        Only visible in jam-{jamId}-host room.
+      payload:
+        type: object
+        required:
+          - jamId
+          - scheduleId
+          - musicianId
+          - timestamp
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          scheduleId:
+            type: string
+            format: uuid
+          musicianId:
+            type: string
+            format: uuid
+          musicianName:
+            type: string
+            nullable: true
+          timestamp:
+            type: string
+            format: date-time
+
+    # ======== Schedule Events ========
+    ScheduleCreated:
+      name: schedule:created
+      title: Schedule Created
+      contentType: application/json
+      description: Broadcast when a new schedule (performance slot) is created
+      payload:
+        type: object
+        required:
+          - jamId
+          - schedule
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          schedule:
+            $ref: '#/components/schemas/Schedule'
+
+    ScheduleUpdated:
+      name: schedule:updated
+      title: Schedule Updated
+      contentType: application/json
+      description: Broadcast when a schedule is updated
+      payload:
+        type: object
+        required:
+          - jamId
+          - scheduleId
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          scheduleId:
+            type: string
+            format: uuid
+          updates:
+            type: object
+            description: Fields that were updated
+
+    ScheduleStatusChanged:
+      name: schedule:status-changed
+      title: Schedule Status Changed (Musician)
+      contentType: application/json
+      description: |
+        Sent to musicians when their schedule status changes
+        (e.g., pending → ready → performing → completed)
+      payload:
+        type: object
+        required:
+          - jamId
+          - scheduleId
+          - previousStatus
+          - newStatus
+          - timestamp
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          scheduleId:
+            type: string
+            format: uuid
+          previousStatus:
+            type: string
+          newStatus:
+            type: string
+          timestamp:
+            type: string
+            format: date-time
+
+    # ======== Registration Events ========
+    RegistrationCreated:
+      name: registration:created
+      title: Registration Created
+      contentType: application/json
+      description: Broadcast when a musician registers for a jam
+      payload:
+        type: object
+        required:
+          - jamId
+          - registration
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          registration:
+            $ref: '#/components/schemas/Registration'
+
+    RegistrationApproved:
+      name: registration:approved
+      title: Registration Approved
+      contentType: application/json
+      description: Broadcast when a registration is approved by host
+      payload:
+        type: object
+        required:
+          - jamId
+          - registrationId
+          - musicianId
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          registrationId:
+            type: string
+            format: uuid
+          musicianId:
+            type: string
+            format: uuid
+          scheduleId:
+            type: string
+            format: uuid
+            nullable: true
+          registration:
+            $ref: '#/components/schemas/Registration'
+
+    RegistrationRejected:
+      name: registration:rejected
+      title: Registration Rejected
+      contentType: application/json
+      description: Broadcast when a registration is rejected
+      payload:
+        type: object
+        required:
+          - jamId
+          - registrationId
+          - musicianId
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          registrationId:
+            type: string
+            format: uuid
+          musicianId:
+            type: string
+            format: uuid
+          reason:
+            type: string
+            nullable: true
+
+    # ======== Music Events ========
+    MusicAdded:
+      name: music:added
+      title: Music Added to Jam
+      contentType: application/json
+      description: Broadcast when a song is added to the jam's music library
+      payload:
+        type: object
+        required:
+          - jamId
+          - music
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          music:
+            $ref: '#/components/schemas/Music'
+          jamMusic:
+            type: object
+            nullable: true
+
+    MusicUpdated:
+      name: music:updated
+      title: Music Updated
+      contentType: application/json
+      description: Broadcast when a song is updated
+      payload:
+        type: object
+        required:
+          - jamId
+          - musicId
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          musicId:
+            type: string
+            format: uuid
+          updates:
+            type: object
+
+    # ======== Jam Events ========
+    JamStatusUpdate:
+      name: jamStatusUpdate
+      title: Jam Status Updated
+      contentType: application/json
+      description: Broadcast when jam status changes
+      payload:
+        type: object
+        required:
+          - jamId
+          - status
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          status:
+            type: string
+            enum: [ planning, open, active, closed, completed ]
+
+    CurrentPerformance:
+      name: currentPerformance
+      title: Current Performance Update
+      contentType: application/json
+      description: Broadcast when current performance changes
+      payload:
+        type: object
+        properties:
+          jamId:
+            type: string
+            format: uuid
+          currentSchedule:
+            $ref: '#/components/schemas/Schedule'
+            nullable: true
+          nextSchedules:
+            type: array
+            items:
+              $ref: '#/components/schemas/Schedule'
+            maxItems: 3
+

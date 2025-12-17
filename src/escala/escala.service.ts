@@ -2,10 +2,14 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateScheduleDto } from './dto/create-escala.dto';
 import { UpdateScheduleDto } from './dto/update-escala.dto';
+import { WebsocketGateway } from '../websocket/websocket.gateway';
 
 @Injectable()
 export class EscalaService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly websocketGateway: WebsocketGateway,
+  ) {}
 
   async create(createScheduleDto: CreateScheduleDto) {
     // Verify that the music exists
@@ -26,7 +30,7 @@ export class EscalaService {
       throw new BadRequestException('Jam not found');
     }
 
-    return this.prisma.schedule.create({
+    const schedule = await this.prisma.schedule.create({
       data: {
         jamId: createScheduleDto.jamId,
         musicId: createScheduleDto.musicId,
@@ -38,6 +42,14 @@ export class EscalaService {
         jam: true,
       },
     });
+
+    // Emit socket event to all jam users
+    this.websocketGateway.emitToJam(createScheduleDto.jamId, 'schedule:created', {
+      jamId: createScheduleDto.jamId,
+      schedule,
+    });
+
+    return schedule;
   }
 
   async findByJam(jamId: string) {
@@ -66,7 +78,16 @@ export class EscalaService {
   // }
 
   async update(id: string, updateScheduleDto: UpdateScheduleDto) {
-    return this.prisma.schedule.update({
+    const schedule = await this.prisma.schedule.findUnique({
+      where: { id },
+      include: { jam: true },
+    });
+
+    if (!schedule) {
+      throw new BadRequestException('Schedule not found');
+    }
+
+    const updated = await this.prisma.schedule.update({
       where: { id },
       data: updateScheduleDto,
       include: {
@@ -74,11 +95,44 @@ export class EscalaService {
         jam: true,
       },
     });
+
+    // Emit socket event - check if status changed
+    if (updateScheduleDto.status && updateScheduleDto.status !== schedule.status) {
+      this.websocketGateway.emitToJam(schedule.jamId, 'schedule:status-changed', {
+        jamId: schedule.jamId,
+        scheduleId: id,
+        previousStatus: schedule.status,
+        newStatus: updateScheduleDto.status,
+        timestamp: new Date(),
+      });
+    }
+
+    // Emit generic update event
+    this.websocketGateway.emitToJam(schedule.jamId, 'schedule:updated', {
+      jamId: schedule.jamId,
+      schedule: updated,
+    });
+
+    return updated;
   }
 
   async remove(id: string) {
-    return this.prisma.schedule.delete({
+    const schedule = await this.prisma.schedule.findUnique({
       where: { id },
+    });
+
+    if (!schedule) {
+      throw new BadRequestException('Schedule not found');
+    }
+
+    await this.prisma.schedule.delete({
+      where: { id },
+    });
+
+    // Emit socket event
+    this.websocketGateway.emitToJam(schedule.jamId, 'schedule:deleted', {
+      jamId: schedule.jamId,
+      scheduleId: id,
     });
   }
 
@@ -102,6 +156,22 @@ export class EscalaService {
       })
     );
 
-    return Promise.all(updates);
+    const updatedSchedules = await Promise.all(updates);
+
+    // Fetch full schedule details with relations
+    const fullSchedules = await this.prisma.schedule.findMany({
+      where: { id: { in: scheduleIds } },
+      include: { music: true, jam: true },
+      orderBy: { order: 'asc' },
+    });
+
+    // Emit socket event
+    this.websocketGateway.emitToJam(jamId, 'schedule:reordered', {
+      jamId,
+      newOrder: scheduleIds,
+      schedules: fullSchedules,
+    });
+
+    return updatedSchedules;
   }
 }
