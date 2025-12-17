@@ -5,6 +5,13 @@
   "env": {
     "NODE_ENV": "production"
   },
+  "functions": {
+    "src/main.ts": {
+      "memory": 1024,
+      "maxDuration": 60,
+      "runtime": "nodejs20.x"
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
@@ -36,6 +43,10 @@
         {
           "key": "X-Frame-Options",
           "value": "DENY"
+        },
+        {
+          "key": "Connection",
+          "value": "upgrade"
         }
       ]
     }

@@ -32,8 +32,43 @@ interface MessageRateLimit {
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: function (origin, callback) {
+      const isDevelopment = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+
+      // Development: allow all
+      if (isDevelopment) {
+        callback(null, true);
+        return;
+      }
+
+      // Production: explicit allowlist
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'https://karaoke-jam-frontend.vercel.app',
+        'https://lets-jam-web.vercel.app',
+        'https://jamapp.com.br',
+        'https://www.jamapp.com.br',
+      ];
+
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        console.warn(`[WS_CORS] Origin rejected: ${origin}`);
+        callback(new Error('CORS not allowed'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST'],
   },
+  // Transports configuration for Vercel compatibility
+  transports: ['websocket', 'polling'],
+  // Connection settings
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  maxHttpBufferSize: 1e6,
 })
 export class WebsocketGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
