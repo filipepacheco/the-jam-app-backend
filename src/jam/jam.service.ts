@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateJamDto } from './dto/create-jam.dto';
 import { UpdateJamDto } from './dto/update-jam.dto';
+import { LiveDashboardResponseDto, DashboardSongDto } from './dto/live-dashboard-response.dto';
 import * as QRCode from 'qrcode';
 
 @Injectable()
@@ -124,17 +125,6 @@ export class JamService {
     });
   }
 
-  async insertMusica(jamId: string, musicId: string) {
-    await this.prisma.jam.update({
-        where: { id: jamId },
-        data: {
-            jamMusics: {
-                create: { musicId }
-            }
-        }
-    })
-  }
-
   async remove(id: string) {
     return this.prisma.jam.delete({
       where: { id },
@@ -237,5 +227,65 @@ export class JamService {
     }
 
     return updatedJam;
+  }
+
+  async getLiveDashboard(jamId: string): Promise<LiveDashboardResponseDto> {
+    const jam = await this.prisma.jam.findUnique({
+      where: { id: jamId },
+    });
+
+    if (!jam) {
+      throw new NotFoundException(`Jam with ID ${jamId} not found`);
+    }
+
+    // Fetch all schedules with their music and all approved registrations
+    const schedules = await this.prisma.schedule.findMany({
+      where: { jamId },
+      include: {
+        music: true,
+        registrations: {
+          where: { status: 'APPROVED' },
+          include: { musician: true },
+        },
+      },
+      orderBy: { order: 'asc' },
+    });
+
+    // Find current song (IN_PROGRESS status)
+    const currentSchedule = schedules.find((s) => s.status === 'IN_PROGRESS');
+    const currentSong: DashboardSongDto | null = currentSchedule
+      ? this.mapScheduleToDashboardSong(currentSchedule)
+      : null;
+
+    // Find next songs (SCHEDULED status, take first 3)
+    const nextSchedules = schedules
+      .filter((s) => s.status === 'SCHEDULED')
+      .slice(0, 3);
+    const nextSongs = nextSchedules.map((schedule) =>
+      this.mapScheduleToDashboardSong(schedule),
+    );
+
+    return {
+      jamId: jam.id,
+      jamName: jam.name,
+      qrCode: jam.qrCode,
+      jamStatus: jam.status,
+      currentSong,
+      nextSongs,
+    };
+  }
+
+  private mapScheduleToDashboardSong(schedule: any): DashboardSongDto {
+    return {
+      id: schedule.music.id,
+      title: schedule.music.title,
+      artist: schedule.music.artist,
+      duration: schedule.music.duration,
+      musicians: schedule.registrations.map((reg: any) => ({
+        id: reg.musician.id,
+        name: reg.musician.name,
+        instrument: reg.musician.instrument,
+      })),
+    };
   }
 }

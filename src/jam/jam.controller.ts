@@ -23,6 +23,7 @@ import { UpdateJamDto } from './dto/update-jam.dto';
 import { ControlJamActionDto } from './dto/control-jam-action.dto';
 import { JamResponseDto } from './dto/jam-response.dto';
 import { LiveStateResponseDto } from './dto/live-state-response.dto';
+import { LiveDashboardResponseDto } from './dto/live-dashboard-response.dto';
 import { LiveControlActionResponseDto } from './dto/live-control-action-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RoleGuard } from '../auth/guards/role.guard';
@@ -100,6 +101,18 @@ export class JamController {
       jamStatus: jam.status,
       timestamp: Date.now(),
     };
+  }
+
+  @Get(':id/live/dashboard')
+  @ApiOperation({ summary: 'Get live jam dashboard data (current and next songs with musicians)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Live jam dashboard data',
+    type: LiveDashboardResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Jam not found' })
+  async getLiveDashboard(@Param('id') id: string): Promise<LiveDashboardResponseDto> {
+    return this.jamService.getLiveDashboard(id);
   }
 
   @Post(':id/live/control')
