@@ -64,6 +64,37 @@ async function bootstrap() {
 
   // Enable CORS as a secondary layer for all actual requests
   app.enableCors({
+    origin: function (origin: string, callback: (arg0: Error, arg1: boolean) => void) {
+      const isDevelopment = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+      if (isDevelopment) {
+        callback(null, true);
+        return;
+      }
+
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'https://localhost:3000',
+        'http://localhost:5174',
+        'https://localhost:5174',
+        'http://127.0.0.1:3000',
+        'https://127.0.0.1:3000',
+        'http://127.0.0.1:5174',
+        'https://127.0.0.1:5174',
+        // Vercel frontends
+        'https://karaoke-jam-frontend.vercel.app',
+        'https://lets-jam-web.vercel.app',
+        // Custom domains
+        'https://jamapp.com.br',
+        'https://www.jamapp.com.br',
+      ];
+
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        console.warn(`[CORS] Origin rejected: ${origin}`);
+        callback(new Error('CORS not allowed'), false);
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
