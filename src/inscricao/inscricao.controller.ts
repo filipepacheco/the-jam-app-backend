@@ -17,7 +17,7 @@ import {
 import { InscricaoService } from './inscricao.service';
 import { CreateRegistrationDto } from './dto/create-inscricao.dto';
 import { UpdateRegistrationDto } from './dto/update-inscricao.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
 import { RoleGuard } from '../auth/guards/role.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
@@ -27,7 +27,7 @@ export class InscricaoController {
   constructor(private readonly inscricaoService: InscricaoService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(SupabaseJwtGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new registration' })
   @ApiResponse({ status: 201, description: 'Registration created successfully' })
@@ -44,7 +44,7 @@ export class InscricaoController {
   }
 
   @Patch(':id/approve')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Approve a registration' })
@@ -56,7 +56,7 @@ export class InscricaoController {
   }
 
   @Patch(':id/reject')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Reject a registration' })
@@ -68,7 +68,7 @@ export class InscricaoController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update registration details (instrument, status)' })
@@ -85,7 +85,7 @@ export class InscricaoController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(SupabaseJwtGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Cancel registration' })
   @ApiResponse({ status: 200, description: 'Registration cancelled' })

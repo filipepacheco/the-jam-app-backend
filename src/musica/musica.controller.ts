@@ -17,7 +17,7 @@ import {
 import { MusicaService } from './musica.service';
 import { CreateMusicDto } from './dto/create-musica.dto';
 import { UpdateMusicDto } from './dto/update-musica.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
 import { RoleGuard } from '../auth/guards/role.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
@@ -27,7 +27,7 @@ export class MusicaController {
   constructor(private readonly musicaService: MusicaService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin', 'user')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new music' })
@@ -61,7 +61,7 @@ export class MusicaController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin', 'user')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update music' })
@@ -73,7 +73,7 @@ export class MusicaController {
   }
 
   @Patch(':id/link-jam/:jamId')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin', 'user')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Link music to a jam' })
@@ -85,7 +85,7 @@ export class MusicaController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete music' })

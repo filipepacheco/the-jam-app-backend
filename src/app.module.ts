@@ -10,11 +10,13 @@ import { InscricaoModule } from './inscricao/inscricao.module';
 import { EscalaModule } from './escala/escala.module';
 import { AuthModule } from './auth/auth.module';
 import { SupabaseModule } from './supabase/supabase.module';
+import { validate } from './config/env.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validate,
     }),
     PrismaModule,
     AuthModule,

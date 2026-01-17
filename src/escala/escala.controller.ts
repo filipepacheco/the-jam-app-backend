@@ -18,7 +18,7 @@ import {
 import { EscalaService } from './escala.service';
 import { CreateScheduleDto } from './dto/create-escala.dto';
 import { UpdateScheduleDto } from './dto/update-escala.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
 import { RoleGuard } from '../auth/guards/role.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
@@ -28,7 +28,7 @@ export class EscalaController {
   constructor(private readonly escalaService: EscalaService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin', 'user')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create new schedule' })
@@ -53,7 +53,7 @@ export class EscalaController {
   // }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update schedule' })
@@ -65,7 +65,7 @@ export class EscalaController {
   }
 
   @Put('jam/:jamId/reorder')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Reorder schedules - array position becomes the order' })
@@ -80,7 +80,7 @@ export class EscalaController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Remove from schedule' })

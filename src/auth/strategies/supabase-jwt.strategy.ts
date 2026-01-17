@@ -1,15 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, ExtractJwt } from 'passport-jwt';
-import { ConfigService } from '@nestjs/config';
+import { Strategy } from 'passport-custom';
+import { Request } from 'express';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { PrismaService } from '../../prisma/prisma.service';
-
-export interface SupabaseJwtPayload {
-  sub: string;
-  email?: string;
-  aud?: string;
-  role?: string;
-}
+import { TokenCacheService } from '../services/token-cache.service';
 
 @Injectable()
 export class SupabaseJwtStrategy extends PassportStrategy(
@@ -17,53 +12,91 @@ export class SupabaseJwtStrategy extends PassportStrategy(
   'supabase-jwt',
 ) {
   constructor(
-    configService: ConfigService,
     private prisma: PrismaService,
+    @Inject('SUPABASE_SERVICE_CLIENT') private supabaseService: SupabaseClient,
+    private tokenCache: TokenCacheService,
   ) {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: configService.get<string>('SUPABASE_JWT_SECRET'),
-    });
+    super();
   }
 
-  async validate(payload: SupabaseJwtPayload) {
-    if (!payload.sub) {
-      return null;
+  async validate(req: Request) {
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new UnauthorizedException(
+        'Missing or invalid Authorization header',
+      );
     }
 
-    // Find musician by Supabase user ID
-    let musician = await this.prisma.musician.findUnique({
-      where: { supabaseUserId: payload.sub },
+    const token = authHeader.substring(7);
+
+    // Check cache first
+    const cached = this.tokenCache.get(token);
+    if (cached) {
+      const musician = await this.findOrCreateMusician(
+        cached.supabaseUserId,
+        cached.email,
+      );
+      return { musicianId: musician.id, supabaseUserId: cached.supabaseUserId };
+    }
+
+    // Verify token with Supabase service client (the authoritative source)
+    const { data: { user }, error } = await this.supabaseService.auth.getUser(
+      token,
+    );
+
+    if (error || !user) {
+      throw new UnauthorizedException('Invalid or expired Supabase token');
+    }
+
+    // Cache validation result
+    this.tokenCache.set(token, {
+      supabaseUserId: user.id,
+      email: user.email || '',
     });
 
-    // If not found by Supabase ID, try to find by email and link
-    if (!musician && payload.email) {
+    // Find or create musician
+    const musician = await this.findOrCreateMusician(user.id, user.email);
+
+    return {
+      musicianId: musician.id,
+      supabaseUserId: user.id,
+    };
+  }
+
+  private async findOrCreateMusician(
+    supabaseUserId: string,
+    email?: string,
+  ) {
+    // 1. Find by supabaseUserId
+    let musician = await this.prisma.musician.findUnique({
+      where: { supabaseUserId },
+    });
+
+    if (musician) return musician;
+
+    // 2. Fallback: Find by email and link
+    if (email) {
       musician = await this.prisma.musician.findUnique({
-        where: { email: payload.email },
+        where: { email },
       });
 
-      // Link Supabase ID to existing musician
       if (musician && !musician.supabaseUserId) {
-        musician = await this.prisma.musician.update({
-          where: { id: musician.id },
-          data: { supabaseUserId: payload.sub },
+        // Auto-link existing musician to Supabase account
+        return this.prisma.musician.update({
+          where: {id: musician.id},
+          data: {supabaseUserId},
         });
       }
     }
 
-    // Auto-create musician from Supabase user if not exists
-    if (!musician) {
-      musician = await this.prisma.musician.create({
-        data: {
-          supabaseUserId: payload.sub,
-          email: payload.email,
-          name: payload.email?.split('@')[0] || `User_${payload.sub.slice(-4)}`,
-        },
-      });
-    }
-
-    return { musicianId: musician.id, supabaseUserId: payload.sub };
+    // 3. Auto-create if doesn't exist
+    return this.prisma.musician.create({
+      data: {
+        supabaseUserId,
+        email,
+        name: email?.split('@')[0] || `User_${supabaseUserId.slice(-4)}`,
+      },
+    });
   }
 }
-

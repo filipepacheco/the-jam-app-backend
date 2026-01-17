@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {MusicaResponseDto} from "./musica-response.dto";
-import {MusicianResponseDto} from "./musician-response.dto";
 
 export class ScheduleResponseDto {
   @ApiProperty()

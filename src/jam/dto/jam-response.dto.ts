@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { JamMusicaResponseDto } from './jam-musica-response.dto';
-import {Registration} from "@prisma/client";
 import {RegistrationResponseDto} from "./registration-response.dto";
 import {ScheduleResponseDto} from "./schedule-response.dto";
 

@@ -19,7 +19,7 @@ import {
 import { MusicoService } from './musico.service';
 import { CreateMusicianDto } from './dto/create-musico.dto';
 import { UpdateMusicianDto } from './dto/update-musico.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
 import { RoleGuard } from '../auth/guards/role.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { PrismaService } from '../prisma/prisma.service';
@@ -33,7 +33,7 @@ export class MusicoController {
   ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new musician (admin only)' })
@@ -60,7 +60,7 @@ export class MusicoController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(SupabaseJwtGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update musician (self or host)' })
   @ApiResponse({ status: 200, description: 'Musician updated successfully' })
@@ -91,7 +91,7 @@ export class MusicoController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete musician (admin only)' })

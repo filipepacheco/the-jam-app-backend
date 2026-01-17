@@ -25,7 +25,7 @@ import { JamResponseDto } from './dto/jam-response.dto';
 import { LiveStateResponseDto } from './dto/live-state-response.dto';
 import { LiveDashboardResponseDto } from './dto/live-dashboard-response.dto';
 import { LiveControlActionResponseDto } from './dto/live-control-action-response.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
 import { RoleGuard } from '../auth/guards/role.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
@@ -35,7 +35,7 @@ export class JamController {
   constructor(private readonly jamService: JamService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin', 'user')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new jam session' })
@@ -116,7 +116,7 @@ export class JamController {
   }
 
   @Post(':id/live/control')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Execute live jam control action (play/pause/skip/reorder)' })
@@ -157,7 +157,7 @@ export class JamController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin', 'user')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update jam' })
@@ -169,7 +169,7 @@ export class JamController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete jam' })

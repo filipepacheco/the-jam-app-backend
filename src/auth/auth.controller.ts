@@ -15,14 +15,12 @@ import {
   ApiBearerAuth,
   ApiBody,
 } from '@nestjs/swagger';
-import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { AuthResponseDto } from './dto/auth-response.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { SyncSupabaseUserDto } from './dto/sync-supabase-user.dto';
-import { JwtAuthGuard } from './guards/jwt.guard';
+import { SupabaseJwtGuard } from './guards/supabase-jwt.guard';
 import { LoggingInterceptor } from '../common/interceptors/logging.interceptor';
+
+import { MusicianProfileResponseDto } from './dto/musician-profile-response.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -30,46 +28,8 @@ import { LoggingInterceptor } from '../common/interceptors/logging.interceptor';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('login')
-  @UseGuards(ThrottlerGuard)
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
-  @ApiOperation({ summary: 'Login or auto-register with email or phone' })
-  @ApiResponse({
-    status: 200,
-    description: 'Login successful',
-    type: AuthResponseDto,
-  })
-  @ApiResponse({ status: 400, description: 'Validation error' })
-  @ApiResponse({ status: 401, description: 'Account locked due to too many failed attempts' })
-  @ApiResponse({ status: 429, description: 'Too many requests - rate limited' })
-  async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
-    return this.authService.login(loginDto);
-  }
-
-  @Post('sync-user')
-  @ApiOperation({
-    summary: 'Sync Supabase user to local database',
-    description: 'Step 5: Endpoint for Supabase OAuth flow. Verifies Supabase token and syncs user data.',
-  })
-  @ApiBody({
-    type: SyncSupabaseUserDto,
-    description: 'Supabase authentication token',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'User synced successfully',
-    type: AuthResponseDto,
-  })
-  @ApiResponse({ status: 400, description: 'Supabase not configured' })
-  @ApiResponse({ status: 401, description: 'Invalid Supabase token' })
-  async syncSupabaseUser(
-    @Body() body: SyncSupabaseUserDto,
-  ): Promise<AuthResponseDto> {
-    return this.authService.syncSupabaseUser(body.token);
-  }
-
   @Post('logout')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(SupabaseJwtGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'Logged out successfully' })
@@ -79,28 +39,66 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(SupabaseJwtGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get current user profile' })
-  @ApiResponse({ status: 200, description: 'User profile retrieved' })
+  @ApiOperation({ summary: 'Get current user profile with registration status' })
+  @ApiResponse({ status: 200, description: 'User profile retrieved', type: MusicianProfileResponseDto })
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
-  async getProfile(@Request() req) {
-    return this.authService.getMusicianProfile(req.user.musicianId);
+  async getProfile(@Request() req): Promise<MusicianProfileResponseDto> {
+    const musician = await this.authService.getMusicianProfile(req.user.musicianId);
+    const registrationComplete = this.authService.isRegistrationComplete(musician);
+
+    return {
+      id: musician.id,
+      supabaseUserId: musician.supabaseUserId,
+      name: musician.name,
+      email: musician.email,
+      phone: musician.phone,
+      contact: musician.contact,
+      instrument: musician.instrument,
+      level: musician.level,
+      isHost: musician.isHost,
+      registrationComplete,
+      isNewUser: !registrationComplete,
+      createdAt: musician.createdAt,
+    };
   }
 
   @Patch('profile')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(SupabaseJwtGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update musician profile (name, instrument, level, contact)' })
+  @ApiOperation({ summary: 'Update musician profile (name, instrument, level, contact, phone, isHost)' })
   @ApiBody({
     type: UpdateProfileDto,
     description: 'Profile fields to update',
   })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully' })
+  @ApiResponse({ status: 200, description: 'Profile updated successfully', type: MusicianProfileResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
-  async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
-    return this.authService.updateProfile(req.user.musicianId, updateProfileDto);
+  async updateProfile(
+    @Request() req,
+    @Body() updateProfileDto: UpdateProfileDto,
+  ): Promise<MusicianProfileResponseDto> {
+    const updatedMusician = await this.authService.updateProfile(
+      req.user.musicianId,
+      updateProfileDto,
+    );
+    const registrationComplete = this.authService.isRegistrationComplete(updatedMusician);
+
+    return {
+      id: updatedMusician.id,
+      supabaseUserId: updatedMusician.supabaseUserId,
+      name: updatedMusician.name,
+      email: updatedMusician.email,
+      phone: updatedMusician.phone,
+      contact: updatedMusician.contact,
+      instrument: updatedMusician.instrument,
+      level: updatedMusician.level,
+      isHost: updatedMusician.isHost,
+      registrationComplete,
+      isNewUser: !registrationComplete,
+      createdAt: updatedMusician.createdAt,
+    };
   }
 
   @Get('health')

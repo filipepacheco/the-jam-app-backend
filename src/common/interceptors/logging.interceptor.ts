@@ -21,7 +21,7 @@ export class LoggingInterceptor implements NestInterceptor {
 
     // Mask sensitive data for logging
     const maskedBody = this.maskSensitiveData(body);
-    const userAgent = request.headers['user-agent'] || 'Unknown';
+
 
     this.logger.log(
       `[REQUEST] ${method} ${url} | IP: ${ip} | Handler: ${className}.${handlerName} | Body: ${JSON.stringify(maskedBody)}`,
