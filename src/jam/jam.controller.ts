@@ -8,8 +8,8 @@ import {
   Delete,
   UseGuards,
   Request,
-  ForbiddenException,
   NotFoundException,
+  HttpCode,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -21,6 +21,7 @@ import { JamService } from './jam.service';
 import { CreateJamDto } from './dto/create-jam.dto';
 import { UpdateJamDto } from './dto/update-jam.dto';
 import { ControlJamActionDto } from './dto/control-jam-action.dto';
+import { ReorderSchedulesDto } from './dto/reorder-schedules.dto';
 import { JamResponseDto } from './dto/jam-response.dto';
 import { LiveStateResponseDto } from './dto/live-state-response.dto';
 import { LiveDashboardResponseDto } from './dto/live-dashboard-response.dto';
@@ -89,16 +90,29 @@ export class JamController {
       (s) => s.status === 'IN_PROGRESS',
     ) || null;
 
-    // Extract next 3 songs (SCHEDULED)
     const nextSongs = jam.schedules
       ?.filter((s) => s.status === 'SCHEDULED')
-      .sort((a, b) => a.order - b.order)
-      .slice(0, 3) || [];
+      .sort((a, b) => a.order - b.order) || [];
+
+    const previousSongs = jam.schedules
+      ?.filter((s) => s.status === 'COMPLETED')
+      .sort((a, b) => b.order - a.order)
+      .reverse() || [];
+
+    const suggestedSongs = jam.schedules
+        ?.filter((s) => s.status === 'SUGGESTED')
+        .sort((a, b) => a.order - b.order) || [];
+
 
     return {
       currentSong,
       nextSongs,
+      previousSongs,
+        suggestedSongs,
       jamStatus: jam.status,
+      playbackState: jam.playbackState || 'STOPPED',
+      currentSongStartedAt: currentSong?.startedAt || null,
+      currentSongPausedAt: currentSong?.pausedAt || null,
       timestamp: Date.now(),
     };
   }
@@ -140,10 +154,6 @@ export class JamController {
       throw new NotFoundException(`Jam with ID ${jamId} not found`);
     }
 
-    if (jam.hostMusicianId && jam.hostMusicianId !== req.user.musicianId) {
-      throw new ForbiddenException('You are not the host of this jam');
-    }
-
     const updatedJam = await this.jamService.executeLiveAction(
       jamId,
       dto.action,
@@ -154,6 +164,181 @@ export class JamController {
       success: true,
       jam: updatedJam,
     };
+  }
+
+  @Post(':id/control/start')
+  @HttpCode(201)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
+  @Roles('host', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Start jam playback (starts first scheduled song)' })
+  @ApiResponse({ status: 201, description: 'Jam started successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
+  @ApiResponse({ status: 404, description: 'Jam not found' })
+  async startJam(
+    @Param('id') jamId: string,
+    @Request() req,
+  ) {
+    // Verify user is the jam host
+    const jam = await this.jamService.findOne(jamId);
+    if (!jam) {
+      throw new NotFoundException(`Jam with ID ${jamId} not found`);
+    }
+
+    return this.jamService.startJam(jamId, req.user?.id);
+  }
+
+  @Post(':id/control/stop')
+  @HttpCode(201)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
+  @Roles('host', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Stop jam playback' })
+  @ApiResponse({ status: 201, description: 'Jam stopped successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
+  @ApiResponse({ status: 404, description: 'Jam not found' })
+  async stopJam(
+    @Param('id') jamId: string,
+    @Request() req,
+  ) {
+    // Verify user is the jam host
+    const jam = await this.jamService.findOne(jamId);
+    if (!jam) {
+      throw new NotFoundException(`Jam with ID ${jamId} not found`);
+    }
+
+    return this.jamService.stopJam(jamId, req.user?.id);
+  }
+
+  @Post(':id/control/next')
+  @HttpCode(201)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
+  @Roles('host', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Skip to next song' })
+  @ApiResponse({ status: 201, description: 'Skip' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
+  @ApiResponse({ status: 404, description: 'Jam not found' })
+  async nextSong(
+    @Param('id') jamId: string,
+    @Request() req,
+  ) {
+    // Verify user is the jam host
+    const jam = await this.jamService.findOne(jamId);
+    if (!jam) {
+      throw new NotFoundException(`Jam with ID ${jamId} not found`);
+    }
+
+    return this.jamService.nextSong(jamId, req.user?.id);
+  }
+
+  @Post(':id/control/previous')
+  @HttpCode(201)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
+  @Roles('host', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Go back to previous song' })
+  @ApiResponse({ status: 201, description: 'Previous' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
+  @ApiResponse({ status: 404, description: 'Jam not found' })
+  async previousSong(
+    @Param('id') jamId: string,
+    @Request() req,
+  ) {
+    // Verify user is the jam host
+    const jam = await this.jamService.findOne(jamId);
+    if (!jam) {
+      throw new NotFoundException(`Jam with ID ${jamId} not found`);
+    }
+
+    return this.jamService.previousSong(jamId, req.user?.id);
+  }
+
+  @Post(':id/control/pause')
+  @HttpCode(201)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
+  @Roles('host', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Pause current song' })
+  @ApiResponse({ status: 201, description: 'Pause' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
+  @ApiResponse({ status: 404, description: 'Jam not found' })
+  async pauseSong(
+    @Param('id') jamId: string,
+    @Request() req,
+  ) {
+    // Verify user is the jam host
+    const jam = await this.jamService.findOne(jamId);
+    if (!jam) {
+      throw new NotFoundException(`Jam with ID ${jamId} not found`);
+    }
+
+    return this.jamService.pauseSong(jamId, req.user?.id);
+  }
+
+  @Post(':id/control/resume')
+  @HttpCode(201)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
+  @Roles('host', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Resume paused song' })
+  @ApiResponse({ status: 201, description: 'Resume' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
+  @ApiResponse({ status: 404, description: 'Jam not found' })
+  async resumeSong(
+    @Param('id') jamId: string,
+    @Request() req,
+  ) {
+    // Verify user is the jam host
+    const jam = await this.jamService.findOne(jamId);
+    if (!jam) {
+      throw new NotFoundException(`Jam with ID ${jamId} not found`);
+    }
+
+    return this.jamService.resumeSong(jamId, req.user?.id);
+  }
+
+  @Post(':id/control/reorder')
+  @HttpCode(200)
+  @UseGuards(SupabaseJwtGuard, RoleGuard)
+  @Roles('host', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Reorder schedules in jam queue (drag and drop support)' })
+  @ApiResponse({ status: 200, description: 'Queue reordered successfully', type: JamResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid schedule IDs or validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
+  @ApiResponse({ status: 404, description: 'Jam not found' })
+  async reorderSchedules(
+    @Param('id') jamId: string,
+    @Body() dto: ReorderSchedulesDto,
+    @Request() req,
+  ) {
+    // Verify user is the jam host
+    const jam = await this.jamService.findOne(jamId);
+    if (!jam) {
+      throw new NotFoundException(`Jam with ID ${jamId} not found`);
+    }
+
+    return this.jamService.reorderSchedules(jamId, dto.scheduleIds, req.user?.id);
+  }
+
+  @Get(':id/playback-history')
+  @ApiOperation({ summary: 'Get playback history for jam' })
+  @ApiResponse({ status: 200, description: 'Playback history retrieved' })
+  @ApiResponse({ status: 404, description: 'Jam not found' })
+  async getPlaybackHistory(
+    @Param('id') jamId: string,
+    @Request() req,
+  ) {
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50;
+    return this.jamService.getPlaybackHistory(jamId, limit);
   }
 
   @Patch(':id')

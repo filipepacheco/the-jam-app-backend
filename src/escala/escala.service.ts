@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable} from '@nestjs/common';
+import {BadRequestException, Injectable, NotFoundException} from '@nestjs/common';
 import {PrismaService} from '../prisma/prisma.service';
 import {CreateScheduleDto} from './dto/create-escala.dto';
 import {UpdateScheduleDto} from './dto/update-escala.dto';
@@ -16,7 +16,7 @@ export class EscalaService {
     });
 
     if (!music) {
-      throw new BadRequestException('Music not found');
+      throw new NotFoundException('Music not found');
     }
 
     // Verify that jam exists
@@ -25,14 +25,18 @@ export class EscalaService {
     });
 
     if (!jam) {
-      throw new BadRequestException('Jam not found');
+      throw new NotFoundException('Jam not found');
     }
+
+    const order = await this.prisma.schedule.count({
+      where: { jamId: createScheduleDto.jamId },
+    });
 
     return this.prisma.schedule.create({
       data: {
         jamId: createScheduleDto.jamId,
         musicId: createScheduleDto.musicId,
-        order: createScheduleDto.order,
+        order: order + 1,
         status: createScheduleDto.status,
       },
       include: {
@@ -42,31 +46,6 @@ export class EscalaService {
     });
   }
 
-  async findByJam(jamId: string) {
-    return this.prisma.schedule.findMany({
-      where: { jamId },
-      include: {
-        music: true,
-        jam: true,
-      },
-      orderBy: { order: 'asc' },
-    });
-  }
-
-  // async findByMusico(musicoId: string) {
-  //   return this.prisma.schedule.findMany({
-  //     where: {
-  //       musicianId: musicoId,
-  //     },
-  //     include: {
-  //       musician: true,
-  //       music: true,
-  //       jam: true,
-  //     },
-  //     orderBy: { order: 'asc' },
-  //   });
-  // }
-
   async update(id: string, updateScheduleDto: UpdateScheduleDto) {
     const schedule = await this.prisma.schedule.findUnique({
       where: { id },
@@ -74,7 +53,7 @@ export class EscalaService {
     });
 
     if (!schedule) {
-      throw new BadRequestException('Schedule not found');
+      throw new NotFoundException('Schedule not found');
     }
 
     return this.prisma.schedule.update({
@@ -93,13 +72,12 @@ export class EscalaService {
     });
 
     if (!schedule) {
-      throw new BadRequestException('Schedule not found');
+      throw new NotFoundException('Schedule not found');
     }
 
-    await this.prisma.schedule.delete({
+    return this.prisma.schedule.delete({
       where: { id },
     });
-
   }
 
   async reorderSchedule(jamId: string, scheduleIds: string[]) {

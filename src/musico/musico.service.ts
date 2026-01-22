@@ -21,15 +21,6 @@ export class MusicoService {
     });
   }
 
-  async findOne(id: string) {
-    return this.prisma.musician.findUnique({
-      where: { id },
-      include: {
-        registrations: { include: { jam: true, jamMusic: { include: { music: true } } } },
-      },
-    });
-  }
- 
   async update(id: string, updateMusicianDto: UpdateMusicianDto) {
     return this.prisma.musician.update({
       where: { id },

@@ -1,6 +1,5 @@
 import {
   Controller,
-  Get,
   Post,
   Body,
   Patch,
@@ -38,19 +37,6 @@ export class EscalaController {
   create(@Body() createScheduleDto: CreateScheduleDto) {
     return this.escalaService.create(createScheduleDto);
   }
-
-  @Get('jam/:jamId')
-  @ApiOperation({ summary: 'Get schedules by jam' })
-  @ApiResponse({ status: 200, description: 'List of schedules for jam' })
-  findByJam(@Param('jamId') jamId: string) {
-    return this.escalaService.findByJam(jamId);
-  }
-
-  // @Get('musico/:musicoId')
-  // @ApiOperation({ summary: 'Get schedules by musician' })
-  // findByMusico(@Param('musicoId') musicoId: string) {
-  //   return this.escalaService.findByMusico(musicoId);
-  // }
 
   @Patch(':id')
   @UseGuards(SupabaseJwtGuard, RoleGuard)

@@ -45,21 +45,6 @@ export class MusicaController {
     return this.musicaService.findAll();
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get music by ID' })
-  @ApiResponse({ status: 200, description: 'Music found' })
-  @ApiResponse({ status: 404, description: 'Music not found' })
-  findOne(@Param('id') id: string) {
-    return this.musicaService.findOne(id);
-  }
-
-  @Get('jam/:jamId')
-  @ApiOperation({ summary: 'Get musics by jam' })
-  @ApiResponse({ status: 200, description: 'List of musics for jam' })
-  findByJam(@Param('jamId') jamId: string) {
-    return this.musicaService.findByJam(jamId);
-  }
-
   @Patch(':id')
   @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin', 'user')

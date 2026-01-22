@@ -26,15 +26,6 @@ export class MusicaService {
     });
   }
 
-  async findOne(id: string) {
-    return this.prisma.music.findUnique({
-      where: { id },
-      include: {
-        jamMusics: { include: { jam: true } },
-      },
-    });
-  }
-
   async update(id: string, updateMusicDto: UpdateMusicDto) {
     return this.prisma.music.update({
       where: { id },
@@ -45,20 +36,6 @@ export class MusicaService {
   async remove(id: string) {
     return this.prisma.music.delete({
       where: { id },
-    });
-  }
-
-  async findByJam(jamId: string) {
-    // Fetch from JamMusic join table, including the related Music
-    return this.prisma.jamMusic.findMany({
-      where: { jamId },
-      include: {
-        music: {
-          include: {
-            jamMusics: true,
-          },
-        },
-      },
     });
   }
 

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import {PrismaService} from '../prisma/prisma.service';
 import {Musician} from '@prisma/client';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class AuthService {
@@ -40,7 +41,7 @@ export class AuthService {
    * Update musician profile
    * Allows musicians to fill in registration info after login
    */
-  async updateProfile(musicianId: string, updateData: any): Promise<Musician> {
+  async updateProfile(musicianId: string, updateData: UpdateProfileDto): Promise<Musician> {
     if (!musicianId || typeof musicianId !== 'string') {
       throw new BadRequestException('Invalid musician ID');
     }

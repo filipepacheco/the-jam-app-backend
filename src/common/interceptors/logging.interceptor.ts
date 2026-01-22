@@ -45,15 +45,15 @@ export class LoggingInterceptor implements NestInterceptor {
     );
   }
 
-  private maskSensitiveData(data: any): any {
+  private maskSensitiveData(data: unknown): unknown {
     if (!data || typeof data !== 'object') {
       return data;
     }
 
-    const masked = { ...data };
+    const masked = { ...(data as Record<string, unknown>) };
 
     // Mask email addresses
-    if (masked.email) {
+    if (masked.email && typeof masked.email === 'string') {
       const [name, domain] = masked.email.split('@');
       if (name && domain) {
         masked.email = `${name.substring(0, 2)}***@${domain}`;
@@ -61,12 +61,12 @@ export class LoggingInterceptor implements NestInterceptor {
     }
 
     // Mask phone numbers
-    if (masked.phone) {
+    if (masked.phone && typeof masked.phone === 'string') {
       masked.phone = `***${masked.phone.slice(-4)}`;
     }
 
     // Mask tokens
-    if (masked.token) {
+    if (masked.token && typeof masked.token === 'string') {
       masked.token = `${masked.token.substring(0, 10)}...`;
     }
 

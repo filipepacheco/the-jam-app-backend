@@ -1,6 +1,5 @@
 import {
   Controller,
-  Get,
   Post,
   Body,
   Param,
@@ -34,37 +33,6 @@ export class InscricaoController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(@Body() createRegistrationDto: CreateRegistrationDto) {
     return this.inscricaoService.create(createRegistrationDto);
-  }
-
-  @Get('jam/:jamId')
-  @ApiOperation({ summary: 'Get registrations by jam' })
-  @ApiResponse({ status: 200, description: 'List of registrations for jam' })
-  findByJam(@Param('jamId') jamId: string) {
-    return this.inscricaoService.findByJam(jamId);
-  }
-
-  @Patch(':id/approve')
-  @UseGuards(SupabaseJwtGuard, RoleGuard)
-  @Roles('host', 'admin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Approve a registration' })
-  @ApiResponse({ status: 200, description: 'Registration approved' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - host only' })
-  approve(@Param('id') id: string) {
-    return this.inscricaoService.approve(id);
-  }
-
-  @Patch(':id/reject')
-  @UseGuards(SupabaseJwtGuard, RoleGuard)
-  @Roles('host', 'admin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Reject a registration' })
-  @ApiResponse({ status: 200, description: 'Registration rejected' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - host only' })
-  reject(@Param('id') id: string) {
-    return this.inscricaoService.reject(id);
   }
 
   @Patch(':id')

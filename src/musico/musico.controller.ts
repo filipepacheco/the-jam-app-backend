@@ -51,14 +51,6 @@ export class MusicoController {
     return this.musicoService.findAll();
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get musician by ID' })
-  @ApiResponse({ status: 200, description: 'Musician found' })
-  @ApiResponse({ status: 404, description: 'Musician not found' })
-  findOne(@Param('id') id: string) {
-    return this.musicoService.findOne(id);
-  }
-
   @Patch(':id')
   @UseGuards(SupabaseJwtGuard)
   @ApiBearerAuth()

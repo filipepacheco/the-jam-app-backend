@@ -100,14 +100,4 @@ export class AuthController {
       createdAt: updatedMusician.createdAt,
     };
   }
-
-  @Get('health')
-  @ApiOperation({ summary: 'Health check endpoint' })
-  @ApiResponse({ status: 200, description: 'Service is healthy' })
-  async healthCheck(): Promise<{ status: string; timestamp: string }> {
-    return {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-    };
-  }
 }
