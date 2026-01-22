@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { MusicaResponseDto } from './musica-response.dto';
+import { RegistrationResponseDto } from './registration-response.dto';
 
 export class LiveStateSongDto {
   @ApiProperty()
@@ -37,14 +39,14 @@ export class LiveStateSongDto {
   })
   completedAt?: Date | null;
 
-  @ApiProperty({ type: Object })
-  music: any;
+  @ApiProperty({ type: MusicaResponseDto })
+  music: MusicaResponseDto;
 
   @ApiProperty({
-    type: [Object],
+    type: [RegistrationResponseDto],
     required: false,
   })
-  registrations?: any[];
+  registrations?: RegistrationResponseDto[];
 }
 
 export class LiveStateResponseDto {

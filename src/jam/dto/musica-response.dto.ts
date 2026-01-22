@@ -5,16 +5,25 @@ export class MusicaResponseDto {
   id: string;
 
   @ApiProperty()
-  titulo: string;
+  title: string;
 
   @ApiProperty()
-  artista: string;
+  artist: string;
 
   @ApiProperty({ required: false })
-  genero?: string | null;
+  genre?: string | null;
 
   @ApiProperty({ required: false })
-  duracao?: number | null;
+  duration?: number | null;
+
+  @ApiProperty({ required: false })
+  description?: string | null;
+
+  @ApiProperty({ required: false })
+  link?: string | null;
+
+  @ApiProperty()
+  status: string;
 
   @ApiProperty({ example: 0, description: 'Number of drummers needed' })
   neededDrums: number;
@@ -33,5 +42,4 @@ export class MusicaResponseDto {
 
   @ApiProperty()
   createdAt: Date;
-
 }

@@ -1,12 +1,20 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './all-exceptions.filter';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+
   const app = await NestFactory.create(AppModule, {
     logger: ['log', 'error', 'warn', 'debug', 'verbose'],
   });
+
+  const configService = app.get(ConfigService);
+  const nodeEnv = configService.get<string>('NODE_ENV', 'development');
+  const isDevelopment = nodeEnv === 'development';
 
   // Handle preflight OPTIONS requests BEFORE everything else
   // This ensures CORS headers are sent immediately without redirects
@@ -15,14 +23,14 @@ async function bootstrap() {
 
     // Log for debugging
     if (req.method === 'OPTIONS') {
-      console.log(`[CORS Preflight] OPTIONS ${req.path} from origin: ${origin}`);
+      logger.debug(`[CORS Preflight] OPTIONS ${req.path} from origin: ${origin}`);
     }
 
     const allowedOrigins = [
       'http://localhost:3000',
       'https://localhost:3000',
       'http://localhost:5174',
-        'http://localhost:5173',
+      'http://localhost:5173',
       'https://localhost:5174',
       'http://127.0.0.1:3000',
       'https://127.0.0.1:3000',
@@ -36,8 +44,8 @@ async function bootstrap() {
       'https://www.jamapp.com.br',
     ];
 
-    const isDevelopment = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
-    const isAllowed = isDevelopment || !origin || allowedOrigins.includes(origin) || origin?.endsWith('.vercel.app');
+    const isAllowed =
+      isDevelopment || !origin || allowedOrigins.includes(origin) || origin?.endsWith('.vercel.app');
 
     if (isAllowed) {
       res.header('Access-Control-Allow-Origin', origin || '*');
@@ -55,7 +63,7 @@ async function bootstrap() {
 
     // Handle preflight OPTIONS requests immediately - MUST return 204, not 200
     if (req.method === 'OPTIONS') {
-      console.log(`[CORS] Preflight request allowed - responding with 204`);
+      logger.debug('[CORS] Preflight request allowed - responding with 204');
       return res.sendStatus(204);
     }
 
@@ -64,8 +72,7 @@ async function bootstrap() {
 
   // Enable CORS as a secondary layer for all actual requests
   app.enableCors({
-    origin: function (origin: string, callback: (arg0: Error, arg1: boolean) => void) {
-      const isDevelopment = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+    origin: function (origin: string, callback: (arg0: Error | null, arg1: boolean) => void) {
       if (isDevelopment) {
         callback(null, true);
         return;
@@ -91,7 +98,7 @@ async function bootstrap() {
       if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
         callback(null, true);
       } else {
-        console.warn(`[CORS] Origin rejected: ${origin}`);
+        logger.warn(`[CORS] Origin rejected: ${origin}`);
         callback(new Error('CORS not allowed'), false);
       }
     },
@@ -102,6 +109,8 @@ async function bootstrap() {
     maxAge: 86400,
   });
 
+  // Global exception filter
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -131,12 +140,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT || 3001;
+  const port = configService.get<number>('PORT', 3001);
   await app.listen(port);
-  console.log(`🚀 Karaoke Jam API running on: http://localhost:${port}`);
-  console.log(`📚 Swagger docs: http://localhost:${port}/api/docs`);
+  logger.log(`Karaoke Jam API running on: http://localhost:${port}`);
+  logger.log(`Swagger docs: http://localhost:${port}/api/docs`);
 }
 
 bootstrap();
-
-

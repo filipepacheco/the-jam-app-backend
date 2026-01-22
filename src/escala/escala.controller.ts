@@ -5,7 +5,6 @@ import {
   Patch,
   Param,
   Delete,
-  Put,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -48,21 +47,6 @@ export class EscalaController {
   @ApiResponse({ status: 403, description: 'Forbidden - host only' })
   update(@Param('id') id: string, @Body() updateScheduleDto: UpdateScheduleDto) {
     return this.escalaService.update(id, updateScheduleDto);
-  }
-
-  @Put('jam/:jamId/reorder')
-  @UseGuards(SupabaseJwtGuard, RoleGuard)
-  @Roles('host', 'admin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Reorder schedules - array position becomes the order' })
-  @ApiResponse({ status: 200, description: 'Schedules reordered successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - host only' })
-  reorderSchedule(
-    @Param('jamId') jamId: string,
-    @Body() scheduleIds: string[],
-  ) {
-    return this.escalaService.reorderSchedule(jamId, scheduleIds);
   }
 
   @Delete(':id')

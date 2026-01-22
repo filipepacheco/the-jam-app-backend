@@ -12,19 +12,19 @@ import { tap, catchError } from 'rxjs/operators';
 export class LoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger('AuthAudit');
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();
     const { method, url, ip, body } = request;
     const className = context.getClass().name;
     const handlerName = context.getHandler().name;
+    const requestId = request.headers['x-request-id'] || '-';
     const now = Date.now();
 
     // Mask sensitive data for logging
     const maskedBody = this.maskSensitiveData(body);
 
-
     this.logger.log(
-      `[REQUEST] ${method} ${url} | IP: ${ip} | Handler: ${className}.${handlerName} | Body: ${JSON.stringify(maskedBody)}`,
+      `[REQUEST] ${method} ${url} | ReqID: ${requestId} | IP: ${ip} | Handler: ${className}.${handlerName} | Body: ${JSON.stringify(maskedBody)}`,
     );
 
     return next.handle().pipe(
@@ -32,13 +32,13 @@ export class LoggingInterceptor implements NestInterceptor {
         const duration = Date.now() - now;
         const maskedResponse = this.maskSensitiveData(response);
         this.logger.log(
-          `[SUCCESS] ${method} ${url} | Duration: ${duration}ms | IP: ${ip} | Response: ${JSON.stringify(maskedResponse)}`,
+          `[SUCCESS] ${method} ${url} | ReqID: ${requestId} | Duration: ${duration}ms | IP: ${ip} | Response: ${JSON.stringify(maskedResponse)}`,
         );
       }),
       catchError((error) => {
         const duration = Date.now() - now;
         this.logger.warn(
-          `[FAILURE] ${method} ${url} | Duration: ${duration}ms | IP: ${ip} | Error: ${error.message} | Status: ${error.status || 500}`,
+          `[FAILURE] ${method} ${url} | ReqID: ${requestId} | Duration: ${duration}ms | IP: ${ip} | Error: ${error.message} | Status: ${error.status || 500}`,
         );
         throw error;
       }),

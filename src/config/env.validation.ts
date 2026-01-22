@@ -19,6 +19,9 @@ export function validate(config: Record<string, unknown>) {
 
     // CORS
     CORS_ORIGINS: Joi.string().optional(),
+
+    // Frontend URL for QR code generation
+    FRONTEND_URL: Joi.string().uri().default('http://localhost:3000'),
   });
 
   const { error, value } = schema.validate(config, {

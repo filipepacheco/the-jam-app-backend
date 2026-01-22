@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateJamDto } from './dto/create-jam.dto';
 import { UpdateJamDto } from './dto/update-jam.dto';
@@ -45,6 +46,7 @@ type RegistrationWithMusician = Prisma.RegistrationGetPayload<{
 export class JamService {
   constructor(
     private prisma: PrismaService,
+    private configService: ConfigService,
   ) {}
 
   async create(createJamDto: CreateJamDto) {
@@ -79,7 +81,8 @@ export class JamService {
       },
     });
 
-    const qrCodeUrl = `${process.env.FRONTEND_URL}/jam/${jam.id}`;
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000');
+    const qrCodeUrl = `${frontendUrl}/jam/${jam.id}`;
     const qrCode = await QRCode.toDataURL(qrCodeUrl);
 
     return this.prisma.jam.update({
@@ -88,28 +91,45 @@ export class JamService {
     });
   }
 
-  async findAll() {
-    return this.prisma.jam.findMany({
-      include: {
-        jamMusics: {
-          include: {
-            music: true,
-            registrations: {
-              include: { musician: true }
-            }
-          }
+  async findAll(skip = 0, take = 20) {
+    const [data, total] = await Promise.all([
+      this.prisma.jam.findMany({
+        skip,
+        take,
+        include: {
+          jamMusics: {
+            include: {
+              music: true,
+              registrations: {
+                include: { musician: true },
+              },
+            },
+          },
+          registrations: { include: { musician: true } },
+          schedules: {
+            include: {
+              music: true,
+              registrations: {
+                include: { musician: true },
+              },
+            },
+            orderBy: { order: 'asc' },
+          },
         },
-        registrations: { include: { musician: true } },
-        schedules: {
-          include: {
-            music: true,
-            registrations: {
-              include: { musician: true }
-            }
-          }
-        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.jam.count(),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        skip,
+        take,
+        hasMore: skip + take < total,
       },
-    });
+    };
   }
 
   async findOne(id: string) {

@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable, NotFoundException} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {PrismaService} from '../prisma/prisma.service';
 import {CreateScheduleDto} from './dto/create-escala.dto';
 import {UpdateScheduleDto} from './dto/update-escala.dto';
@@ -80,34 +80,4 @@ export class EscalaService {
     });
   }
 
-  async reorderSchedule(jamId: string, scheduleIds: string[]) {
-    // Validate that all schedules belong to the specified jam
-    const schedules = await this.prisma.schedule.findMany({
-      where: {
-        id: { in: scheduleIds },
-        jamId: jamId,
-      },
-    });
-
-    if (schedules.length !== scheduleIds.length) {
-      throw new BadRequestException('One or more schedules do not belong to the specified jam');
-    }
-
-    const updates = scheduleIds.map((id, index) =>
-      this.prisma.schedule.update({
-        where: { id },
-        data: { order: index + 1 },
-      })
-    );
-
-    const updatedSchedules = await Promise.all(updates);
-
-    // Fetch full schedule details with relations
-    await this.prisma.schedule.findMany({
-      where: { id: { in: scheduleIds } },
-      include: { music: true, jam: true },
-      orderBy: { order: 'asc' },
-    });
-    return updatedSchedules;
-  }
 }

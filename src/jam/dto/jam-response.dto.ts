@@ -32,7 +32,7 @@ export class JamResponseDto {
   updatedAt: Date;
 
     @ApiProperty({ type: [JamMusicaResponseDto], required: false })
-    jamsmusics?: JamMusicaResponseDto[];
+    jamMusics?: JamMusicaResponseDto[];
 
     @ApiProperty({ type: [RegistrationResponseDto], required: false })
     registrations?: RegistrationResponseDto[];

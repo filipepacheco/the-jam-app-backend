@@ -10,6 +10,7 @@ import {
   Request,
   NotFoundException,
   HttpCode,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -29,6 +30,7 @@ import { LiveControlActionResponseDto } from './dto/live-control-action-response
 import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
 import { RoleGuard } from '../auth/guards/role.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('Jams')
 @Controller('jams')
@@ -52,14 +54,28 @@ export class JamController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all jams' })
+  @ApiOperation({ summary: 'List all jams with pagination' })
   @ApiResponse({
     status: 200,
-    description: 'List of jams',
-    type: [JamResponseDto],
+    description: 'Paginated list of jams',
+    schema: {
+      type: 'object',
+      properties: {
+        data: { type: 'array', items: { $ref: '#/components/schemas/JamResponseDto' } },
+        meta: {
+          type: 'object',
+          properties: {
+            total: { type: 'number' },
+            skip: { type: 'number' },
+            take: { type: 'number' },
+            hasMore: { type: 'boolean' },
+          },
+        },
+      },
+    },
   })
-  findAll() {
-    return this.jamService.findAll();
+  findAll(@Query() pagination: PaginationDto) {
+    return this.jamService.findAll(pagination.skip, pagination.take);
   }
 
   @Get(':id')
@@ -167,12 +183,12 @@ export class JamController {
   }
 
   @Post(':id/control/start')
-  @HttpCode(201)
+  @HttpCode(200)
   @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Start jam playback (starts first scheduled song)' })
-  @ApiResponse({ status: 201, description: 'Jam started successfully' })
+  @ApiResponse({ status: 200, description: 'Jam started successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
@@ -190,12 +206,12 @@ export class JamController {
   }
 
   @Post(':id/control/stop')
-  @HttpCode(201)
+  @HttpCode(200)
   @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Stop jam playback' })
-  @ApiResponse({ status: 201, description: 'Jam stopped successfully' })
+  @ApiResponse({ status: 200, description: 'Jam stopped successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
@@ -213,12 +229,12 @@ export class JamController {
   }
 
   @Post(':id/control/next')
-  @HttpCode(201)
+  @HttpCode(200)
   @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Skip to next song' })
-  @ApiResponse({ status: 201, description: 'Skip' })
+  @ApiResponse({ status: 200, description: 'Skipped to next song' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
@@ -236,12 +252,12 @@ export class JamController {
   }
 
   @Post(':id/control/previous')
-  @HttpCode(201)
+  @HttpCode(200)
   @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Go back to previous song' })
-  @ApiResponse({ status: 201, description: 'Previous' })
+  @ApiResponse({ status: 200, description: 'Returned to previous song' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
@@ -259,12 +275,12 @@ export class JamController {
   }
 
   @Post(':id/control/pause')
-  @HttpCode(201)
+  @HttpCode(200)
   @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Pause current song' })
-  @ApiResponse({ status: 201, description: 'Pause' })
+  @ApiResponse({ status: 200, description: 'Song paused' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
@@ -282,12 +298,12 @@ export class JamController {
   }
 
   @Post(':id/control/resume')
-  @HttpCode(201)
+  @HttpCode(200)
   @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Resume paused song' })
-  @ApiResponse({ status: 201, description: 'Resume' })
+  @ApiResponse({ status: 200, description: 'Song resumed' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })

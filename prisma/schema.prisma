@@ -99,6 +99,7 @@ model Registration {
   musician   Musician           @relation(fields: [musicianId], references: [id], onDelete: Cascade)
 
   @@unique([musicianId, jamId, jamMusicId])
+  @@index([musicianId, jamId, scheduleId])
   @@map("inscricoes")
 }
 

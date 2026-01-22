@@ -39,5 +39,5 @@ export class PlaybackHistoryDto {
     required: false,
     description: 'Additional metadata about the action',
   })
-  metadata?: any;
+  metadata?: Record<string, unknown> | null;
 }
