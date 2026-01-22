@@ -14,9 +14,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
         const supabaseAnonKey = configService.get<string>('SUPABASE_ANON_KEY');
 
         if (!supabaseUrl || !supabaseAnonKey) {
-          console.warn(
-            'SUPABASE_URL or SUPABASE_ANON_KEY not configured. Supabase auth disabled.',
-          );
+          console.warn('SUPABASE_URL or SUPABASE_ANON_KEY not configured. Supabase auth disabled.');
           return null;
         }
 
@@ -29,9 +27,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
       inject: [ConfigService],
       useFactory: (configService: ConfigService): SupabaseClient => {
         const supabaseUrl = configService.get<string>('SUPABASE_URL');
-        const serviceRoleKey = configService.get<string>(
-          'SUPABASE_SERVICE_ROLE_KEY',
-        );
+        const serviceRoleKey = configService.get<string>('SUPABASE_SERVICE_ROLE_KEY');
 
         if (!supabaseUrl || !serviceRoleKey) {
           console.warn(
@@ -52,4 +48,3 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
   exports: ['SUPABASE_CLIENT', 'SUPABASE_SERVICE_CLIENT'],
 })
 export class SupabaseModule {}
-

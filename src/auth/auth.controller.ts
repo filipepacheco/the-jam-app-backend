@@ -8,13 +8,7 @@ import {
   Request,
   UseInterceptors,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiBody,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { SupabaseJwtGuard } from './guards/supabase-jwt.guard';
@@ -42,7 +36,11 @@ export class AuthController {
   @UseGuards(SupabaseJwtGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile with registration status' })
-  @ApiResponse({ status: 200, description: 'User profile retrieved', type: MusicianProfileResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile retrieved',
+    type: MusicianProfileResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
   async getProfile(@Request() req): Promise<MusicianProfileResponseDto> {
     const musician = await this.authService.getMusicianProfile(req.user.musicianId);
@@ -67,12 +65,18 @@ export class AuthController {
   @Patch('profile')
   @UseGuards(SupabaseJwtGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update musician profile (name, instrument, level, contact, phone, isHost)' })
+  @ApiOperation({
+    summary: 'Update musician profile (name, instrument, level, contact, phone, isHost)',
+  })
   @ApiBody({
     type: UpdateProfileDto,
     description: 'Profile fields to update',
   })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully', type: MusicianProfileResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile updated successfully',
+    type: MusicianProfileResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
   async updateProfile(

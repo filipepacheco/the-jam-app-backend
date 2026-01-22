@@ -45,7 +45,10 @@ async function bootstrap() {
     ];
 
     const isAllowed =
-      isDevelopment || !origin || allowedOrigins.includes(origin) || origin?.endsWith('.vercel.app');
+      isDevelopment ||
+      !origin ||
+      allowedOrigins.includes(origin) ||
+      origin?.endsWith('.vercel.app');
 
     if (isAllowed) {
       res.header('Access-Control-Allow-Origin', origin || '*');

@@ -1,6 +1,6 @@
 import { IsString, IsNotEmpty, IsOptional, IsISO8601, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { JamStatus } from "@prisma/client";
+import { JamStatus } from '@prisma/client';
 
 export class CreateJamDto {
   @ApiProperty({ description: 'Jam session name' })
@@ -43,7 +43,11 @@ export class CreateJamDto {
   @IsOptional()
   qrCode?: string;
 
-  @ApiProperty({ description: 'Jam session status', required: false, enum: ['ACTIVE', 'INACTIVE', 'FINISHED'] })
+  @ApiProperty({
+    description: 'Jam session status',
+    required: false,
+    enum: ['ACTIVE', 'INACTIVE', 'FINISHED'],
+  })
   @IsString()
   @IsOptional()
   status?: JamStatus;

@@ -1,18 +1,5 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Param,
-  Delete,
-  Patch,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { Controller, Post, Body, Param, Delete, Patch, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { InscricaoService } from './inscricao.service';
 import { CreateRegistrationDto } from './dto/create-inscricao.dto';
 import { UpdateRegistrationDto } from './dto/update-inscricao.dto';
@@ -45,10 +32,7 @@ export class InscricaoController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - host only' })
   @ApiResponse({ status: 404, description: 'Registration not found' })
-  update(
-    @Param('id') id: string,
-    @Body() updateRegistrationDto: UpdateRegistrationDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateRegistrationDto: UpdateRegistrationDto) {
     return this.inscricaoService.update(id, updateRegistrationDto);
   }
 

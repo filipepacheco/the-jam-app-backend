@@ -5,7 +5,7 @@ enum MusicianLevel {
   BEGINNER = 'BEGINNER',
   INTERMEDIATE = 'INTERMEDIATE',
   ADVANCED = 'ADVANCED',
-  PROFESSIONAL = 'PROFESSIONAL'
+  PROFESSIONAL = 'PROFESSIONAL',
 }
 
 export class CreateMusicianDto {
@@ -24,7 +24,7 @@ export class CreateMusicianDto {
 
   @ApiProperty({
     description: 'Experience level',
-    enum: MusicianLevel
+    enum: MusicianLevel,
   })
   @IsEnum(MusicianLevel)
   @IsNotEmpty()

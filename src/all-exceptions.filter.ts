@@ -51,10 +51,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = this.getPrismaErrorMessage(exception);
       error = 'Database Error';
 
-      this.logger.error(
-        `Prisma Error [${exception.code}]: ${exception.message}`,
-        exception.stack,
-      );
+      this.logger.error(`Prisma Error [${exception.code}]: ${exception.message}`, exception.stack);
     } else if (exception instanceof Prisma.PrismaClientValidationError) {
       status = HttpStatus.BAD_REQUEST;
       message = 'Invalid data provided';
@@ -67,10 +64,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error = 'Internal Server Error';
 
       // Log full error details but don't expose to client
-      this.logger.error(
-        `Unhandled Exception: ${exception.message}`,
-        exception.stack,
-      );
+      this.logger.error(`Unhandled Exception: ${exception.message}`, exception.stack);
     } else {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       message = 'Internal server error';
@@ -109,9 +103,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
   }
 
-  private getPrismaErrorMessage(
-    exception: Prisma.PrismaClientKnownRequestError,
-  ): string {
+  private getPrismaErrorMessage(exception: Prisma.PrismaClientKnownRequestError): string {
     switch (exception.code) {
       case 'P2002':
         const target = (exception.meta?.target as string[]) || [];

@@ -7,41 +7,6 @@ import { LiveDashboardResponseDto, DashboardSongDto } from './dto/live-dashboard
 import * as QRCode from 'qrcode';
 import { PlaybackState, PlaybackAction, Prisma } from '@prisma/client';
 
-type JamWithDetails = Prisma.JamGetPayload<{
-  include: {
-    jamMusics: {
-      include: {
-        music: true;
-        registrations: {
-          include: { musician: true };
-        };
-      };
-    };
-    registrations: { include: { musician: true } };
-    schedules: {
-      include: {
-        music: true;
-        registrations: {
-          include: { musician: true };
-        };
-      };
-    };
-  };
-}>;
-
-type ScheduleWithDetails = Prisma.ScheduleGetPayload<{
-  include: {
-    music: true;
-    registrations: {
-      include: { musician: true };
-    };
-  };
-}>;
-
-type RegistrationWithMusician = Prisma.RegistrationGetPayload<{
-  include: { musician: true };
-}>;
-
 @Injectable()
 export class JamService {
   constructor(
@@ -96,24 +61,24 @@ export class JamService {
       this.prisma.jam.findMany({
         skip,
         take,
-        include: {
-          jamMusics: {
-            include: {
-              music: true,
-              registrations: {
-                include: { musician: true },
-              },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          date: true,
+          qrCode: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          hostName: true,
+          playbackState: true,
+          currentScheduleId: true,
+          _count: {
+            select: {
+              jamMusics: true,
+              registrations: true,
+              schedules: true,
             },
-          },
-          registrations: { include: { musician: true } },
-          schedules: {
-            include: {
-              music: true,
-              registrations: {
-                include: { musician: true },
-              },
-            },
-            orderBy: { order: 'asc' },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -140,19 +105,19 @@ export class JamService {
           include: {
             music: true,
             registrations: {
-              include: { musician: true }
-            }
-          }
+              include: { musician: true },
+            },
+          },
         },
         registrations: { include: { musician: true } },
         schedules: {
           include: {
             music: true,
             registrations: {
-              include: { musician: true }
-            }
+              include: { musician: true },
+            },
           },
-          orderBy: { order: 'asc' }
+          orderBy: { order: 'asc' },
         },
       },
     });
@@ -274,14 +239,32 @@ export class JamService {
       throw new NotFoundException(`Jam with ID ${jamId} not found`);
     }
 
-    // Fetch all schedules with their music and all approved registrations
+    // Fetch all schedules with their music and only approved musician names
     const schedules = await this.prisma.schedule.findMany({
       where: { jamId },
-      include: {
-        music: true,
+      select: {
+        id: true,
+        order: true,
+        status: true,
+        music: {
+          select: {
+            id: true,
+            title: true,
+            artist: true,
+            duration: true,
+          },
+        },
         registrations: {
           where: { status: 'APPROVED' },
-          include: { musician: true },
+          select: {
+            musician: {
+              select: {
+                id: true,
+                name: true,
+                instrument: true,
+              },
+            },
+          },
         },
       },
       orderBy: { order: 'asc' },
@@ -294,12 +277,8 @@ export class JamService {
       : null;
 
     // Find next songs (SCHEDULED status, take first 3)
-    const nextSchedules = schedules
-      .filter((s) => s.status === 'SCHEDULED')
-      .slice(0, 3);
-    const nextSongs = nextSchedules.map((schedule) =>
-      this.mapScheduleToDashboardSong(schedule),
-    );
+    const nextSchedules = schedules.filter((s) => s.status === 'SCHEDULED').slice(0, 3);
+    const nextSongs = nextSchedules.map((schedule) => this.mapScheduleToDashboardSong(schedule));
 
     return {
       jamId: jam.id,
@@ -311,7 +290,7 @@ export class JamService {
     };
   }
 
-  async startJam(jamId: string, userId?: string): Promise<JamWithDetails | null> {
+  async startJam(jamId: string, userId?: string) {
     // Validate jam exists and is ACTIVE
     const jam = await this.prisma.jam.findUnique({
       where: { id: jamId },
@@ -353,28 +332,29 @@ export class JamService {
     });
 
     // Update jam: set playbackState to PLAYING and currentScheduleId
-    await this.prisma.jam.update({
+    const updatedJam = await this.prisma.jam.update({
       where: { id: jamId },
       data: {
         playbackState: PlaybackState.PLAYING,
         currentScheduleId: firstSchedule.id,
       },
-      include: { currentSchedule: true },
+      select: {
+        id: true,
+        playbackState: true,
+        currentScheduleId: true,
+        updatedAt: true,
+      },
     });
 
     // Record history
-    await this.recordPlaybackHistory(
-      jamId,
-      firstSchedule.id,
-      PlaybackAction.START_JAM,
-      userId,
-      { firstSongId: firstSchedule.id },
-    );
+    await this.recordPlaybackHistory(jamId, firstSchedule.id, PlaybackAction.START_JAM, userId, {
+      firstSongId: firstSchedule.id,
+    });
 
-    return this.findOne(jamId);
+    return updatedJam;
   }
 
-  async stopJam(jamId: string, userId?: string): Promise<JamWithDetails | null> {
+  async stopJam(jamId: string, userId?: string) {
     // Validate jam exists
     const jam = await this.prisma.jam.findUnique({
       where: { id: jamId },
@@ -389,7 +369,7 @@ export class JamService {
       throw new BadRequestException('Jam is already stopped');
     }
 
-    let scheduleId = jam.currentScheduleId;
+    const scheduleId = jam.currentScheduleId;
 
     // If there's a current song, mark it as COMPLETED
     if (jam.currentScheduleId) {
@@ -404,11 +384,17 @@ export class JamService {
     }
 
     // Update jam: set playbackState to STOPPED and clear currentScheduleId
-    await this.prisma.jam.update({
+    const updatedJam = await this.prisma.jam.update({
       where: { id: jamId },
       data: {
         playbackState: PlaybackState.STOPPED,
         currentScheduleId: null,
+      },
+      select: {
+        id: true,
+        playbackState: true,
+        currentScheduleId: true,
+        updatedAt: true,
       },
     });
 
@@ -417,10 +403,10 @@ export class JamService {
       await this.recordPlaybackHistory(jamId, scheduleId, PlaybackAction.STOP_JAM, userId);
     }
 
-    return this.findOne(jamId);
+    return updatedJam;
   }
 
-  async nextSong(jamId: string, userId?: string): Promise<JamWithDetails | null> {
+  async nextSong(jamId: string, userId?: string) {
     // Validate jam exists and is playing or paused
     const jam = await this.prisma.jam.findUnique({
       where: { id: jamId },
@@ -484,11 +470,17 @@ export class JamService {
     }
 
     // Update jam
-    await this.prisma.jam.update({
+    const updatedJam = await this.prisma.jam.update({
       where: { id: jamId },
       data: {
         playbackState: newPlaybackState,
         currentScheduleId: newScheduleId,
+      },
+      select: {
+        id: true,
+        playbackState: true,
+        currentScheduleId: true,
+        updatedAt: true,
       },
     });
 
@@ -497,10 +489,10 @@ export class JamService {
       await this.recordPlaybackHistory(jamId, currentSong.id, PlaybackAction.SKIP_SONG, userId);
     }
 
-    return this.findOne(jamId);
+    return updatedJam;
   }
 
-  async previousSong(jamId: string, userId?: string): Promise<JamWithDetails | null> {
+  async previousSong(jamId: string, userId?: string) {
     // Validate jam exists and is playing or paused
     const jam = await this.prisma.jam.findUnique({
       where: { id: jamId },
@@ -584,11 +576,17 @@ export class JamService {
     }
 
     // Update jam
-    await this.prisma.jam.update({
+    const updatedJam = await this.prisma.jam.update({
       where: { id: jamId },
       data: {
         playbackState: PlaybackState.PLAYING,
         currentScheduleId: newScheduleId,
+      },
+      select: {
+        id: true,
+        playbackState: true,
+        currentScheduleId: true,
+        updatedAt: true,
       },
     });
 
@@ -597,10 +595,10 @@ export class JamService {
       await this.recordPlaybackHistory(jamId, currentSong.id, PlaybackAction.PREVIOUS_SONG, userId);
     }
 
-    return this.findOne(jamId);
+    return updatedJam;
   }
 
-  async pauseSong(jamId: string, userId?: string): Promise<JamWithDetails | null> {
+  async pauseSong(jamId: string, userId?: string) {
     // Validate jam is PLAYING
     const jam = await this.prisma.jam.findUnique({
       where: { id: jamId },
@@ -628,20 +626,31 @@ export class JamService {
     });
 
     // Update jam playbackState
-    await this.prisma.jam.update({
+    const updatedJam = await this.prisma.jam.update({
       where: { id: jamId },
       data: {
         playbackState: PlaybackState.PAUSED,
       },
+      select: {
+        id: true,
+        playbackState: true,
+        currentScheduleId: true,
+        updatedAt: true,
+      },
     });
 
     // Record history
-    await this.recordPlaybackHistory(jamId, jam.currentScheduleId, PlaybackAction.PAUSE_SONG, userId);
+    await this.recordPlaybackHistory(
+      jamId,
+      jam.currentScheduleId,
+      PlaybackAction.PAUSE_SONG,
+      userId,
+    );
 
-    return this.findOne(jamId);
+    return updatedJam;
   }
 
-  async resumeSong(jamId: string, userId?: string): Promise<JamWithDetails | null> {
+  async resumeSong(jamId: string, userId?: string) {
     // Validate jam is PAUSED
     const jam = await this.prisma.jam.findUnique({
       where: { id: jamId },
@@ -669,17 +678,28 @@ export class JamService {
     });
 
     // Update jam playbackState
-    await this.prisma.jam.update({
+    const updatedJam = await this.prisma.jam.update({
       where: { id: jamId },
       data: {
         playbackState: PlaybackState.PLAYING,
       },
+      select: {
+        id: true,
+        playbackState: true,
+        currentScheduleId: true,
+        updatedAt: true,
+      },
     });
 
     // Record history
-    await this.recordPlaybackHistory(jamId, jam.currentScheduleId, PlaybackAction.RESUME_SONG, userId);
+    await this.recordPlaybackHistory(
+      jamId,
+      jam.currentScheduleId,
+      PlaybackAction.RESUME_SONG,
+      userId,
+    );
 
-    return this.findOne(jamId);
+    return updatedJam;
   }
 
   async reorderSchedules(jamId: string, scheduleIds: string[], userId?: string): Promise<boolean> {
@@ -695,7 +715,7 @@ export class JamService {
     }
 
     // Validate all provided schedule IDs belong to this jam
-    const jamScheduleIds = new Set(allSchedules.map(s => s.id));
+    const jamScheduleIds = new Set(allSchedules.map((s) => s.id));
 
     for (const scheduleId of scheduleIds) {
       if (!jamScheduleIds.has(scheduleId)) {
@@ -705,8 +725,8 @@ export class JamService {
 
     // Build complete order: provided IDs first, then missing schedules at end
     const providedScheduleSet = new Set(scheduleIds);
-    const missingSchedules = allSchedules.filter(s => !providedScheduleSet.has(s.id));
-    const completeOrder = [...scheduleIds, ...missingSchedules.map(s => s.id)];
+    const missingSchedules = allSchedules.filter((s) => !providedScheduleSet.has(s.id));
+    const completeOrder = [...scheduleIds, ...missingSchedules.map((s) => s.id)];
 
     await this.prisma.$transaction(async (tx) => {
       // Phase 1: Set to negative values to avoid unique constraint violations
@@ -750,16 +770,21 @@ export class JamService {
     return true;
   }
 
-  async getPlaybackHistory(jamId: string, limit: number = 50): Promise<{
-    id: string;
-    action: PlaybackAction;
-    timestamp: Date;
-    scheduleId: string;
-    songTitle: string;
-    songArtist: string;
-    performedBy: string | null;
-    metadata: Prisma.JsonValue;
-  }[]> {
+  async getPlaybackHistory(
+    jamId: string,
+    limit: number = 50,
+  ): Promise<
+    {
+      id: string;
+      action: PlaybackAction;
+      timestamp: Date;
+      scheduleId: string;
+      songTitle: string;
+      songArtist: string;
+      performedBy: string | null;
+      metadata: Prisma.JsonValue;
+    }[]
+  > {
     // Validate jam exists
     const jam = await this.prisma.jam.findUnique({
       where: { id: jamId },
@@ -769,16 +794,31 @@ export class JamService {
       throw new NotFoundException('Jam not found');
     }
 
-    // Get playback history with song details
+    // Get playback history with selective music and musician fields
     const history = await this.prisma.playbackHistory.findMany({
       where: { jamId },
-      include: {
+      select: {
+        id: true,
+        action: true,
+        timestamp: true,
+        scheduleId: true,
+        metadata: true,
         schedule: {
-          include: {
-            music: true,
+          select: {
+            music: {
+              select: {
+                title: true,
+                artist: true,
+              },
+            },
             registrations: {
               where: { status: 'APPROVED' },
-              include: { musician: true },
+              select: {
+                musician: {
+                  select: { name: true },
+                },
+              },
+              take: 1, // Only need first performer
             },
           },
         },
@@ -794,8 +834,7 @@ export class JamService {
       scheduleId: entry.scheduleId,
       songTitle: entry.schedule?.music?.title || 'Unknown',
       songArtist: entry.schedule?.music?.artist || 'Unknown',
-      performedBy:
-        entry.schedule?.registrations?.[0]?.musician?.name || null,
+      performedBy: entry.schedule?.registrations?.[0]?.musician?.name || null,
       metadata: entry.metadata,
     }));
   }
@@ -818,13 +857,13 @@ export class JamService {
     });
   }
 
-  private mapScheduleToDashboardSong(schedule: ScheduleWithDetails): DashboardSongDto {
+  private mapScheduleToDashboardSong(schedule: any): DashboardSongDto {
     return {
       id: schedule.music.id,
       title: schedule.music.title,
       artist: schedule.music.artist,
       duration: schedule.music.duration,
-      musicians: schedule.registrations.map((reg: RegistrationWithMusician) => ({
+      musicians: schedule.registrations.map((reg: any) => ({
         id: reg.musician.id,
         name: reg.musician.name,
         instrument: reg.musician.instrument,

@@ -37,11 +37,9 @@ export class MusicianProfileResponseDto {
   })
   registrationComplete: boolean;
 
-  @ApiProperty({description:'Whether is new user'})
+  @ApiProperty({ description: 'Whether is new user' })
   isNewUser: boolean;
 
   @ApiProperty({ description: 'Account creation timestamp' })
   createdAt: Date;
-
-
 }

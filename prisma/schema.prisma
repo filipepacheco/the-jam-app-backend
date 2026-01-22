@@ -121,7 +121,7 @@ model Schedule {
   currentForJam Jam?           @relation("CurrentSchedule")
 
   @@unique([jamId, order])
-  @@index([jamId, status])
+  @@index([jamId, status, order])
   @@map("escalas")
 }
 

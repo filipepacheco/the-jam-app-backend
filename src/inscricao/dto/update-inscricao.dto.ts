@@ -5,7 +5,7 @@ import { RegistrationStatus } from '@prisma/client';
 export class UpdateRegistrationDto {
   @ApiProperty({
     description: 'Instrument to play',
-    required: false
+    required: false,
   })
   @IsString()
   @IsOptional()
@@ -14,10 +14,9 @@ export class UpdateRegistrationDto {
   @ApiProperty({
     description: 'Registration status',
     enum: ['PENDING', 'APPROVED', 'REJECTED'],
-    required: false
+    required: false,
   })
   @IsEnum(RegistrationStatus)
   @IsOptional()
   status?: RegistrationStatus;
 }
-

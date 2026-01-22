@@ -8,7 +8,10 @@ export class UpdateProfileDto {
   @IsOptional()
   name?: string;
 
-  @ApiProperty({ description: 'Musician instrument (drums, guitar, vocals, bass, keys, etc.)', required: false })
+  @ApiProperty({
+    description: 'Musician instrument (drums, guitar, vocals, bass, keys, etc.)',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   instrument?: string;
@@ -16,7 +19,7 @@ export class UpdateProfileDto {
   @ApiProperty({
     description: 'Musician skill level',
     enum: ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'PROFESSIONAL'],
-    required: false
+    required: false,
   })
   @IsEnum(MusicianLevel)
   @IsOptional()
@@ -37,4 +40,3 @@ export class UpdateProfileDto {
   @IsOptional()
   isHost?: boolean;
 }
-

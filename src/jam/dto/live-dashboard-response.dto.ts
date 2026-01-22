@@ -63,4 +63,3 @@ export class LiveDashboardResponseDto {
   })
   nextSongs: DashboardSongDto[];
 }
-

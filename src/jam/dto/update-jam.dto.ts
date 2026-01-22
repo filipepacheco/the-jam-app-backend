@@ -10,4 +10,3 @@ export class UpdateJamDto extends PartialType(CreateJamDto) {
   @IsOptional()
   status?: JamStatus;
 }
-

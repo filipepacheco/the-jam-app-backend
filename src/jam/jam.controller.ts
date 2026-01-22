@@ -12,12 +12,7 @@ import {
   HttpCode,
   Query,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JamService } from './jam.service';
 import { CreateJamDto } from './dto/create-jam.dto';
 import { UpdateJamDto } from './dto/update-jam.dto';
@@ -102,29 +97,27 @@ export class JamController {
     }
 
     // Extract current song (IN_PROGRESS)
-    const currentSong = jam.schedules?.find(
-      (s) => s.status === 'IN_PROGRESS',
-    ) || null;
+    const currentSong = jam.schedules?.find((s) => s.status === 'IN_PROGRESS') || null;
 
-    const nextSongs = jam.schedules
-      ?.filter((s) => s.status === 'SCHEDULED')
-      .sort((a, b) => a.order - b.order) || [];
+    const nextSongs =
+      jam.schedules?.filter((s) => s.status === 'SCHEDULED').sort((a, b) => a.order - b.order) ||
+      [];
 
-    const previousSongs = jam.schedules
-      ?.filter((s) => s.status === 'COMPLETED')
-      .sort((a, b) => b.order - a.order)
-      .reverse() || [];
+    const previousSongs =
+      jam.schedules
+        ?.filter((s) => s.status === 'COMPLETED')
+        .sort((a, b) => b.order - a.order)
+        .reverse() || [];
 
-    const suggestedSongs = jam.schedules
-        ?.filter((s) => s.status === 'SUGGESTED')
-        .sort((a, b) => a.order - b.order) || [];
-
+    const suggestedSongs =
+      jam.schedules?.filter((s) => s.status === 'SUGGESTED').sort((a, b) => a.order - b.order) ||
+      [];
 
     return {
       currentSong,
       nextSongs,
       previousSongs,
-        suggestedSongs,
+      suggestedSongs,
       jamStatus: jam.status,
       playbackState: jam.playbackState || 'STOPPED',
       currentSongStartedAt: currentSong?.startedAt || null,
@@ -170,11 +163,7 @@ export class JamController {
       throw new NotFoundException(`Jam with ID ${jamId} not found`);
     }
 
-    const updatedJam = await this.jamService.executeLiveAction(
-      jamId,
-      dto.action,
-      dto.payload,
-    );
+    const updatedJam = await this.jamService.executeLiveAction(jamId, dto.action, dto.payload);
 
     return {
       success: true,
@@ -192,10 +181,7 @@ export class JamController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async startJam(
-    @Param('id') jamId: string,
-    @Request() req,
-  ) {
+  async startJam(@Param('id') jamId: string, @Request() req) {
     // Verify user is the jam host
     const jam = await this.jamService.findOne(jamId);
     if (!jam) {
@@ -215,10 +201,7 @@ export class JamController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async stopJam(
-    @Param('id') jamId: string,
-    @Request() req,
-  ) {
+  async stopJam(@Param('id') jamId: string, @Request() req) {
     // Verify user is the jam host
     const jam = await this.jamService.findOne(jamId);
     if (!jam) {
@@ -238,10 +221,7 @@ export class JamController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async nextSong(
-    @Param('id') jamId: string,
-    @Request() req,
-  ) {
+  async nextSong(@Param('id') jamId: string, @Request() req) {
     // Verify user is the jam host
     const jam = await this.jamService.findOne(jamId);
     if (!jam) {
@@ -261,10 +241,7 @@ export class JamController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async previousSong(
-    @Param('id') jamId: string,
-    @Request() req,
-  ) {
+  async previousSong(@Param('id') jamId: string, @Request() req) {
     // Verify user is the jam host
     const jam = await this.jamService.findOne(jamId);
     if (!jam) {
@@ -284,10 +261,7 @@ export class JamController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async pauseSong(
-    @Param('id') jamId: string,
-    @Request() req,
-  ) {
+  async pauseSong(@Param('id') jamId: string, @Request() req) {
     // Verify user is the jam host
     const jam = await this.jamService.findOne(jamId);
     if (!jam) {
@@ -307,10 +281,7 @@ export class JamController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async resumeSong(
-    @Param('id') jamId: string,
-    @Request() req,
-  ) {
+  async resumeSong(@Param('id') jamId: string, @Request() req) {
     // Verify user is the jam host
     const jam = await this.jamService.findOne(jamId);
     if (!jam) {
@@ -349,10 +320,7 @@ export class JamController {
   @ApiOperation({ summary: 'Get playback history for jam' })
   @ApiResponse({ status: 200, description: 'Playback history retrieved' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async getPlaybackHistory(
-    @Param('id') jamId: string,
-    @Request() req,
-  ) {
+  async getPlaybackHistory(@Param('id') jamId: string, @Request() req) {
     const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50;
     return this.jamService.getPlaybackHistory(jamId, limit);
   }

@@ -1,13 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import {PrismaService} from '../prisma/prisma.service';
-import {CreateScheduleDto} from './dto/create-escala.dto';
-import {UpdateScheduleDto} from './dto/update-escala.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateScheduleDto } from './dto/create-escala.dto';
+import { UpdateScheduleDto } from './dto/update-escala.dto';
 
 @Injectable()
 export class EscalaService {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createScheduleDto: CreateScheduleDto) {
     // Verify that the music exists
@@ -57,7 +55,7 @@ export class EscalaService {
     }
 
     return this.prisma.schedule.update({
-      where: {id},
+      where: { id },
       data: updateScheduleDto,
       include: {
         music: true,
@@ -79,5 +77,4 @@ export class EscalaService {
       where: { id },
     });
   }
-
 }

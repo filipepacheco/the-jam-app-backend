@@ -1,13 +1,11 @@
-import {Injectable} from '@nestjs/common';
-import {PrismaService} from '../prisma/prisma.service';
-import {CreateMusicDto} from './dto/create-musica.dto';
-import {UpdateMusicDto} from './dto/update-musica.dto';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateMusicDto } from './dto/create-musica.dto';
+import { UpdateMusicDto } from './dto/update-musica.dto';
 
 @Injectable()
 export class MusicaService {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createMusicDto: CreateMusicDto) {
     return this.prisma.music.create({
@@ -21,7 +19,7 @@ export class MusicaService {
         jamMusics: { include: { jam: true } },
       },
       orderBy: {
-        title: 'asc'
+        title: 'asc',
       },
     });
   }

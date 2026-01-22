@@ -10,12 +10,7 @@ import {
   Request,
   ForbiddenException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { MusicoService } from './musico.service';
 import { CreateMusicianDto } from './dto/create-musico.dto';
 import { UpdateMusicianDto } from './dto/update-musico.dto';

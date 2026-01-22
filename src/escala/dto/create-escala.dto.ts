@@ -13,7 +13,6 @@ export class CreateScheduleDto {
   @IsNotEmpty()
   musicId: string;
 
-
   @ApiProperty({ description: 'Order in schedule' })
   @IsInt()
   @Min(0)
@@ -22,7 +21,7 @@ export class CreateScheduleDto {
   @ApiProperty({
     description: 'Performance status',
     enum: ScheduleStatus,
-    required: false
+    required: false,
   })
   @IsEnum(ScheduleStatus)
   @IsOptional()

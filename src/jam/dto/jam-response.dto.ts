@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { JamMusicaResponseDto } from './jam-musica-response.dto';
-import {RegistrationResponseDto} from "./registration-response.dto";
-import {ScheduleResponseDto} from "./schedule-response.dto";
+import { RegistrationResponseDto } from './registration-response.dto';
+import { ScheduleResponseDto } from './schedule-response.dto';
 
 export class JamResponseDto {
   @ApiProperty()
@@ -31,14 +31,12 @@ export class JamResponseDto {
   @ApiProperty()
   updatedAt: Date;
 
-    @ApiProperty({ type: [JamMusicaResponseDto], required: false })
-    jamMusics?: JamMusicaResponseDto[];
+  @ApiProperty({ type: [JamMusicaResponseDto], required: false })
+  jamMusics?: JamMusicaResponseDto[];
 
-    @ApiProperty({ type: [RegistrationResponseDto], required: false })
-    registrations?: RegistrationResponseDto[];
+  @ApiProperty({ type: [RegistrationResponseDto], required: false })
+  registrations?: RegistrationResponseDto[];
 
-    @ApiProperty({ type: [ScheduleResponseDto], required: false })
-    schedules?: ScheduleResponseDto[];
-
+  @ApiProperty({ type: [ScheduleResponseDto], required: false })
+  schedules?: ScheduleResponseDto[];
 }
-

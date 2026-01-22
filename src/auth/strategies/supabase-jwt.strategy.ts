@@ -7,10 +7,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { TokenCacheService } from '../services/token-cache.service';
 
 @Injectable()
-export class SupabaseJwtStrategy extends PassportStrategy(
-  Strategy,
-  'supabase-jwt',
-) {
+export class SupabaseJwtStrategy extends PassportStrategy(Strategy, 'supabase-jwt') {
   constructor(
     private prisma: PrismaService,
     @Inject('SUPABASE_SERVICE_CLIENT') private supabaseService: SupabaseClient,
@@ -23,9 +20,7 @@ export class SupabaseJwtStrategy extends PassportStrategy(
     // Extract token from Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
-      throw new UnauthorizedException(
-        'Missing or invalid Authorization header',
-      );
+      throw new UnauthorizedException('Missing or invalid Authorization header');
     }
 
     const token = authHeader.substring(7);
@@ -33,17 +28,15 @@ export class SupabaseJwtStrategy extends PassportStrategy(
     // Check cache first
     const cached = this.tokenCache.get(token);
     if (cached) {
-      const musician = await this.findOrCreateMusician(
-        cached.supabaseUserId,
-        cached.email,
-      );
+      const musician = await this.findOrCreateMusician(cached.supabaseUserId, cached.email);
       return { musicianId: musician.id, supabaseUserId: cached.supabaseUserId };
     }
 
     // Verify token with Supabase service client (the authoritative source)
-    const { data: { user }, error } = await this.supabaseService.auth.getUser(
-      token,
-    );
+    const {
+      data: { user },
+      error,
+    } = await this.supabaseService.auth.getUser(token);
 
     if (error || !user) {
       throw new UnauthorizedException('Invalid or expired Supabase token');
@@ -64,10 +57,7 @@ export class SupabaseJwtStrategy extends PassportStrategy(
     };
   }
 
-  private async findOrCreateMusician(
-    supabaseUserId: string,
-    email?: string,
-  ) {
+  private async findOrCreateMusician(supabaseUserId: string, email?: string) {
     // 1. Find by supabaseUserId
     let musician = await this.prisma.musician.findUnique({
       where: { supabaseUserId },
@@ -84,8 +74,8 @@ export class SupabaseJwtStrategy extends PassportStrategy(
       if (musician && !musician.supabaseUserId) {
         // Auto-link existing musician to Supabase account
         return this.prisma.musician.update({
-          where: {id: musician.id},
-          data: {supabaseUserId},
+          where: { id: musician.id },
+          data: { supabaseUserId },
         });
       }
     }

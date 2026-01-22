@@ -7,9 +7,7 @@ export function validate(config: Record<string, unknown>) {
     DATABASE_URL: Joi.string().required(),
     DIRECT_URL: Joi.string().required(),
     PORT: Joi.number().default(3001),
-    NODE_ENV: Joi.string()
-      .valid('development', 'production', 'test')
-      .default('development'),
+    NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
 
     // Required Supabase
     SUPABASE_URL: Joi.string().uri().required(),

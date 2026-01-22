@@ -33,7 +33,6 @@ describe('Live Jam Control System E2E Tests', () => {
     it('should execute full jam control lifecycle', async () => {
       const jamId = testData.jam.id;
 
-
       // === Step 1: Start Jam ===
       const startResponse = await request(app.getHttpServer())
         .post(`/jams/${jamId}/control/start`)
@@ -88,9 +87,7 @@ describe('Live Jam Control System E2E Tests', () => {
       expect(secondSchedule.startedAt).toBeDefined();
 
       // Verify jam state updated
-      jamData = await getPrismaService().then((p) =>
-        p.jam.findUnique({ where: { id: jamId } }),
-      );
+      jamData = await getPrismaService().then((p) => p.jam.findUnique({ where: { id: jamId } }));
       expect(jamData.currentScheduleId).toBe(secondSchedule.id);
       expect(jamData.playbackState).toBe('PLAYING');
 
@@ -114,9 +111,7 @@ describe('Live Jam Control System E2E Tests', () => {
       expect(pausedSchedule.pausedAt).toBeDefined();
 
       // Verify jam playback state is PAUSED
-      jamData = await getPrismaService().then((p) =>
-        p.jam.findUnique({ where: { id: jamId } }),
-      );
+      jamData = await getPrismaService().then((p) => p.jam.findUnique({ where: { id: jamId } }));
       expect(jamData.playbackState).toBe('PAUSED');
 
       // Verify history recorded
@@ -139,9 +134,7 @@ describe('Live Jam Control System E2E Tests', () => {
       expect(resumedSchedule.pausedAt).toBeNull();
 
       // Verify jam playback state is PLAYING
-      jamData = await getPrismaService().then((p) =>
-        p.jam.findUnique({ where: { id: jamId } }),
-      );
+      jamData = await getPrismaService().then((p) => p.jam.findUnique({ where: { id: jamId } }));
       expect(jamData.playbackState).toBe('PLAYING');
 
       // Verify history recorded
@@ -174,9 +167,7 @@ describe('Live Jam Control System E2E Tests', () => {
       expect(replayedSchedule.startedAt).toBeDefined();
 
       // Verify jam state
-      jamData = await getPrismaService().then((p) =>
-        p.jam.findUnique({ where: { id: jamId } }),
-      );
+      jamData = await getPrismaService().then((p) => p.jam.findUnique({ where: { id: jamId } }));
       expect(jamData.currentScheduleId).toBe(firstSchedule.id);
       expect(jamData.playbackState).toBe('PLAYING');
 
@@ -201,9 +192,7 @@ describe('Live Jam Control System E2E Tests', () => {
       expect(stoppedSchedule.completedAt).toBeDefined();
 
       // Verify jam is STOPPED
-      jamData = await getPrismaService().then((p) =>
-        p.jam.findUnique({ where: { id: jamId } }),
-      );
+      jamData = await getPrismaService().then((p) => p.jam.findUnique({ where: { id: jamId } }));
       expect(jamData.playbackState).toBe('STOPPED');
       expect(jamData.currentScheduleId).toBeNull();
 
@@ -394,9 +383,7 @@ describe('Live Jam Control System E2E Tests', () => {
         .expect(201);
 
       expect(response.body.playbackState).toBe('PAUSED');
-      const pausedSchedule = response.body.schedules.find(
-        (s: any) => s.status === 'IN_PROGRESS',
-      );
+      const pausedSchedule = response.body.schedules.find((s: any) => s.status === 'IN_PROGRESS');
       expect(pausedSchedule.pausedAt).toBeDefined();
 
       // Resume
@@ -406,9 +393,7 @@ describe('Live Jam Control System E2E Tests', () => {
         .expect(201);
 
       expect(response.body.playbackState).toBe('PLAYING');
-      const resumedSchedule = response.body.schedules.find(
-        (s: any) => s.status === 'IN_PROGRESS',
-      );
+      const resumedSchedule = response.body.schedules.find((s: any) => s.status === 'IN_PROGRESS');
       expect(resumedSchedule.pausedAt).toBeNull();
     });
 
@@ -461,9 +446,7 @@ describe('Live Jam Control System E2E Tests', () => {
       expect(response.body.playbackState).toBe('STOPPED');
       expect(response.body.currentScheduleId).toBeNull();
 
-      const completedSchedule = response.body.schedules.find(
-        (s: any) => s.status === 'COMPLETED',
-      );
+      const completedSchedule = response.body.schedules.find((s: any) => s.status === 'COMPLETED');
       expect(completedSchedule).toBeDefined();
       expect(completedSchedule.completedAt).toBeDefined();
     });
@@ -674,9 +657,7 @@ describe('Live Jam Control System E2E Tests', () => {
       expect(response.body.playbackState).toBe('PLAYING');
 
       // Verify current song status unchanged
-      const currentSchedule = response.body.schedules.find(
-        (s: any) => s.id === currentScheduleId,
-      );
+      const currentSchedule = response.body.schedules.find((s: any) => s.id === currentScheduleId);
       expect(currentSchedule.status).toBe('IN_PROGRESS');
     });
 

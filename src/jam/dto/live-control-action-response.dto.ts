@@ -13,4 +13,3 @@ export class LiveControlActionResponseDto {
   })
   jam: JamResponseDto;
 }
-

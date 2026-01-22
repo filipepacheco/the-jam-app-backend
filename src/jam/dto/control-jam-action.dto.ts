@@ -29,4 +29,3 @@ export class ControlJamActionDto {
   @IsOptional()
   payload?: ControlJamActionPayloadDto;
 }
-

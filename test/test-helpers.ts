@@ -180,7 +180,10 @@ export async function setupTestData() {
   const jam = await testFixtures.createJam(hostMusician.id);
 
   // Create schedules for the jam
-  const schedules = await testFixtures.createSchedules(jam.id, songs.map((s) => s.id));
+  const schedules = await testFixtures.createSchedules(
+    jam.id,
+    songs.map((s) => s.id),
+  );
 
   // Create registrations
   const registrations = await Promise.all([
@@ -197,4 +200,3 @@ export async function setupTestData() {
     registrations,
   };
 }
-

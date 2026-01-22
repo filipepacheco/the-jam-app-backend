@@ -29,12 +29,21 @@ export class CreateMusicDto {
   @IsOptional()
   description?: string | null;
 
-  @ApiProperty({ description: 'Link to music (YouTube, Spotify, etc)', required: false, nullable: true })
+  @ApiProperty({
+    description: 'Link to music (YouTube, Spotify, etc)',
+    required: false,
+    nullable: true,
+  })
   @IsString()
   @IsOptional()
   link?: string | null;
 
-  @ApiProperty({ description: 'Music status', enum: MusicStatus, default: MusicStatus.SUGGESTED, required: false })
+  @ApiProperty({
+    description: 'Music status',
+    enum: MusicStatus,
+    default: MusicStatus.SUGGESTED,
+    required: false,
+  })
   @IsEnum(MusicStatus)
   @IsOptional()
   status?: MusicStatus;

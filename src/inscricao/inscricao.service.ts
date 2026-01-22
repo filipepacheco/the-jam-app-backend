@@ -1,13 +1,11 @@
-import {ConflictException, Injectable, NotFoundException} from '@nestjs/common';
-import {PrismaService} from '../prisma/prisma.service';
-import {CreateRegistrationDto} from './dto/create-inscricao.dto';
-import {UpdateRegistrationDto} from './dto/update-inscricao.dto';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateRegistrationDto } from './dto/create-inscricao.dto';
+import { UpdateRegistrationDto } from './dto/update-inscricao.dto';
 
 @Injectable()
 export class InscricaoService {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createRegistrationDto: CreateRegistrationDto) {
     // Get the schedule to validate it exists and get jam info

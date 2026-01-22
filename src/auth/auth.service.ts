@@ -1,20 +1,13 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
-import {PrismaService} from '../prisma/prisma.service';
-import {Musician} from '@prisma/client';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { Musician } from '@prisma/client';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
-  constructor(
-    private prisma: PrismaService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   /**
    * Get musician profile by ID
@@ -92,5 +85,4 @@ export class AuthService {
   isRegistrationComplete(musician: Musician): boolean {
     return !!(musician.instrument && musician.level && musician.phone);
   }
-
 }
