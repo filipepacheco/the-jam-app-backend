@@ -155,7 +155,7 @@ export class JamService {
   async executeLiveAction(
     jamId: string,
     action: 'play' | 'pause' | 'skip' | 'reorder',
-    payload?: { scheduleIds?: string[] },
+    payload?: { updates?: { scheduleId: string; order: number }[] },
   ) {
     // Verify jam exists and is ACTIVE
     const jam = await this.prisma.jam.findUnique({
@@ -216,11 +216,12 @@ export class JamService {
 
       case 'reorder':
         // Delegate to new reorderSchedules method for proper transaction handling
-        if (!payload?.scheduleIds || payload.scheduleIds.length === 0) {
-          throw new BadRequestException('scheduleIds array is required for reorder action');
+        if (!payload?.updates || payload.updates.length === 0) {
+          throw new BadRequestException('updates array is required for reorder action');
         }
 
-        updatedJam = await this.reorderSchedules(jamId, payload.scheduleIds);
+        await this.reorderSchedules(jamId, payload.updates);
+        updatedJam = await this.findOne(jamId);
         break;
 
       default:
@@ -702,69 +703,62 @@ export class JamService {
     return updatedJam;
   }
 
-  async reorderSchedules(jamId: string, scheduleIds: string[], userId?: string): Promise<boolean> {
-    // Get all schedules for this jam (validates jam exists, fetches only needed fields)
-    const allSchedules = await this.prisma.schedule.findMany({
-      where: { jamId },
-      select: { id: true, order: true },
-      orderBy: { order: 'asc' },
+  async reorderSchedules(
+    jamId: string,
+    updates: { scheduleId: string; order: number }[],
+    userId?: string,
+  ): Promise<boolean> {
+    if (updates.length === 0) {
+      throw new BadRequestException('Updates array cannot be empty');
+    }
+
+    // Validate all scheduleIds belong to this jam
+    const scheduleIds = updates.map((u) => u.scheduleId);
+    const schedules = await this.prisma.schedule.findMany({
+      where: { id: { in: scheduleIds }, jamId },
+      select: { id: true },
     });
 
-    if (allSchedules.length === 0) {
-      throw new NotFoundException('Jam not found or has no schedules');
+    if (schedules.length !== scheduleIds.length) {
+      const foundIds = new Set(schedules.map((s) => s.id));
+      const invalidIds = scheduleIds.filter((id) => !foundIds.has(id));
+      throw new BadRequestException(`Invalid schedule IDs: ${invalidIds.join(', ')}`);
     }
 
-    // Validate all provided schedule IDs belong to this jam
-    const jamScheduleIds = new Set(allSchedules.map((s) => s.id));
-
-    for (const scheduleId of scheduleIds) {
-      if (!jamScheduleIds.has(scheduleId)) {
-        throw new BadRequestException(`Schedule ID ${scheduleId} does not belong to this jam`);
-      }
+    // Check for duplicate scheduleIds in payload
+    const uniqueIds = new Set(scheduleIds);
+    if (uniqueIds.size !== scheduleIds.length) {
+      throw new BadRequestException('Duplicate schedule IDs in payload');
     }
 
-    // Build complete order: provided IDs first, then missing schedules at end
-    const providedScheduleSet = new Set(scheduleIds);
-    const missingSchedules = allSchedules.filter((s) => !providedScheduleSet.has(s.id));
-    const completeOrder = [...scheduleIds, ...missingSchedules.map((s) => s.id)];
+    // Execute batch update in transaction
+    await this.prisma.$transaction(
+      updates.map(({ scheduleId, order }) =>
+        this.prisma.schedule.update({
+          where: { id: scheduleId },
+          data: { order },
+        }),
+      ),
+    );
 
-    await this.prisma.$transaction(async (tx) => {
-      // Phase 1: Set to negative values to avoid unique constraint violations
-      for (let i = 0; i < completeOrder.length; i++) {
-        await tx.schedule.update({
-          where: { id: completeOrder[i] },
-          data: { order: -(i + 1) },
-        });
-      }
+    // Record playback history
+    const jam = await this.prisma.jam.findUnique({
+      where: { id: jamId },
+      select: { currentScheduleId: true },
+    });
 
-      // Phase 2: Set to positive final values
-      for (let i = 0; i < completeOrder.length; i++) {
-        await tx.schedule.update({
-          where: { id: completeOrder[i] },
-          data: { order: i + 1 },
-        });
-      }
-
-      // Get current schedule ID efficiently (only fetch what we need)
-      const jam = await tx.jam.findUnique({
-        where: { id: jamId },
-        select: { currentScheduleId: true },
-      });
-
-      // Record playback history
-      const scheduleIdForHistory = jam?.currentScheduleId || completeOrder[0];
-      await tx.playbackHistory.create({
-        data: {
-          jamId,
-          scheduleId: scheduleIdForHistory,
-          action: PlaybackAction.REORDER_QUEUE,
-          userId,
-          metadata: {
-            newOrder: scheduleIds,
-            totalSchedules: completeOrder.length,
-          },
+    const scheduleIdForHistory = jam?.currentScheduleId || scheduleIds[0];
+    await this.prisma.playbackHistory.create({
+      data: {
+        jamId,
+        scheduleId: scheduleIdForHistory,
+        action: PlaybackAction.REORDER_QUEUE,
+        userId,
+        metadata: {
+          updates,
+          totalUpdates: updates.length,
         },
-      });
+      },
     });
 
     return true;

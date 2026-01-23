@@ -1,16 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsArray, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsIn, IsOptional, IsArray, ValidateNested } from 'class-validator';
+import { ScheduleOrderUpdateDto } from './reorder-schedules.dto';
 
 export class ControlJamActionPayloadDto {
   @ApiProperty({
-    description: 'Array of schedule IDs in desired order (for reorder action)',
-    type: [String],
+    description: 'Array of schedule order updates (for reorder action)',
+    type: [ScheduleOrderUpdateDto],
     required: false,
   })
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
-  scheduleIds?: string[];
+  @ValidateNested({ each: true })
+  @Type(() => ScheduleOrderUpdateDto)
+  updates?: ScheduleOrderUpdateDto[];
 }
 
 export class ControlJamActionDto {

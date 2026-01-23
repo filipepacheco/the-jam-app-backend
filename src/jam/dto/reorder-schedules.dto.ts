@@ -1,19 +1,30 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ArrayNotEmpty, ArrayUnique, IsString, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ArrayNotEmpty, IsArray, IsNumber, IsUUID, Min, ValidateNested } from 'class-validator';
+
+export class ScheduleOrderUpdateDto {
+  @ApiProperty({ description: 'Schedule ID', format: 'uuid' })
+  @IsUUID('4', { message: 'scheduleId must be a valid UUID' })
+  scheduleId: string;
+
+  @ApiProperty({ description: 'New order position (1-based)', minimum: 1 })
+  @IsNumber()
+  @Min(1)
+  order: number;
+}
 
 export class ReorderSchedulesDto {
   @ApiProperty({
-    description: 'Array of schedule IDs in the desired order',
+    description: 'Array of schedule order updates',
+    type: [ScheduleOrderUpdateDto],
     example: [
-      '123e4567-e89b-12d3-a456-426614174000',
-      '123e4567-e89b-12d3-a456-426614174001',
-      '123e4567-e89b-12d3-a456-426614174002',
+      { scheduleId: '123e4567-e89b-12d3-a456-426614174000', order: 1 },
+      { scheduleId: '123e4567-e89b-12d3-a456-426614174001', order: 2 },
     ],
-    type: [String],
   })
-  @ArrayNotEmpty({ message: 'Schedule IDs array cannot be empty' })
-  @ArrayUnique({ message: 'Schedule IDs must be unique' })
-  @IsUUID('4', { each: true, message: 'Each schedule ID must be a valid UUID' })
-  @IsString({ each: true })
-  scheduleIds: string[];
+  @IsArray()
+  @ArrayNotEmpty({ message: 'Updates array cannot be empty' })
+  @ValidateNested({ each: true })
+  @Type(() => ScheduleOrderUpdateDto)
+  updates: ScheduleOrderUpdateDto[];
 }

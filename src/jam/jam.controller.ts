@@ -313,7 +313,7 @@ export class JamController {
       throw new NotFoundException(`Jam with ID ${jamId} not found`);
     }
 
-    return this.jamService.reorderSchedules(jamId, dto.scheduleIds, req.user?.id);
+    return this.jamService.reorderSchedules(jamId, dto.updates, req.user?.id);
   }
 
   @Get(':id/playback-history')
