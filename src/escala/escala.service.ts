@@ -26,21 +26,24 @@ export class EscalaService {
       throw new NotFoundException('Jam not found');
     }
 
-    const order = await this.prisma.schedule.count({
-      where: { jamId: createScheduleDto.jamId },
-    });
+    // Use transaction to prevent race condition in order calculation
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.schedule.count({
+        where: { jamId: createScheduleDto.jamId },
+      });
 
-    return this.prisma.schedule.create({
-      data: {
-        jamId: createScheduleDto.jamId,
-        musicId: createScheduleDto.musicId,
-        order: order + 1,
-        status: createScheduleDto.status,
-      },
-      include: {
-        music: true,
-        jam: true,
-      },
+      return tx.schedule.create({
+        data: {
+          jamId: createScheduleDto.jamId,
+          musicId: createScheduleDto.musicId,
+          order: order + 1,
+          status: createScheduleDto.status,
+        },
+        include: {
+          music: true,
+          jam: true,
+        },
+      });
     });
   }
 

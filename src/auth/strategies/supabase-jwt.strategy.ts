@@ -71,8 +71,9 @@ export class SupabaseJwtStrategy extends PassportStrategy(Strategy, 'supabase-jw
         where: { email },
       });
 
-      if (musician && !musician.supabaseUserId) {
-        // Auto-link existing musician to Supabase account
+      if (musician) {
+        // Link existing musician to new Supabase identity (handles OAuth provider changes)
+        // This covers: email/password user switching to Google SSO, or vice versa
         return this.prisma.musician.update({
           where: { id: musician.id },
           data: { supabaseUserId },

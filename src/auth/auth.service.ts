@@ -65,9 +65,6 @@ export class AuthService {
     if (updateData.phone !== undefined) {
       updatePayload['phone'] = updateData.phone;
     }
-    if (updateData.isHost !== undefined) {
-      updatePayload['isHost'] = updateData.isHost;
-    }
 
     const updatedMusician = await this.prisma.musician.update({
       where: { id: musicianId },

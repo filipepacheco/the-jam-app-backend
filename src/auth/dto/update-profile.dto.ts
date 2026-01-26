@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { MusicianLevel } from '@prisma/client';
 
@@ -34,9 +34,4 @@ export class UpdateProfileDto {
   @IsString()
   @IsOptional()
   phone?: string;
-
-  @ApiProperty({ description: 'Whether user wants to host jams', required: false })
-  @IsBoolean()
-  @IsOptional()
-  isHost?: boolean;
 }

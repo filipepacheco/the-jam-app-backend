@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param, Delete, Patch, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Param, Delete, Patch, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { InscricaoService } from './inscricao.service';
 import { CreateRegistrationDto } from './dto/create-inscricao.dto';
@@ -18,8 +18,8 @@ export class InscricaoController {
   @ApiOperation({ summary: 'Create a new registration' })
   @ApiResponse({ status: 201, description: 'Registration created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  create(@Body() createRegistrationDto: CreateRegistrationDto) {
-    return this.inscricaoService.create(createRegistrationDto);
+  create(@Body() createRegistrationDto: CreateRegistrationDto, @Request() req) {
+    return this.inscricaoService.create(createRegistrationDto, req.user.musicianId);
   }
 
   @Patch(':id')
@@ -42,7 +42,8 @@ export class InscricaoController {
   @ApiOperation({ summary: 'Cancel registration' })
   @ApiResponse({ status: 200, description: 'Registration cancelled' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  remove(@Param('id') id: string) {
-    return this.inscricaoService.remove(id);
+  @ApiResponse({ status: 403, description: 'Forbidden - can only delete own registrations' })
+  remove(@Param('id') id: string, @Request() req) {
+    return this.inscricaoService.remove(id, req.user.musicianId);
   }
 }

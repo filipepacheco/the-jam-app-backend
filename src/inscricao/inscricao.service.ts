@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRegistrationDto } from './dto/create-inscricao.dto';
 import { UpdateRegistrationDto } from './dto/update-inscricao.dto';
@@ -7,7 +12,7 @@ import { UpdateRegistrationDto } from './dto/update-inscricao.dto';
 export class InscricaoService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createRegistrationDto: CreateRegistrationDto) {
+  async create(createRegistrationDto: CreateRegistrationDto, musicianId: string) {
     // Get the schedule to validate it exists and get jam info
     const schedule = await this.prisma.schedule.findUnique({
       where: { id: createRegistrationDto.scheduleId },
@@ -21,7 +26,7 @@ export class InscricaoService {
     // Check if musician is already registered for this schedule's music
     const existingRegistration = await this.prisma.registration.findFirst({
       where: {
-        musicianId: createRegistrationDto.musicianId,
+        musicianId,
         jamId: schedule.jamId,
         scheduleId: createRegistrationDto.scheduleId,
       },
@@ -33,7 +38,7 @@ export class InscricaoService {
 
     return this.prisma.registration.create({
       data: {
-        musicianId: createRegistrationDto.musicianId,
+        musicianId,
         jamId: schedule.jamId,
         scheduleId: createRegistrationDto.scheduleId,
         instrument: createRegistrationDto.instrument,
@@ -76,13 +81,26 @@ export class InscricaoService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, requestingMusicianId: string) {
     const registration = await this.prisma.registration.findUnique({
       where: { id },
     });
 
     if (!registration) {
       throw new NotFoundException('Registration not found');
+    }
+
+    // Look up requesting musician to check if host
+    const requestingMusician = await this.prisma.musician.findUnique({
+      where: { id: requestingMusicianId },
+    });
+
+    // Allow delete if owner OR host
+    const isOwner = registration.musicianId === requestingMusicianId;
+    const isHost = requestingMusician?.isHost === true;
+
+    if (!isOwner && !isHost) {
+      throw new ForbiddenException('Can only delete your own registrations');
     }
 
     return this.prisma.registration.delete({

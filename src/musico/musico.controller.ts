@@ -40,8 +40,11 @@ export class MusicoController {
   }
 
   @Get()
+  @UseGuards(SupabaseJwtGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'List all musicians' })
   @ApiResponse({ status: 200, description: 'List of musicians' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   findAll() {
     return this.musicoService.findAll();
   }

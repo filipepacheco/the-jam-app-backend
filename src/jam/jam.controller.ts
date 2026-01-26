@@ -317,11 +317,16 @@ export class JamController {
   }
 
   @Get(':id/playback-history')
+  @UseGuards(SupabaseJwtGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get playback history for jam' })
   @ApiResponse({ status: 200, description: 'Playback history retrieved' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async getPlaybackHistory(@Param('id') jamId: string, @Request() req) {
-    const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50;
+  async getPlaybackHistory(@Param('id') jamId: string, @Query('limit') limitParam?: string) {
+    let limit = limitParam ? parseInt(limitParam, 10) : 50;
+    if (isNaN(limit) || limit < 1) limit = 50;
+    if (limit > 100) limit = 100;
     return this.jamService.getPlaybackHistory(jamId, limit);
   }
 
