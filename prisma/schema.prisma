@@ -80,6 +80,7 @@ model Musician {
   isHost         Boolean        @default(false) @map("isHost")
   registrations  Registration[]
   hostedJams     Jam[]
+  feedbacks      Feedback[]
 
   @@map("musicos")
 }
@@ -185,6 +186,23 @@ enum PlaybackAction {
   REORDER_QUEUE @map("REORDENAR_FILA")
 
   @@map("AcaoReproducao")
+}
+
+model Feedback {
+  id         String    @id @default(uuid())
+  rating     Int
+  comment    String?   @db.VarChar(500) @map("comentario")
+  userAgent  String?   @map("userAgent")
+  pageUrl    String?   @map("pageUrl")
+  ipAddress  String?   @map("ipAddress")
+  musicianId String?   @map("musicoId")
+  createdAt  DateTime  @default(now()) @map("criadoEm")
+
+  musician   Musician? @relation(fields: [musicianId], references: [id], onDelete: SetNull)
+
+  @@index([musicianId])
+  @@index([createdAt])
+  @@map("feedbacks")
 }
 
 model PlaybackHistory {

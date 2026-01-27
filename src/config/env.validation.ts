@@ -18,6 +18,10 @@ export function validate(config: Record<string, unknown>) {
     // CORS
     CORS_ORIGINS: Joi.string().optional(),
 
+    // Spotify (optional - enables import feature)
+    SPOTIFY_CLIENT_ID: Joi.string().optional(),
+    SPOTIFY_CLIENT_SECRET: Joi.string().optional(),
+
     // Frontend URL for QR code generation
     FRONTEND_URL: Joi.string().uri().default('http://localhost:3000'),
   });

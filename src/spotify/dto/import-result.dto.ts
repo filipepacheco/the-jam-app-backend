@@ -1,0 +1,18 @@
+import { ApiProperty } from '@nestjs/swagger';
+
+export class ImportResultDto {
+  @ApiProperty({ description: 'Created jam' })
+  jam: any;
+
+  @ApiProperty({ description: 'Number of new Music records created' })
+  importedTracks: number;
+
+  @ApiProperty({ description: 'Number of existing Music records reused' })
+  reusedTracks: number;
+
+  @ApiProperty({ description: 'Number of tracks that failed to import' })
+  skippedTracks: number;
+
+  @ApiProperty({ description: 'Error details for skipped tracks', required: false })
+  errors?: string[];
+}

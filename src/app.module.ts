@@ -11,6 +11,8 @@ import { EscalaModule } from './escala/escala.module';
 import { AuthModule } from './auth/auth.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { validate } from './config/env.validation';
+import { FeedbackModule } from './feedback/feedback.module';
+import { SpotifyModule } from './spotify/spotify.module';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 
 @Module({
@@ -27,6 +29,8 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
     MusicaModule,
     InscricaoModule,
     EscalaModule,
+    FeedbackModule,
+    SpotifyModule,
   ],
   controllers: [AppController],
   providers: [AppService],
