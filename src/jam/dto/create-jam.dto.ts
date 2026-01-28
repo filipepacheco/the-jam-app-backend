@@ -46,7 +46,7 @@ export class CreateJamDto {
   @ApiProperty({
     description: 'Jam session status',
     required: false,
-    enum: ['ACTIVE', 'INACTIVE', 'FINISHED'],
+    enum: ['ACTIVE', 'INACTIVE', 'LIVE', 'FINISHED'],
   })
   @IsString()
   @IsOptional()

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDateString, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ImportPlaylistDto {
@@ -7,25 +7,31 @@ export class ImportPlaylistDto {
   @IsNotEmpty()
   playlistUrl: string;
 
-  @ApiProperty({ description: 'Jam name (defaults to playlist name)', required: false })
+  @ApiProperty({ description: 'Jam ID to import into (if omitted, creates new jam)', required: false })
+  @IsString()
+  @IsOptional()
+  @IsUUID()
+  jamId?: string;
+
+  @ApiProperty({ description: 'Jam name (defaults to playlist name, ignored if jamId provided)', required: false })
   @IsString()
   @IsOptional()
   name?: string;
 
   @ApiProperty({
-    description: 'Jam description (defaults to playlist description)',
+    description: 'Jam description (defaults to playlist description, ignored if jamId provided)',
     required: false,
   })
   @IsString()
   @IsOptional()
   description?: string;
 
-  @ApiProperty({ description: 'Jam date in ISO 8601 format', required: false })
+  @ApiProperty({ description: 'Jam date in ISO 8601 format (ignored if jamId provided)', required: false })
   @IsDateString()
   @IsOptional()
   date?: string;
 
-  @ApiProperty({ description: 'Jam location', required: false })
+  @ApiProperty({ description: 'Jam location (ignored if jamId provided)', required: false })
   @IsString()
   @IsOptional()
   location?: string;

@@ -15,11 +15,15 @@ export class SpotifyController {
   @Post('import')
   @UseGuards(SupabaseJwtGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Import a Spotify playlist as a new jam' })
-  @ApiResponse({ status: 201, description: 'Jam created from playlist', type: ImportResultDto })
+  @ApiOperation({
+    summary: 'Import a Spotify playlist as a new jam or append to existing jam',
+    description: `If 'jamId' is provided, tracks are appended to the existing jam. If omitted, a new jam is created. When importing to an existing jam, tracks already present are skipped.`,
+  })
+  @ApiResponse({ status: 201, description: 'Import completed successfully', type: ImportResultDto })
   @ApiResponse({ status: 400, description: 'Invalid playlist URL' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Playlist not found on Spotify' })
+  @ApiResponse({ status: 403, description: 'Forbidden - user is not the jam host' })
+  @ApiResponse({ status: 404, description: 'Jam or playlist not found' })
   @ApiResponse({ status: 503, description: 'Spotify integration not configured' })
   async importPlaylist(@Body() dto: ImportPlaylistDto, @Req() req: any): Promise<ImportResultDto> {
     return this.spotifyService.importPlaylist(dto, req.user.musicianId);

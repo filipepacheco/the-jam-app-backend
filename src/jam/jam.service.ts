@@ -157,7 +157,7 @@ export class JamService {
     action: 'play' | 'pause' | 'skip' | 'reorder',
     payload?: { updates?: { scheduleId: string; order: number }[] },
   ) {
-    // Verify jam exists and is ACTIVE
+    // Verify jam exists and is ACTIVE or LIVE
     const jam = await this.prisma.jam.findUnique({
       where: { id: jamId },
     });
@@ -166,8 +166,8 @@ export class JamService {
       throw new NotFoundException('Jam not found');
     }
 
-    if (jam.status !== 'ACTIVE') {
-      throw new BadRequestException('Jam is not active');
+    if (jam.status !== 'ACTIVE' && jam.status !== 'LIVE') {
+      throw new BadRequestException('Jam is not active or live');
     }
 
     let updatedJam;
@@ -332,15 +332,17 @@ export class JamService {
       },
     });
 
-    // Update jam: set playbackState to PLAYING and currentScheduleId
+    // Update jam: set status to LIVE, playbackState to PLAYING and currentScheduleId
     const updatedJam = await this.prisma.jam.update({
       where: { id: jamId },
       data: {
+        status: 'LIVE',
         playbackState: PlaybackState.PLAYING,
         currentScheduleId: firstSchedule.id,
       },
       select: {
         id: true,
+        status: true,
         playbackState: true,
         currentScheduleId: true,
         updatedAt: true,
@@ -384,15 +386,17 @@ export class JamService {
       });
     }
 
-    // Update jam: set playbackState to STOPPED and clear currentScheduleId
+    // Update jam: set status to FINISHED, playbackState to STOPPED and clear currentScheduleId
     const updatedJam = await this.prisma.jam.update({
       where: { id: jamId },
       data: {
+        status: 'FINISHED',
         playbackState: PlaybackState.STOPPED,
         currentScheduleId: null,
       },
       select: {
         id: true,
+        status: true,
         playbackState: true,
         currentScheduleId: true,
         updatedAt: true,

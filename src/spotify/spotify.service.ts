@@ -5,6 +5,7 @@ import {
   HttpException,
   ServiceUnavailableException,
   Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SpotifyApiClient } from './spotify-api.client';
@@ -93,31 +94,90 @@ export class SpotifyService {
       }
     }
 
-    // Create jam
-    const jam = await this.prisma.jam.create({
-      data: {
-        name: dto.name || playlistMeta.name,
-        description: dto.description || playlistMeta.description || undefined,
-        date: dto.date ? new Date(dto.date) : undefined,
-        location: dto.location,
-        hostMusicianId,
-      },
-    });
+    let jam;
+    let startingOrder = 0;
+    let existingJamMusicIds = new Set<string>();
+    const isExistingJam = !!dto.jamId;
+
+    if (dto.jamId) {
+      // Import to existing jam
+      jam = await this.prisma.jam.findUnique({
+        where: { id: dto.jamId },
+        include: {
+          schedules: { orderBy: { order: 'desc' }, take: 1 },
+          jamMusics: { select: { musicId: true } },
+        },
+      });
+
+      if (!jam) {
+        throw new NotFoundException('Jam not found');
+      }
+
+      // Verify user is the host
+      if (jam.hostMusicianId !== hostMusicianId) {
+        throw new ForbiddenException('You must be the jam host to import tracks');
+      }
+
+      // Only allow importing to ACTIVE or LIVE jams
+      if (jam.status !== 'ACTIVE' && jam.status !== 'LIVE') {
+        throw new BadRequestException('Cannot import to a jam that is not active or live');
+      }
+
+      // Get starting order for new tracks (append after existing)
+      startingOrder = jam.schedules[0]?.order || 0;
+
+      // Get existing music IDs to avoid duplicates within the jam
+      existingJamMusicIds = new Set(jam.jamMusics.map((jm) => jm.musicId));
+    } else {
+      // Create new jam
+      jam = await this.prisma.jam.create({
+        data: {
+          name: dto.name || playlistMeta.name,
+          description: dto.description || playlistMeta.description || undefined,
+          date: dto.date ? new Date(dto.date) : undefined,
+          location: dto.location,
+          hostMusicianId,
+        },
+      });
+    }
+
+    // Track how many tracks were actually added vs skipped as duplicates
+    let addedTracks = 0;
+    let duplicateTracks = 0;
 
     // Create JamMusic links and Schedule entries
     for (let i = 0; i < musicIds.length; i++) {
-      await this.prisma.jamMusic.create({
-        data: { jamId: jam.id, musicId: musicIds[i] },
-      });
+      const musicId = musicIds[i];
 
-      await this.prisma.schedule.create({
-        data: {
-          jamId: jam.id,
-          musicId: musicIds[i],
-          order: i + 1,
-          status: 'SCHEDULED',
-        },
-      });
+      // Skip if music already exists in this jam (duplicate detection)
+      if (existingJamMusicIds.has(musicId)) {
+        duplicateTracks++;
+        continue;
+      }
+
+      try {
+        await this.prisma.jamMusic.create({
+          data: { jamId: jam.id, musicId },
+        });
+
+        // Calculate order: for existing jams, append after current tracks
+        const order = startingOrder + addedTracks + 1;
+
+        await this.prisma.schedule.create({
+          data: {
+            jamId: jam.id,
+            musicId,
+            order,
+            status: 'SCHEDULED',
+          },
+        });
+
+        addedTracks++;
+      } catch (err: any) {
+        this.logger.warn(`Failed to add track to jam: ${err.message}`);
+        errors.push(`Failed to add track to jam`);
+        skippedTracks++;
+      }
     }
 
     // Fetch the full jam with relations
@@ -134,6 +194,9 @@ export class SpotifyService {
       importedTracks,
       reusedTracks,
       skippedTracks,
+      addedTracks,
+      duplicateTracks,
+      isExistingJam,
       ...(errors.length > 0 ? { errors } : {}),
     };
   }
