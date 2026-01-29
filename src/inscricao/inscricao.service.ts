@@ -23,17 +23,20 @@ export class InscricaoService {
       throw new NotFoundException('Schedule not found');
     }
 
-    // Check if musician is already registered for this schedule's music
+    // Check if musician is already registered for this schedule with the same instrument
     const existingRegistration = await this.prisma.registration.findFirst({
       where: {
         musicianId,
         jamId: schedule.jamId,
         scheduleId: createRegistrationDto.scheduleId,
+        instrument: createRegistrationDto.instrument,
       },
     });
 
     if (existingRegistration) {
-      throw new ConflictException('Musician already registered for this schedule');
+      throw new ConflictException(
+        'Musician already registered for this schedule with the same instrument',
+      );
     }
 
     return this.prisma.registration.create({
