@@ -5,6 +5,8 @@ import { ImportPlaylistDto } from './dto/import-playlist.dto';
 import { ImportResultDto } from './dto/import-result.dto';
 import { ExportPlaylistDto } from './dto/export-playlist.dto';
 import { ExportResultDto } from './dto/export-result.dto';
+import { GetTrackDto } from './dto/get-track.dto';
+import { TrackMetadataDto } from './dto/track-metadata.dto';
 import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
 
 @ApiTags('Spotify')
@@ -39,5 +41,17 @@ export class SpotifyController {
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async exportPlaylist(@Body() dto: ExportPlaylistDto): Promise<ExportResultDto> {
     return this.spotifyService.exportPlaylist(dto);
+  }
+
+  @Post('track')
+  @UseGuards(SupabaseJwtGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get Spotify track metadata from URL or URI' })
+  @ApiResponse({ status: 200, description: 'Track metadata retrieved', type: TrackMetadataDto })
+  @ApiResponse({ status: 400, description: 'Invalid track URL or URI' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 503, description: 'Spotify integration not configured' })
+  async getTrackMetadata(@Body() dto: GetTrackDto): Promise<TrackMetadataDto> {
+    return this.spotifyService.getTrackMetadata(dto);
   }
 }

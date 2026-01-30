@@ -7,13 +7,19 @@ export class ImportPlaylistDto {
   @IsNotEmpty()
   playlistUrl: string;
 
-  @ApiProperty({ description: 'Jam ID to import into (if omitted, creates new jam)', required: false })
+  @ApiProperty({
+    description: 'Jam ID to import into (if omitted, creates new jam)',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   @IsUUID()
   jamId?: string;
 
-  @ApiProperty({ description: 'Jam name (defaults to playlist name, ignored if jamId provided)', required: false })
+  @ApiProperty({
+    description: 'Jam name (defaults to playlist name, ignored if jamId provided)',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   name?: string;
@@ -26,7 +32,10 @@ export class ImportPlaylistDto {
   @IsOptional()
   description?: string;
 
-  @ApiProperty({ description: 'Jam date in ISO 8601 format (ignored if jamId provided)', required: false })
+  @ApiProperty({
+    description: 'Jam date in ISO 8601 format (ignored if jamId provided)',
+    required: false,
+  })
   @IsDateString()
   @IsOptional()
   date?: string;

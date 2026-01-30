@@ -155,6 +155,35 @@ export class SpotifyApiClient {
     return null;
   }
 
+  parseTrackId(urlOrUri: string): string | null {
+    // Handle https://open.spotify.com/track/ID?si=...
+    const urlMatch = urlOrUri.match(/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/);
+    if (urlMatch) return urlMatch[1];
+
+    // Handle spotify:track:ID format
+    const uriMatch = urlOrUri.match(/spotify:track:([a-zA-Z0-9]+)/);
+    if (uriMatch) return uriMatch[1];
+
+    return null;
+  }
+
+  async getTrack(
+    trackId: string,
+    token: string,
+  ): Promise<SpotifyTrack & { albumName?: string; albumImageUrl?: string }> {
+    const response = await this.spotifyFetch(`https://api.spotify.com/v1/tracks/${trackId}`, token);
+
+    return {
+      id: response.id,
+      name: response.name,
+      artists: response.artists.map((a: { name: string }) => a.name),
+      durationMs: response.duration_ms,
+      spotifyUrl: `https://open.spotify.com/track/${response.id}`,
+      albumName: response.album?.name,
+      albumImageUrl: response.album?.images?.[0]?.url,
+    };
+  }
+
   extractTrackUri(link: string): string | null {
     if (!link) return null;
 

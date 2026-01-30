@@ -13,6 +13,8 @@ import { ImportPlaylistDto } from './dto/import-playlist.dto';
 import { ImportResultDto } from './dto/import-result.dto';
 import { ExportPlaylistDto } from './dto/export-playlist.dto';
 import { ExportResultDto } from './dto/export-result.dto';
+import { GetTrackDto } from './dto/get-track.dto';
+import { TrackMetadataDto } from './dto/track-metadata.dto';
 import { MusicStatus } from '@prisma/client';
 
 @Injectable()
@@ -269,6 +271,40 @@ export class SpotifyService {
       skippedTracks,
       ...(errors.length > 0 ? { errors } : {}),
     };
+  }
+
+  async getTrackMetadata(dto: GetTrackDto): Promise<TrackMetadataDto> {
+    if (!this.spotifyApi.isConfigured) {
+      throw new ServiceUnavailableException('Spotify integration is not configured');
+    }
+
+    const trackId = this.spotifyApi.parseTrackId(dto.trackUrl);
+    if (!trackId) {
+      throw new BadRequestException('Invalid Spotify track URL or URI');
+    }
+
+    let token: string;
+    try {
+      token = await this.spotifyApi.getClientToken();
+    } catch {
+      throw new ServiceUnavailableException('Failed to authenticate with Spotify');
+    }
+
+    try {
+      const track = await this.spotifyApi.getTrack(trackId, token);
+
+      return {
+        id: track.id,
+        title: track.name,
+        artist: track.artists.join(', '),
+        durationMs: track.durationMs,
+        spotifyUrl: track.spotifyUrl,
+        albumName: track.albumName,
+        albumImageUrl: track.albumImageUrl,
+      };
+    } catch (err: any) {
+      this.handleSpotifyApiError(err, 'track');
+    }
   }
 
   private handleSpotifyApiError(err: any, context: string): never {
