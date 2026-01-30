@@ -85,6 +85,12 @@ export class SpotifyService {
             duration: Math.round(track.durationMs / 1000),
             link: track.spotifyUrl,
             status: MusicStatus.APPROVED,
+            // Default band setup: 1 vocal, 2 guitars, 1 bass, 1 drums
+            neededVocals: 1,
+            neededGuitars: 2,
+            neededBass: 1,
+            neededDrums: 1,
+            neededKeys: 0,
           },
         });
         musicIds.push(created.id);
