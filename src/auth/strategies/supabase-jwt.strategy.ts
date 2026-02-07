@@ -29,7 +29,7 @@ export class SupabaseJwtStrategy extends PassportStrategy(Strategy, 'supabase-jw
     const cached = this.tokenCache.get(token);
     if (cached) {
       const musician = await this.findOrCreateMusician(cached.supabaseUserId, cached.email);
-      return { musicianId: musician.id, supabaseUserId: cached.supabaseUserId };
+      return { musicianId: musician.id, supabaseUserId: cached.supabaseUserId, isHost: musician.isHost };
     }
 
     // Verify token with Supabase service client (the authoritative source)
@@ -54,6 +54,7 @@ export class SupabaseJwtStrategy extends PassportStrategy(Strategy, 'supabase-jw
     return {
       musicianId: musician.id,
       supabaseUserId: user.id,
+      isHost: musician.isHost,
     };
   }
 
