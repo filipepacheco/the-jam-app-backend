@@ -7,6 +7,11 @@ export class CreateRegistrationDto {
   @IsNotEmpty()
   scheduleId: string;
 
+  @ApiProperty({ description: 'Musician ID (optional, only usable by hosts)', required: false })
+  @IsString()
+  @IsOptional()
+  musicianId?: string;
+
   @ApiProperty({ description: 'Instrument to play', required: false })
   @IsString()
   @IsOptional()

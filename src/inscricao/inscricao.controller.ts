@@ -19,7 +19,11 @@ export class InscricaoController {
   @ApiResponse({ status: 201, description: 'Registration created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(@Body() createRegistrationDto: CreateRegistrationDto, @Request() req) {
-    return this.inscricaoService.create(createRegistrationDto, req.user.musicianId);
+    // If musicianId is provided in DTO and user is host, use that. Otherwise use authenticated user
+    const musicianId = createRegistrationDto.musicianId && req.user.isHost
+      ? createRegistrationDto.musicianId
+      : req.user.musicianId;
+    return this.inscricaoService.create(createRegistrationDto, musicianId);
   }
 
   @Patch(':id')
