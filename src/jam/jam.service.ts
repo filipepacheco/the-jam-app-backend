@@ -256,13 +256,12 @@ export class JamService {
           },
         },
         registrations: {
-          where: { status: 'APPROVED' },
           select: {
+            instrument: true,
             musician: {
               select: {
                 id: true,
                 name: true,
-                instrument: true,
               },
             },
           },
@@ -864,7 +863,7 @@ export class JamService {
       musicians: schedule.registrations.map((reg: any) => ({
         id: reg.musician.id,
         name: reg.musician.name,
-        instrument: reg.musician.instrument,
+        instrument: reg.instrument,
       })),
     };
   }

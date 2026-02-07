@@ -31,7 +31,11 @@ export class FeedbackController {
   @Roles('host')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'List all feedback (host only)' })
-  @ApiResponse({ status: 200, description: 'Paginated feedback list', type: FeedbackListResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated feedback list',
+    type: FeedbackListResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - host role required' })
   async findAll(@Query() query: FeedbackQueryDto): Promise<FeedbackListResponseDto> {
