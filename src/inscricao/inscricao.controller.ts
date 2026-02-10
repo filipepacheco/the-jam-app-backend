@@ -4,8 +4,7 @@ import { InscricaoService } from './inscricao.service';
 import { CreateRegistrationDto } from './dto/create-inscricao.dto';
 import { UpdateRegistrationDto } from './dto/update-inscricao.dto';
 import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
-import { RoleGuard } from '../auth/guards/role.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
 
 @ApiTags('Registrations')
 @Controller('inscricoes')
@@ -28,9 +27,7 @@ export class InscricaoController {
   }
 
   @Patch(':id')
-  @UseGuards(SupabaseJwtGuard, RoleGuard)
-  @Roles('host', 'admin')
-  @ApiBearerAuth()
+  @ProtectedRoute('host', 'admin')
   @ApiOperation({ summary: 'Update registration details (instrument, status)' })
   @ApiResponse({ status: 200, description: 'Registration updated successfully' })
   @ApiResponse({ status: 400, description: 'Validation error' })

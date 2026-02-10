@@ -1,11 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { MusicaService } from './musica.service';
 import { CreateMusicDto } from './dto/create-musica.dto';
 import { UpdateMusicDto } from './dto/update-musica.dto';
-import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
-import { RoleGuard } from '../auth/guards/role.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
 
 @ApiTags('Musicas')
 @Controller('musicas')
@@ -13,9 +11,7 @@ export class MusicaController {
   constructor(private readonly musicaService: MusicaService) {}
 
   @Post()
-  @UseGuards(SupabaseJwtGuard, RoleGuard)
-  @Roles('host', 'admin', 'user')
-  @ApiBearerAuth()
+  @ProtectedRoute('host', 'admin', 'user')
   @ApiOperation({ summary: 'Create a new music' })
   @ApiResponse({ status: 201, description: 'Music created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -32,9 +28,7 @@ export class MusicaController {
   }
 
   @Patch(':id')
-  @UseGuards(SupabaseJwtGuard, RoleGuard)
-  @Roles('host', 'admin', 'user')
-  @ApiBearerAuth()
+  @ProtectedRoute('host', 'admin', 'user')
   @ApiOperation({ summary: 'Update music' })
   @ApiResponse({ status: 200, description: 'Music updated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -44,9 +38,7 @@ export class MusicaController {
   }
 
   @Patch(':id/link-jam/:jamId')
-  @UseGuards(SupabaseJwtGuard, RoleGuard)
-  @Roles('host', 'admin', 'user')
-  @ApiBearerAuth()
+  @ProtectedRoute('host', 'admin', 'user')
   @ApiOperation({ summary: 'Link music to a jam' })
   @ApiResponse({ status: 200, description: 'Music linked to jam successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -56,9 +48,7 @@ export class MusicaController {
   }
 
   @Delete(':id')
-  @UseGuards(SupabaseJwtGuard, RoleGuard)
-  @Roles('host', 'admin')
-  @ApiBearerAuth()
+  @ProtectedRoute('host', 'admin')
   @ApiOperation({ summary: 'Delete music' })
   @ApiResponse({ status: 200, description: 'Music deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

@@ -15,8 +15,7 @@ import { MusicoService } from './musico.service';
 import { CreateMusicianDto } from './dto/create-musico.dto';
 import { UpdateMusicianDto } from './dto/update-musico.dto';
 import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
-import { RoleGuard } from '../auth/guards/role.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 
 @ApiTags('Musicians')
@@ -28,9 +27,7 @@ export class MusicoController {
   ) {}
 
   @Post()
-  @UseGuards(SupabaseJwtGuard, RoleGuard)
-  @Roles('host')
-  @ApiBearerAuth()
+  @ProtectedRoute('host')
   @ApiOperation({ summary: 'Create a new musician (host only)' })
   @ApiResponse({ status: 201, description: 'Musician created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -81,9 +78,7 @@ export class MusicoController {
   }
 
   @Delete(':id')
-  @UseGuards(SupabaseJwtGuard, RoleGuard)
-  @Roles('host')
-  @ApiBearerAuth()
+  @ProtectedRoute('host')
   @ApiOperation({ summary: 'Delete musician (host only)' })
   @ApiResponse({ status: 200, description: 'Musician deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

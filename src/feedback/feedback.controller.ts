@@ -10,16 +10,14 @@ import {
   Request,
   Ip,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { FeedbackService } from './feedback.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { FeedbackResponseDto } from './dto/feedback-response.dto';
 import { FeedbackQueryDto, FeedbackListResponseDto } from './dto/feedback-list.dto';
 import { OptionalJwtGuard } from '../auth/guards/optional-jwt.guard';
-import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
-import { RoleGuard } from '../auth/guards/role.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
 import { FEEDBACK_RATE_LIMIT, FEEDBACK_RATE_WINDOW_MS } from '../common/constants';
 
 @ApiTags('Feedback')
@@ -28,9 +26,7 @@ export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
 
   @Get()
-  @UseGuards(SupabaseJwtGuard, RoleGuard)
-  @Roles('host')
-  @ApiBearerAuth()
+  @ProtectedRoute('host')
   @ApiOperation({ summary: 'List all feedback (host only)' })
   @ApiResponse({
     status: 200,

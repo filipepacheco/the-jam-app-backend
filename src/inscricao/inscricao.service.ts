@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRegistrationDto } from './dto/create-inscricao.dto';
 import { UpdateRegistrationDto } from './dto/update-inscricao.dto';
+import { RegistrationStatus } from '@prisma/client';
 
 @Injectable()
 export class InscricaoService {
@@ -63,7 +64,7 @@ export class InscricaoService {
       throw new NotFoundException('Registration not found');
     }
 
-    const updateData: any = {};
+    const updateData: { instrument?: string; status?: RegistrationStatus } = {};
 
     if (updateRegistrationDto.instrument !== undefined) {
       updateData.instrument = updateRegistrationDto.instrument;
