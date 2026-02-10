@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsEnum, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { MusicianLevel } from '@prisma/client';
 
@@ -6,6 +6,7 @@ export class UpdateProfileDto {
   @ApiProperty({ description: 'Musician name', required: false })
   @IsString()
   @IsOptional()
+  @MaxLength(255)
   name?: string;
 
   @ApiProperty({
@@ -14,6 +15,7 @@ export class UpdateProfileDto {
   })
   @IsString()
   @IsOptional()
+  @MaxLength(255)
   instrument?: string;
 
   @ApiProperty({
@@ -28,10 +30,12 @@ export class UpdateProfileDto {
   @ApiProperty({ description: 'Contact phone number or secondary email', required: false })
   @IsString()
   @IsOptional()
+  @MaxLength(255)
   contact?: string;
 
   @ApiProperty({ description: 'Phone number', required: false })
   @IsString()
   @IsOptional()
+  @MaxLength(255)
   phone?: string;
 }

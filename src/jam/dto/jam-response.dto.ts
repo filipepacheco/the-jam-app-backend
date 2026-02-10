@@ -10,8 +10,8 @@ export class JamResponseDto {
   @ApiProperty()
   name: string;
 
-  @ApiProperty()
-  hostName: string;
+  @ApiProperty({ required: false })
+  hostName?: string;
 
   @ApiProperty({ required: false })
   description?: string | null;
@@ -20,10 +20,19 @@ export class JamResponseDto {
   date?: Date | null;
 
   @ApiProperty({ required: false })
+  location?: string | null;
+
+  @ApiProperty({ required: false })
   qrCode?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ enum: ['ACTIVE', 'INACTIVE', 'LIVE', 'FINISHED'] })
   status: string;
+
+  @ApiProperty({ enum: ['STOPPED', 'PLAYING', 'PAUSED'], required: false })
+  playbackState?: string;
+
+  @ApiProperty({ required: false })
+  currentScheduleId?: string | null;
 
   @ApiProperty()
   createdAt: Date;

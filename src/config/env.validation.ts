@@ -18,6 +18,9 @@ export function validate(config: Record<string, unknown>) {
     // CORS
     CORS_ORIGINS: Joi.string().optional(),
 
+    // Swagger
+    ENABLE_SWAGGER: Joi.string().valid('true', 'false').default('true'),
+
     // Spotify (optional - enables import feature)
     SPOTIFY_CLIENT_ID: Joi.string().optional(),
     SPOTIFY_CLIENT_SECRET: Joi.string().optional(),

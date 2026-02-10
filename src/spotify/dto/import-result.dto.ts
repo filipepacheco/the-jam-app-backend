@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { JamResponseDto } from '../../jam/dto/jam-response.dto';
 
 export class ImportResultDto {
-  @ApiProperty({ description: 'Target jam (existing or newly created)' })
-  jam: any;
+  @ApiProperty({ description: 'Target jam (existing or newly created)', type: JamResponseDto })
+  jam: JamResponseDto;
 
   @ApiProperty({ description: 'Number of new Music records created' })
   importedTracks: number;

@@ -17,6 +17,7 @@ model JamMusic {
   music         Music          @relation(fields: [musicId], references: [id], onDelete: Cascade)
 
   @@unique([jamId, musicId])
+  @@index([musicId])
   @@map("jamsmusics")
 }
 
@@ -56,6 +57,7 @@ model Music {
   link          String?     @map("link")
   status        MusicStatus @default(SUGGESTED) @map("status")
   createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt @map("atualizado_em")
   neededDrums   Int         @default(0) @map("neededDrums")
   neededGuitars Int         @default(0) @map("neededGuitars")
   neededVocals  Int         @default(0) @map("neededVocals")
@@ -91,6 +93,7 @@ model Registration {
   jamId      String
   status     RegistrationStatus @default(PENDING) @map("status")
   createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt @map("atualizado_em")
   jamMusicId String?            @map("jamMusicaId")
   instrument String?            @map("instrumento")
   scheduleId String?            @map("escalaId")
@@ -110,7 +113,7 @@ model Schedule {
   order         Int            @map("ordem")
   status        ScheduleStatus @default(SUGGESTED) @map("status")
   createdAt     DateTime       @default(now())
-  inscricaoId   String?
+  updatedAt     DateTime       @updatedAt @map("atualizado_em")
   musicId       String
   startedAt     DateTime?      @map("startedAt")
   completedAt   DateTime?      @map("completedAt")
@@ -122,6 +125,7 @@ model Schedule {
   currentForJam Jam?           @relation("CurrentSchedule")
 
   @@index([jamId, status, order])
+  @@index([musicId])
   @@map("escalas")
 }
 
@@ -198,6 +202,7 @@ model Feedback {
   ipAddress  String?   @map("ipAddress")
   musicianId String?   @map("musicoId")
   createdAt  DateTime  @default(now()) @map("criadoEm")
+  updatedAt  DateTime  @updatedAt @map("atualizado_em")
 
   musician   Musician? @relation(fields: [musicianId], references: [id], onDelete: SetNull)
 

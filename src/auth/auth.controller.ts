@@ -28,7 +28,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'Logged out successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
-  async logout(@Request() req): Promise<{ message: string }> {
+  async logout(@Request() _req): Promise<{ message: string }> {
     return { message: 'Logged out successfully' };
   }
 

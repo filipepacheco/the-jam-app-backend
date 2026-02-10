@@ -16,6 +16,7 @@ import { ExportResultDto } from './dto/export-result.dto';
 import { GetTrackDto } from './dto/get-track.dto';
 import { TrackMetadataDto } from './dto/track-metadata.dto';
 import { MusicStatus } from '@prisma/client';
+import { SpotifyApiError } from './types/spotify.types';
 
 @Injectable()
 export class SpotifyService {
@@ -39,7 +40,9 @@ export class SpotifyService {
     let token: string;
     try {
       token = await this.spotifyApi.getClientToken();
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Spotify client token authentication failed: ${message}`);
       throw new ServiceUnavailableException('Failed to authenticate with Spotify');
     }
 
@@ -51,7 +54,7 @@ export class SpotifyService {
         this.spotifyApi.getPlaylist(playlistId, token),
         this.spotifyApi.getPlaylistTracks(playlistId, token),
       ]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       this.handleSpotifyApiError(err, 'playlist');
     }
 
@@ -95,8 +98,9 @@ export class SpotifyService {
         });
         musicIds.push(created.id);
         importedTracks++;
-      } catch (err: any) {
-        this.logger.warn(`Failed to create music for track ${track.name}: ${err.message}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        this.logger.warn(`Failed to create music for track ${track.name}: ${message}`);
         errors.push(`Failed to import "${track.name}" by ${track.artists.join(', ')}`);
         skippedTracks++;
       }
@@ -181,8 +185,9 @@ export class SpotifyService {
         });
 
         addedTracks++;
-      } catch (err: any) {
-        this.logger.warn(`Failed to add track to jam: ${err.message}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        this.logger.warn(`Failed to add track to jam: ${message}`);
         errors.push(`Failed to add track to jam`);
         skippedTracks++;
       }
@@ -266,7 +271,7 @@ export class SpotifyService {
       );
 
       await this.spotifyApi.addTracksToPlaylist(playlist.id, trackUris, dto.spotifyAccessToken);
-    } catch (err: any) {
+    } catch (err: unknown) {
       this.handleSpotifyApiError(err, 'export');
     }
 
@@ -292,7 +297,9 @@ export class SpotifyService {
     let token: string;
     try {
       token = await this.spotifyApi.getClientToken();
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Spotify client token authentication failed: ${message}`);
       throw new ServiceUnavailableException('Failed to authenticate with Spotify');
     }
 
@@ -308,13 +315,14 @@ export class SpotifyService {
         albumName: track.albumName,
         albumImageUrl: track.albumImageUrl,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       this.handleSpotifyApiError(err, 'track');
     }
   }
 
-  private handleSpotifyApiError(err: any, context: string): never {
-    const status = err?.status;
+  private handleSpotifyApiError(err: unknown, context: string): never {
+    const apiErr = err as SpotifyApiError;
+    const status = apiErr?.status;
 
     if (status === 401) {
       throw new HttpException('Invalid or expired Spotify token', 401);
@@ -326,11 +334,12 @@ export class SpotifyService {
       throw new NotFoundException(`Spotify ${context} not found`);
     }
     if (status === 429) {
-      const retryAfter = err.retryAfter;
+      const retryAfter = apiErr.retryAfter;
       throw new HttpException({ message: 'Spotify rate limit exceeded', retryAfter }, 429);
     }
 
-    this.logger.error(`Spotify API error during ${context}: ${err.message}`);
+    const message = err instanceof Error ? err.message : String(err);
+    this.logger.error(`Spotify API error during ${context}: ${message}`);
     throw new HttpException('Failed to communicate with Spotify', 502);
   }
 }

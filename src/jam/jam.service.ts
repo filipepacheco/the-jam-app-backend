@@ -3,9 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateJamDto } from './dto/create-jam.dto';
 import { UpdateJamDto } from './dto/update-jam.dto';
+import { LiveStateResponseDto } from './dto/live-state-response.dto';
 import { LiveDashboardResponseDto, DashboardSongDto } from './dto/live-dashboard-response.dto';
 import * as QRCode from 'qrcode';
 import { PlaybackState, PlaybackAction, Prisma } from '@prisma/client';
+import { DEFAULT_HISTORY_LIMIT } from '../common/constants';
 
 @Injectable()
 export class JamService {
@@ -136,6 +138,42 @@ export class JamService {
     return {
       ...jam,
       schedules: schedulesWithDetails,
+    };
+  }
+
+  async getLiveState(jamId: string): Promise<LiveStateResponseDto> {
+    const jam = await this.findOne(jamId);
+
+    if (!jam) {
+      throw new NotFoundException(`Jam with ID ${jamId} not found`);
+    }
+
+    const currentSong = jam.schedules?.find((s) => s.status === 'IN_PROGRESS') || null;
+
+    const nextSongs =
+      jam.schedules?.filter((s) => s.status === 'SCHEDULED').sort((a, b) => a.order - b.order) ||
+      [];
+
+    const previousSongs =
+      jam.schedules
+        ?.filter((s) => s.status === 'COMPLETED')
+        .sort((a, b) => b.order - a.order)
+        .reverse() || [];
+
+    const suggestedSongs =
+      jam.schedules?.filter((s) => s.status === 'SUGGESTED').sort((a, b) => a.order - b.order) ||
+      [];
+
+    return {
+      currentSong,
+      nextSongs,
+      previousSongs,
+      suggestedSongs,
+      jamStatus: jam.status,
+      playbackState: jam.playbackState || 'STOPPED',
+      currentSongStartedAt: currentSong?.startedAt || null,
+      currentSongPausedAt: currentSong?.pausedAt || null,
+      timestamp: Date.now(),
     };
   }
 
@@ -769,7 +807,7 @@ export class JamService {
 
   async getPlaybackHistory(
     jamId: string,
-    limit: number = 50,
+    limit: number = DEFAULT_HISTORY_LIMIT,
   ): Promise<
     {
       id: string;

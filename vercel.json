@@ -10,22 +10,6 @@
       "source": "/(.*)",
       "headers": [
         {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type,Authorization,X-Requested-With,Accept"
-        },
-        {
-          "key": "Access-Control-Allow-Credentials",
-          "value": "true"
-        },
-        {
-          "key": "Access-Control-Max-Age",
-          "value": "86400"
-        },
-        {
           "key": "Referrer-Policy",
           "value": "no-referrer-when-downgrade"
         },
@@ -36,13 +20,8 @@
         {
           "key": "X-Frame-Options",
           "value": "DENY"
-        },
-        {
-          "key": "Connection",
-          "value": "upgrade"
         }
       ]
     }
   ]
 }
-

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 enum MusicianLevel {
@@ -15,7 +15,9 @@ export class CreateMusicianDto {
   name: string;
 
   @ApiProperty({ description: 'Musician contact' })
-  contact: string;
+  @IsString()
+  @IsOptional()
+  contact?: string;
 
   @ApiProperty({ description: 'Primary instrument' })
   @IsString()

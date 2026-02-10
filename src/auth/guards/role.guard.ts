@@ -40,19 +40,16 @@ export class RoleGuard implements CanActivate {
     // Attach musician to request for downstream use
     request.musician = musician;
 
-    // Map roles to musician flags: 'host' -> musician.isHost
-    const roleMapping = {
-      host: musician.isHost,
-      admin: false, // Can add admin flag to musician if needed in future
-    };
-
     // Check if user has one of the required roles
     const hasRole = requiredRoles.some((role) => {
       if (role === 'host') {
         return musician.isHost === true;
       }
       if (role === 'admin') {
-        return roleMapping['admin'];
+        return false; // Can add admin flag to musician if needed in future
+      }
+      if (role === 'user') {
+        return true; // Any authenticated user with a musician record qualifies
       }
       return false;
     });

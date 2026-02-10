@@ -29,12 +29,12 @@ export class MusicoController {
 
   @Post()
   @UseGuards(SupabaseJwtGuard, RoleGuard)
-  @Roles('admin')
+  @Roles('host')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a new musician (admin only)' })
+  @ApiOperation({ summary: 'Create a new musician (host only)' })
   @ApiResponse({ status: 201, description: 'Musician created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - admin only' })
+  @ApiResponse({ status: 403, description: 'Forbidden - host only' })
   create(@Body() createMusicianDto: CreateMusicianDto) {
     return this.musicoService.create(createMusicianDto);
   }
@@ -84,10 +84,10 @@ export class MusicoController {
   @UseGuards(SupabaseJwtGuard, RoleGuard)
   @Roles('host')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete musician (admin only)' })
+  @ApiOperation({ summary: 'Delete musician (host only)' })
   @ApiResponse({ status: 200, description: 'Musician deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - admin only' })
+  @ApiResponse({ status: 403, description: 'Forbidden - host only' })
   remove(@Param('id') id: string) {
     return this.musicoService.remove(id);
   }

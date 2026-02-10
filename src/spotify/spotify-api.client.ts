@@ -198,6 +198,7 @@ export class SpotifyApiClient {
     return null;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async spotifyFetch(url: string, token: string): Promise<any> {
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
@@ -213,7 +214,10 @@ export class SpotifyApiClient {
     const body = await response.text();
     this.logger.warn(`Spotify API error: ${response.status} ${body}`);
 
-    const error: any = new Error(`Spotify API error: ${response.status}`);
+    const error = new Error(`Spotify API error: ${response.status}`) as Error & {
+      status: number;
+      retryAfter: string | null;
+    };
     error.status = response.status;
     error.retryAfter = response.headers.get('retry-after');
     throw error;

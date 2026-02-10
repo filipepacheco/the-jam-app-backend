@@ -8,6 +8,7 @@ import { ExportResultDto } from './dto/export-result.dto';
 import { GetTrackDto } from './dto/get-track.dto';
 import { TrackMetadataDto } from './dto/track-metadata.dto';
 import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
+import { AuthenticatedRequest } from './types/spotify.types';
 
 @ApiTags('Spotify')
 @Controller('spotify')
@@ -27,7 +28,10 @@ export class SpotifyController {
   @ApiResponse({ status: 403, description: 'Forbidden - user is not the jam host' })
   @ApiResponse({ status: 404, description: 'Jam or playlist not found' })
   @ApiResponse({ status: 503, description: 'Spotify integration not configured' })
-  async importPlaylist(@Body() dto: ImportPlaylistDto, @Req() req: any): Promise<ImportResultDto> {
+  async importPlaylist(
+    @Body() dto: ImportPlaylistDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<ImportResultDto> {
     return this.spotifyService.importPlaylist(dto, req.user.musicianId);
   }
 

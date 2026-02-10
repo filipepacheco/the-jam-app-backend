@@ -14,12 +14,18 @@ export class RegistrationResponseDto {
   @ApiProperty()
   jamMusicId: string;
 
+  @ApiProperty({ required: false })
+  scheduleId?: string;
+
+  @ApiProperty({ required: false })
+  instrument?: string;
+
   @ApiProperty()
   status: string;
 
   @ApiProperty()
   createdAt: Date;
 
-  @ApiProperty({ type: MusicianResponseDto })
-  musician: MusicianResponseDto;
+  @ApiProperty({ type: MusicianResponseDto, required: false })
+  musician?: MusicianResponseDto;
 }

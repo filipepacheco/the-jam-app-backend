@@ -20,6 +20,7 @@ import { OptionalJwtGuard } from '../auth/guards/optional-jwt.guard';
 import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
 import { RoleGuard } from '../auth/guards/role.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { FEEDBACK_RATE_LIMIT, FEEDBACK_RATE_WINDOW_MS } from '../common/constants';
 
 @ApiTags('Feedback')
 @Controller('feedback')
@@ -45,7 +46,7 @@ export class FeedbackController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(OptionalJwtGuard)
-  @Throttle({ default: { limit: 5, ttl: 3600000 } })
+  @Throttle({ default: { limit: FEEDBACK_RATE_LIMIT, ttl: FEEDBACK_RATE_WINDOW_MS } })
   @ApiOperation({ summary: 'Submit feedback (authentication optional)' })
   @ApiResponse({ status: 201, description: 'Feedback submitted', type: FeedbackResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })

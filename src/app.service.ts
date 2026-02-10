@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
 
 export interface HealthCheckResult {
@@ -13,6 +13,8 @@ export interface HealthCheckResult {
 
 @Injectable()
 export class AppService {
+  private readonly logger = new Logger(AppService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async getHealth(): Promise<HealthCheckResult> {
@@ -31,7 +33,8 @@ export class AppService {
           latency,
         },
       };
-    } catch {
+    } catch (error) {
+      this.logger.warn('Health check: DB connection failed', error);
       return {
         status: 'error',
         timestamp: new Date().toISOString(),
