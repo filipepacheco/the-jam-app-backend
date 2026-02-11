@@ -8,7 +8,6 @@ import {
   Delete,
   UseGuards,
   Request,
-  NotFoundException,
   HttpCode,
   Query,
 } from '@nestjs/common';
@@ -35,14 +34,6 @@ export class JamController {
     private readonly jamPlaybackService: JamPlaybackService,
     private readonly jamLiveStateService: JamLiveStateService,
   ) {}
-
-  private async findJamOrFail(id: string) {
-    const jam = await this.jamService.findOne(id);
-    if (!jam) {
-      throw new NotFoundException(`Jam with ID ${id} not found`);
-    }
-    return jam;
-  }
 
   @Post()
   @ProtectedRoute('host', 'admin', 'user')
@@ -124,7 +115,6 @@ export class JamController {
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async startJam(@Param('id') jamId: string, @Request() req) {
-    await this.findJamOrFail(jamId);
     return this.jamPlaybackService.startJam(jamId, req.user?.id);
   }
 
@@ -137,7 +127,6 @@ export class JamController {
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async stopJam(@Param('id') jamId: string, @Request() req) {
-    await this.findJamOrFail(jamId);
     return this.jamPlaybackService.stopJam(jamId, req.user?.id);
   }
 
@@ -150,7 +139,6 @@ export class JamController {
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async nextSong(@Param('id') jamId: string, @Request() req) {
-    await this.findJamOrFail(jamId);
     return this.jamPlaybackService.nextSong(jamId, req.user?.id);
   }
 
@@ -163,7 +151,6 @@ export class JamController {
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async previousSong(@Param('id') jamId: string, @Request() req) {
-    await this.findJamOrFail(jamId);
     return this.jamPlaybackService.previousSong(jamId, req.user?.id);
   }
 
@@ -176,7 +163,6 @@ export class JamController {
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async pauseSong(@Param('id') jamId: string, @Request() req) {
-    await this.findJamOrFail(jamId);
     return this.jamPlaybackService.pauseSong(jamId, req.user?.id);
   }
 
@@ -189,7 +175,6 @@ export class JamController {
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async resumeSong(@Param('id') jamId: string, @Request() req) {
-    await this.findJamOrFail(jamId);
     return this.jamPlaybackService.resumeSong(jamId, req.user?.id);
   }
 
@@ -207,7 +192,6 @@ export class JamController {
     @Body() dto: ReorderSchedulesDto,
     @Request() req,
   ) {
-    await this.findJamOrFail(jamId);
     return this.jamPlaybackService.reorderSchedules(jamId, dto.updates, req.user?.id);
   }
 

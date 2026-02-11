@@ -27,8 +27,7 @@ export class JamLiveStateService {
     const previousSongs =
       jam.schedules
         ?.filter((s) => s.status === 'COMPLETED')
-        .sort((a, b) => b.order - a.order)
-        .reverse() || [];
+        .sort((a, b) => a.order - b.order) || [];
 
     const suggestedSongs =
       jam.schedules?.filter((s) => s.status === 'SUGGESTED').sort((a, b) => a.order - b.order) ||

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateJamDto } from './dto/create-jam.dto';
@@ -145,82 +145,5 @@ export class JamService {
     return this.prisma.jam.delete({
       where: { id },
     });
-  }
-
-  async executeLiveAction(
-    jamId: string,
-    action: 'play' | 'pause' | 'skip' | 'reorder',
-    payload?: { updates?: { scheduleId: string; order: number }[] },
-  ) {
-    const jam = await this.prisma.jam.findUnique({
-      where: { id: jamId },
-    });
-
-    if (!jam) {
-      throw new NotFoundException('Jam not found');
-    }
-
-    if (jam.status !== 'ACTIVE' && jam.status !== 'LIVE') {
-      throw new BadRequestException('Jam is not active or live');
-    }
-
-    let updatedJam;
-
-    switch (action) {
-      case 'play':
-      case 'pause':
-        updatedJam = await this.findOne(jamId);
-        break;
-
-      case 'skip': {
-        const currentSchedule = await this.prisma.schedule.findFirst({
-          where: { jamId, status: 'IN_PROGRESS' },
-        });
-
-        if (currentSchedule) {
-          await this.prisma.schedule.update({
-            where: { id: currentSchedule.id },
-            data: { status: 'COMPLETED' },
-          });
-        }
-
-        const nextSchedule = await this.prisma.schedule.findFirst({
-          where: { jamId, status: 'SCHEDULED' },
-          orderBy: { order: 'asc' },
-        });
-
-        if (nextSchedule) {
-          await this.prisma.schedule.update({
-            where: { id: nextSchedule.id },
-            data: { status: 'IN_PROGRESS' },
-          });
-        }
-
-        updatedJam = await this.findOne(jamId);
-        break;
-      }
-
-      case 'reorder':
-        if (!payload?.updates || payload.updates.length === 0) {
-          throw new BadRequestException('updates array is required for reorder action');
-        }
-
-        // Execute reorder inline since the method moved to JamPlaybackService
-        await this.prisma.$transaction(
-          payload.updates.map(({ scheduleId, order }) =>
-            this.prisma.schedule.update({
-              where: { id: scheduleId },
-              data: { order },
-            }),
-          ),
-        );
-        updatedJam = await this.findOne(jamId);
-        break;
-
-      default:
-        throw new BadRequestException('Invalid action');
-    }
-
-    return updatedJam;
   }
 }
