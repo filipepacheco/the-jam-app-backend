@@ -8,12 +8,15 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateRegistrationDto } from './dto/create-inscricao.dto';
 import { UpdateRegistrationDto } from './dto/update-inscricao.dto';
 import { RegistrationStatus } from '@prisma/client';
+import { normalizeInstrument } from '../common/constants';
 
 @Injectable()
 export class InscricaoService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createRegistrationDto: CreateRegistrationDto, musicianId: string) {
+    const instrument = normalizeInstrument(createRegistrationDto.instrument);
+
     // Get the schedule to validate it exists and get jam info
     const schedule = await this.prisma.schedule.findUnique({
       where: { id: createRegistrationDto.scheduleId },
@@ -30,7 +33,7 @@ export class InscricaoService {
         musicianId,
         jamId: schedule.jamId,
         scheduleId: createRegistrationDto.scheduleId,
-        instrument: createRegistrationDto.instrument,
+        instrument,
       },
     });
 
@@ -45,7 +48,7 @@ export class InscricaoService {
         musicianId,
         jamId: schedule.jamId,
         scheduleId: createRegistrationDto.scheduleId,
-        instrument: createRegistrationDto.instrument,
+        instrument,
       },
       include: {
         musician: true,
@@ -67,7 +70,7 @@ export class InscricaoService {
     const updateData: { instrument?: string; status?: RegistrationStatus } = {};
 
     if (updateRegistrationDto.instrument !== undefined) {
-      updateData.instrument = updateRegistrationDto.instrument;
+      updateData.instrument = normalizeInstrument(updateRegistrationDto.instrument) ?? updateRegistrationDto.instrument;
     }
 
     if (updateRegistrationDto.status !== undefined) {

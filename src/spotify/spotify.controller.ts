@@ -1,5 +1,5 @@
-import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Post, Body, Req } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { SpotifyService } from './spotify.service';
 import { ImportPlaylistDto } from './dto/import-playlist.dto';
 import { ImportResultDto } from './dto/import-result.dto';
@@ -7,7 +7,7 @@ import { ExportPlaylistDto } from './dto/export-playlist.dto';
 import { ExportResultDto } from './dto/export-result.dto';
 import { GetTrackDto } from './dto/get-track.dto';
 import { TrackMetadataDto } from './dto/track-metadata.dto';
-import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
+import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
 import { AuthenticatedRequest } from './types/spotify.types';
 
 @ApiTags('Spotify')
@@ -16,8 +16,7 @@ export class SpotifyController {
   constructor(private readonly spotifyService: SpotifyService) {}
 
   @Post('import')
-  @UseGuards(SupabaseJwtGuard)
-  @ApiBearerAuth()
+  @ProtectedRoute()
   @ApiOperation({
     summary: 'Import a Spotify playlist as a new jam or append to existing jam',
     description: `If 'jamId' is provided, tracks are appended to the existing jam. If omitted, a new jam is created. When importing to an existing jam, tracks already present are skipped.`,
@@ -36,8 +35,7 @@ export class SpotifyController {
   }
 
   @Post('export')
-  @UseGuards(SupabaseJwtGuard)
-  @ApiBearerAuth()
+  @ProtectedRoute()
   @ApiOperation({ summary: 'Export a jam as a Spotify playlist' })
   @ApiResponse({ status: 201, description: 'Spotify playlist created', type: ExportResultDto })
   @ApiResponse({ status: 400, description: 'No valid Spotify links in jam' })
@@ -48,8 +46,7 @@ export class SpotifyController {
   }
 
   @Post('track')
-  @UseGuards(SupabaseJwtGuard)
-  @ApiBearerAuth()
+  @ProtectedRoute()
   @ApiOperation({ summary: 'Get Spotify track metadata from URL or URI' })
   @ApiResponse({ status: 200, description: 'Track metadata retrieved', type: TrackMetadataDto })
   @ApiResponse({ status: 400, description: 'Invalid track URL or URI' })

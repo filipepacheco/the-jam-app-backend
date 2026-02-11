@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { PrismaService } from '../prisma/prisma.service';
 import { Musician } from '@prisma/client';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { normalizeInstrument } from '../common/constants';
 
 @Injectable()
 export class AuthService {
@@ -54,7 +55,7 @@ export class AuthService {
       updatePayload['name'] = updateData.name;
     }
     if (updateData.instrument !== undefined) {
-      updatePayload['instrument'] = updateData.instrument;
+      updatePayload['instrument'] = normalizeInstrument(updateData.instrument) ?? updateData.instrument;
     }
     if (updateData.level !== undefined) {
       updatePayload['level'] = updateData.level;

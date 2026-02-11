@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateJamDto } from './dto/create-jam.dto';
@@ -134,14 +134,28 @@ export class JamService {
     };
   }
 
-  async update(id: string, updateJamDto: UpdateJamDto) {
+  async update(id: string, updateJamDto: UpdateJamDto, musicianId?: string) {
+    const jam = await this.prisma.jam.findUnique({ where: { id } });
+    if (!jam) {
+      throw new NotFoundException('Jam not found');
+    }
+    if (musicianId && jam.hostMusicianId && jam.hostMusicianId !== musicianId) {
+      throw new ForbiddenException('Only the jam host can update this jam');
+    }
     return this.prisma.jam.update({
       where: { id },
       data: updateJamDto,
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, musicianId?: string) {
+    const jam = await this.prisma.jam.findUnique({ where: { id } });
+    if (!jam) {
+      throw new NotFoundException('Jam not found');
+    }
+    if (musicianId && jam.hostMusicianId && jam.hostMusicianId !== musicianId) {
+      throw new ForbiddenException('Only the jam host can delete this jam');
+    }
     return this.prisma.jam.delete({
       where: { id },
     });

@@ -6,12 +6,12 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
   Request,
   HttpCode,
   Query,
+  ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JamService } from './jam.service';
 import { JamPlaybackService } from './jam-playback.service';
 import { JamLiveStateService } from './jam-live-state.service';
@@ -21,7 +21,6 @@ import { ReorderSchedulesDto } from './dto/reorder-schedules.dto';
 import { JamResponseDto } from './dto/jam-response.dto';
 import { LiveStateResponseDto } from './dto/live-state-response.dto';
 import { LiveDashboardResponseDto } from './dto/live-dashboard-response.dto';
-import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
 import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { DEFAULT_HISTORY_LIMIT, MAX_HISTORY_LIMIT } from '../common/constants';
@@ -78,7 +77,7 @@ export class JamController {
   @ApiOperation({ summary: 'Get jam by ID' })
   @ApiResponse({ status: 200, description: 'Jam found', type: JamResponseDto })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.jamService.findOne(id);
   }
 
@@ -90,7 +89,7 @@ export class JamController {
     type: LiveStateResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async getLiveState(@Param('id') id: string): Promise<LiveStateResponseDto> {
+  async getLiveState(@Param('id', ParseUUIDPipe) id: string): Promise<LiveStateResponseDto> {
     return this.jamLiveStateService.getLiveState(id);
   }
 
@@ -102,7 +101,7 @@ export class JamController {
     type: LiveDashboardResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async getLiveDashboard(@Param('id') id: string): Promise<LiveDashboardResponseDto> {
+  async getLiveDashboard(@Param('id', ParseUUIDPipe) id: string): Promise<LiveDashboardResponseDto> {
     return this.jamLiveStateService.getLiveDashboard(id);
   }
 
@@ -114,8 +113,8 @@ export class JamController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async startJam(@Param('id') jamId: string, @Request() req) {
-    return this.jamPlaybackService.startJam(jamId, req.user?.id);
+  async startJam(@Param('id', ParseUUIDPipe) jamId: string, @Request() req) {
+    return this.jamPlaybackService.startJam(jamId, req.user?.musicianId);
   }
 
   @Post(':id/control/stop')
@@ -126,8 +125,8 @@ export class JamController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async stopJam(@Param('id') jamId: string, @Request() req) {
-    return this.jamPlaybackService.stopJam(jamId, req.user?.id);
+  async stopJam(@Param('id', ParseUUIDPipe) jamId: string, @Request() req) {
+    return this.jamPlaybackService.stopJam(jamId, req.user?.musicianId);
   }
 
   @Post(':id/control/next')
@@ -138,8 +137,8 @@ export class JamController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async nextSong(@Param('id') jamId: string, @Request() req) {
-    return this.jamPlaybackService.nextSong(jamId, req.user?.id);
+  async nextSong(@Param('id', ParseUUIDPipe) jamId: string, @Request() req) {
+    return this.jamPlaybackService.nextSong(jamId, req.user?.musicianId);
   }
 
   @Post(':id/control/previous')
@@ -150,8 +149,8 @@ export class JamController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async previousSong(@Param('id') jamId: string, @Request() req) {
-    return this.jamPlaybackService.previousSong(jamId, req.user?.id);
+  async previousSong(@Param('id', ParseUUIDPipe) jamId: string, @Request() req) {
+    return this.jamPlaybackService.previousSong(jamId, req.user?.musicianId);
   }
 
   @Post(':id/control/pause')
@@ -162,8 +161,8 @@ export class JamController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async pauseSong(@Param('id') jamId: string, @Request() req) {
-    return this.jamPlaybackService.pauseSong(jamId, req.user?.id);
+  async pauseSong(@Param('id', ParseUUIDPipe) jamId: string, @Request() req) {
+    return this.jamPlaybackService.pauseSong(jamId, req.user?.musicianId);
   }
 
   @Post(':id/control/resume')
@@ -174,8 +173,8 @@ export class JamController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async resumeSong(@Param('id') jamId: string, @Request() req) {
-    return this.jamPlaybackService.resumeSong(jamId, req.user?.id);
+  async resumeSong(@Param('id', ParseUUIDPipe) jamId: string, @Request() req) {
+    return this.jamPlaybackService.resumeSong(jamId, req.user?.musicianId);
   }
 
   @Post(':id/control/reorder')
@@ -188,21 +187,20 @@ export class JamController {
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async reorderSchedules(
-    @Param('id') jamId: string,
+    @Param('id', ParseUUIDPipe) jamId: string,
     @Body() dto: ReorderSchedulesDto,
     @Request() req,
   ) {
-    return this.jamPlaybackService.reorderSchedules(jamId, dto.updates, req.user?.id);
+    return this.jamPlaybackService.reorderSchedules(jamId, dto.updates, req.user?.musicianId);
   }
 
   @Get(':id/playback-history')
-  @UseGuards(SupabaseJwtGuard)
-  @ApiBearerAuth()
+  @ProtectedRoute()
   @ApiOperation({ summary: 'Get playback history for jam' })
   @ApiResponse({ status: 200, description: 'Playback history retrieved' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async getPlaybackHistory(@Param('id') jamId: string, @Query('limit') limitParam?: string) {
+  async getPlaybackHistory(@Param('id', ParseUUIDPipe) jamId: string, @Query('limit') limitParam?: string) {
     let limit = limitParam ? parseInt(limitParam, 10) : DEFAULT_HISTORY_LIMIT;
     if (isNaN(limit) || limit < 1) limit = DEFAULT_HISTORY_LIMIT;
     if (limit > MAX_HISTORY_LIMIT) limit = MAX_HISTORY_LIMIT;
@@ -215,8 +213,8 @@ export class JamController {
   @ApiResponse({ status: 200, description: 'Jam updated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  update(@Param('id') id: string, @Body() updateJamDto: UpdateJamDto) {
-    return this.jamService.update(id, updateJamDto);
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateJamDto: UpdateJamDto, @Request() req) {
+    return this.jamService.update(id, updateJamDto, req.user?.musicianId);
   }
 
   @Delete(':id')
@@ -225,7 +223,7 @@ export class JamController {
   @ApiResponse({ status: 200, description: 'Jam deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  remove(@Param('id') id: string) {
-    return this.jamService.remove(id);
+  remove(@Param('id', ParseUUIDPipe) id: string, @Request() req) {
+    return this.jamService.remove(id, req.user?.musicianId);
   }
 }

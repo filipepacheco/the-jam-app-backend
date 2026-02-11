@@ -1,3 +1,7 @@
+// Instruments
+export { CANONICAL_INSTRUMENTS, normalizeInstrument } from './instruments';
+export type { CanonicalInstrument } from './instruments';
+
 // Pagination
 export const DEFAULT_TAKE = 20;
 export const MAX_TAKE = 100;

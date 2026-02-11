@@ -1,14 +1,14 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateRegistrationDto {
   @ApiProperty({ description: 'Schedule ID' })
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
   scheduleId: string;
 
   @ApiProperty({ description: 'Musician ID (optional, only usable by hosts)', required: false })
-  @IsString()
+  @IsUUID()
   @IsOptional()
   musicianId?: string;
 

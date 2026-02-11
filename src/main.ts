@@ -27,7 +27,9 @@ function isOriginAllowed(
   if (isDevelopment) return true;
   if (!origin) return true;
   if (allowedOrigins.includes(origin)) return true;
-  if (origin.endsWith('.vercel.app')) return true;
+  if (origin.endsWith('-filipepachecos-projects.vercel.app')) return true;
+  if (origin.endsWith('.the-jam-app.vercel.app')) return true;
+  if (origin.endsWith('.jamapp.com.br') || origin === 'https://jamapp.com.br') return true;
   return false;
 }
 

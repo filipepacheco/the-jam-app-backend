@@ -6,25 +6,19 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
   Request,
-  ForbiddenException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { MusicoService } from './musico.service';
 import { CreateMusicianDto } from './dto/create-musico.dto';
 import { UpdateMusicianDto } from './dto/update-musico.dto';
-import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
 import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
-import { PrismaService } from '../prisma/prisma.service';
 
 @ApiTags('Musicians')
 @Controller('musicos')
 export class MusicoController {
-  constructor(
-    private readonly musicoService: MusicoService,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly musicoService: MusicoService) {}
 
   @Post()
   @ProtectedRoute('host')
@@ -37,8 +31,7 @@ export class MusicoController {
   }
 
   @Get()
-  @UseGuards(SupabaseJwtGuard)
-  @ApiBearerAuth()
+  @ProtectedRoute()
   @ApiOperation({ summary: 'List all musicians' })
   @ApiResponse({ status: 200, description: 'List of musicians' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -47,34 +40,17 @@ export class MusicoController {
   }
 
   @Patch(':id')
-  @UseGuards(SupabaseJwtGuard)
-  @ApiBearerAuth()
+  @ProtectedRoute()
   @ApiOperation({ summary: 'Update musician (self or host)' })
   @ApiResponse({ status: 200, description: 'Musician updated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - can only update own profile unless host' })
-  async update(
-    @Param('id') id: string,
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateMusicianDto: UpdateMusicianDto,
     @Request() req,
   ) {
-    // Get the authenticated user's musician ID from JWT
-    const authenticatedMusicianId = req.user.musicianId;
-
-    // Get the authenticated user's musician record to check if host
-    const authenticatedMusician = await this.prisma.musician.findUnique({
-      where: { id: authenticatedMusicianId },
-    });
-
-    // Allow user to update their own profile or if they are a host
-    const isUpdatingOwnProfile = authenticatedMusicianId === id;
-    const isHost = authenticatedMusician?.isHost === true;
-
-    if (!isUpdatingOwnProfile && !isHost) {
-      throw new ForbiddenException('You can only update your own profile');
-    }
-
-    return this.musicoService.update(id, updateMusicianDto);
+    return this.musicoService.update(id, updateMusicianDto, req.user?.musicianId);
   }
 
   @Delete(':id')
@@ -83,7 +59,7 @@ export class MusicoController {
   @ApiResponse({ status: 200, description: 'Musician deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - host only' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.musicoService.remove(id);
   }
 }

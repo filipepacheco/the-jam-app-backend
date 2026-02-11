@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMusicDto } from './dto/create-musica.dto';
 import { UpdateMusicDto } from './dto/update-musica.dto';
@@ -25,6 +25,10 @@ export class MusicaService {
   }
 
   async update(id: string, updateMusicDto: UpdateMusicDto) {
+    const music = await this.prisma.music.findUnique({ where: { id } });
+    if (!music) {
+      throw new NotFoundException('Music not found');
+    }
     return this.prisma.music.update({
       where: { id },
       data: updateMusicDto,
@@ -32,34 +36,38 @@ export class MusicaService {
   }
 
   async remove(id: string) {
+    const music = await this.prisma.music.findUnique({ where: { id } });
+    if (!music) {
+      throw new NotFoundException('Music not found');
+    }
     return this.prisma.music.delete({
       where: { id },
     });
   }
 
   async linkToJam(musicaId: string, jamId: string) {
-    // Check if the link already exists
-    const existingLink = await this.prisma.jamMusic.findFirst({
-      where: {
-        jamId,
-        musicId: musicaId,
-      },
-    });
+    return this.prisma.$transaction(async (tx) => {
+      const existingLink = await tx.jamMusic.findFirst({
+        where: {
+          jamId,
+          musicId: musicaId,
+        },
+      });
 
-    if (existingLink) {
-      return existingLink;
-    }
+      if (existingLink) {
+        return existingLink;
+      }
 
-    // Create the link
-    return this.prisma.jamMusic.create({
-      data: {
-        jamId,
-        musicId: musicaId,
-      },
-      include: {
-        jam: true,
-        music: true,
-      },
+      return tx.jamMusic.create({
+        data: {
+          jamId,
+          musicId: musicaId,
+        },
+        include: {
+          jam: true,
+          music: true,
+        },
+      });
     });
   }
 }

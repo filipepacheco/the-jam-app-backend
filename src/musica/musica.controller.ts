@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { MusicaService } from './musica.service';
 import { CreateMusicDto } from './dto/create-musica.dto';
@@ -33,7 +33,7 @@ export class MusicaController {
   @ApiResponse({ status: 200, description: 'Music updated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  update(@Param('id') id: string, @Body() updateMusicDto: UpdateMusicDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateMusicDto: UpdateMusicDto) {
     return this.musicaService.update(id, updateMusicDto);
   }
 
@@ -43,7 +43,7 @@ export class MusicaController {
   @ApiResponse({ status: 200, description: 'Music linked to jam successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  linkToJam(@Param('id') musicaId: string, @Param('jamId') jamId: string) {
+  linkToJam(@Param('id', ParseUUIDPipe) musicaId: string, @Param('jamId', ParseUUIDPipe) jamId: string) {
     return this.musicaService.linkToJam(musicaId, jamId);
   }
 
@@ -53,7 +53,7 @@ export class MusicaController {
   @ApiResponse({ status: 200, description: 'Music deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.musicaService.remove(id);
   }
 }

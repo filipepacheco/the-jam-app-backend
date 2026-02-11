@@ -8,23 +8,23 @@ import {
   Request,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { SupabaseJwtGuard } from './guards/supabase-jwt.guard';
 import { LoggingInterceptor } from '../common/interceptors/logging.interceptor';
-
+import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
 import { MusicianProfileResponseDto } from './dto/musician-profile-response.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
+@UseGuards(ThrottlerGuard)
 @UseInterceptors(LoggingInterceptor)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('logout')
-  @UseGuards(SupabaseJwtGuard)
-  @ApiBearerAuth()
+  @ProtectedRoute()
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'Logged out successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
@@ -33,8 +33,7 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(SupabaseJwtGuard)
-  @ApiBearerAuth()
+  @ProtectedRoute()
   @ApiOperation({ summary: 'Get current user profile with registration status' })
   @ApiResponse({
     status: 200,
@@ -63,8 +62,8 @@ export class AuthController {
   }
 
   @Patch('profile')
-  @UseGuards(SupabaseJwtGuard)
-  @ApiBearerAuth()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ProtectedRoute()
   @ApiOperation({
     summary: 'Update musician profile (name, instrument, level, contact, phone, isHost)',
   })

@@ -1,4 +1,4 @@
-import { PartialType } from '@nestjs/mapped-types';
+import { PartialType } from '@nestjs/swagger';
 import { CreateMusicDto } from './create-musica.dto';
 
 export class UpdateMusicDto extends PartialType(CreateMusicDto) {}

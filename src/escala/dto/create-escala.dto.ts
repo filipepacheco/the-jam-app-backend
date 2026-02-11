@@ -1,15 +1,15 @@
-import { IsString, IsNotEmpty, IsInt, Min, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsInt, Min, IsOptional, IsEnum, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ScheduleStatus } from '@prisma/client';
 
 export class CreateScheduleDto {
   @ApiProperty({ description: 'Jam session ID' })
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
   jamId: string;
 
   @ApiProperty({ description: 'Music ID' })
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
   musicId: string;
 

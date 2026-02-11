@@ -1,9 +1,8 @@
-import { Controller, Post, Body, Param, Delete, Patch, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Post, Body, Param, Delete, Patch, Request, ParseUUIDPipe } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { InscricaoService } from './inscricao.service';
 import { CreateRegistrationDto } from './dto/create-inscricao.dto';
 import { UpdateRegistrationDto } from './dto/update-inscricao.dto';
-import { SupabaseJwtGuard } from '../auth/guards/supabase-jwt.guard';
 import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
 
 @ApiTags('Registrations')
@@ -12,8 +11,7 @@ export class InscricaoController {
   constructor(private readonly inscricaoService: InscricaoService) {}
 
   @Post()
-  @UseGuards(SupabaseJwtGuard)
-  @ApiBearerAuth()
+  @ProtectedRoute()
   @ApiOperation({ summary: 'Create a new registration' })
   @ApiResponse({ status: 201, description: 'Registration created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -34,18 +32,17 @@ export class InscricaoController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - host only' })
   @ApiResponse({ status: 404, description: 'Registration not found' })
-  update(@Param('id') id: string, @Body() updateRegistrationDto: UpdateRegistrationDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateRegistrationDto: UpdateRegistrationDto) {
     return this.inscricaoService.update(id, updateRegistrationDto);
   }
 
   @Delete(':id')
-  @UseGuards(SupabaseJwtGuard)
-  @ApiBearerAuth()
+  @ProtectedRoute()
   @ApiOperation({ summary: 'Cancel registration' })
   @ApiResponse({ status: 200, description: 'Registration cancelled' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - can only delete own registrations' })
-  remove(@Param('id') id: string, @Request() req) {
+  remove(@Param('id', ParseUUIDPipe) id: string, @Request() req) {
     return this.inscricaoService.remove(id, req.user.musicianId);
   }
 }
