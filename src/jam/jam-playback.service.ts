@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PlaybackState, PlaybackAction, Prisma } from '@prisma/client';
 import { DEFAULT_HISTORY_LIMIT } from '../common/constants';
@@ -6,12 +6,6 @@ import { DEFAULT_HISTORY_LIMIT } from '../common/constants';
 @Injectable()
 export class JamPlaybackService {
   constructor(private prisma: PrismaService) {}
-
-  private validateHostOwnership(jam: { hostMusicianId: string | null }, musicianId?: string): void {
-    if (musicianId && jam.hostMusicianId && jam.hostMusicianId !== musicianId) {
-      throw new ForbiddenException('Only the jam host can control playback');
-    }
-  }
 
   async startJam(jamId: string, userId?: string) {
     const jam = await this.prisma.jam.findUnique({
@@ -23,11 +17,6 @@ export class JamPlaybackService {
       throw new NotFoundException('Jam not found');
     }
 
-    this.validateHostOwnership(jam, userId);
-
-    if (jam.status !== 'ACTIVE') {
-      throw new BadRequestException('Jam must be ACTIVE to start');
-    }
 
     if (jam.playbackState === PlaybackState.PLAYING) {
       throw new BadRequestException('Jam is already playing');
@@ -65,7 +54,13 @@ export class JamPlaybackService {
       });
 
       await tx.playbackHistory.create({
-        data: { jamId, scheduleId: firstSchedule.id, action: PlaybackAction.START_JAM, userId, metadata: { firstSongId: firstSchedule.id } },
+        data: {
+          jamId,
+          scheduleId: firstSchedule.id,
+          action: PlaybackAction.START_JAM,
+          userId,
+          metadata: { firstSongId: firstSchedule.id },
+        },
       });
 
       return updatedJam;
@@ -82,7 +77,6 @@ export class JamPlaybackService {
       throw new NotFoundException('Jam not found');
     }
 
-    this.validateHostOwnership(jam, userId);
 
     if (jam.playbackState === PlaybackState.STOPPED) {
       throw new BadRequestException('Jam is already stopped');
@@ -134,7 +128,6 @@ export class JamPlaybackService {
       throw new NotFoundException('Jam not found');
     }
 
-    this.validateHostOwnership(jam, userId);
 
     if (!jam.currentScheduleId) {
       throw new BadRequestException('No current song playing');
@@ -205,7 +198,6 @@ export class JamPlaybackService {
       throw new NotFoundException('Jam not found');
     }
 
-    this.validateHostOwnership(jam, userId);
 
     if (!jam.currentScheduleId) {
       throw new BadRequestException('No current song playing');
@@ -288,7 +280,6 @@ export class JamPlaybackService {
       throw new NotFoundException('Jam not found');
     }
 
-    this.validateHostOwnership(jam, userId);
 
     if (jam.playbackState !== PlaybackState.PLAYING) {
       throw new BadRequestException('Jam is not currently playing');
@@ -316,7 +307,12 @@ export class JamPlaybackService {
       });
 
       await tx.playbackHistory.create({
-        data: { jamId, scheduleId: jam.currentScheduleId, action: PlaybackAction.PAUSE_SONG, userId },
+        data: {
+          jamId,
+          scheduleId: jam.currentScheduleId,
+          action: PlaybackAction.PAUSE_SONG,
+          userId,
+        },
       });
 
       return updatedJam;
@@ -333,7 +329,6 @@ export class JamPlaybackService {
       throw new NotFoundException('Jam not found');
     }
 
-    this.validateHostOwnership(jam, userId);
 
     if (jam.playbackState !== PlaybackState.PAUSED) {
       throw new BadRequestException('Jam is not paused');
@@ -361,7 +356,12 @@ export class JamPlaybackService {
       });
 
       await tx.playbackHistory.create({
-        data: { jamId, scheduleId: jam.currentScheduleId, action: PlaybackAction.RESUME_SONG, userId },
+        data: {
+          jamId,
+          scheduleId: jam.currentScheduleId,
+          action: PlaybackAction.RESUME_SONG,
+          userId,
+        },
       });
 
       return updatedJam;
@@ -381,7 +381,6 @@ export class JamPlaybackService {
     if (!jam) {
       throw new NotFoundException('Jam not found');
     }
-    this.validateHostOwnership(jam, userId);
 
     const scheduleIds = updates.map((u) => u.scheduleId);
     const schedules = await this.prisma.schedule.findMany({
@@ -478,5 +477,4 @@ export class JamPlaybackService {
       metadata: entry.metadata,
     }));
   }
-
 }

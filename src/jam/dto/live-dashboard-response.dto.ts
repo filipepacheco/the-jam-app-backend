@@ -24,6 +24,9 @@ export class DashboardSongDto {
   @ApiProperty({ nullable: true })
   duration: number | null;
 
+  @ApiProperty({ nullable: true, required: false })
+  link?: string | null;
+
   @ApiProperty({ type: [DashboardMusicianDto] })
   musicians: DashboardMusicianDto[];
 }
@@ -44,6 +47,18 @@ export class LiveDashboardResponseDto {
     description: 'Jam QR code (data URL)',
   })
   qrCode: string | null;
+
+  @ApiProperty({
+    nullable: true,
+    description: 'Jam slug for friendly URLs',
+  })
+  slug: string | null;
+
+  @ApiProperty({
+    nullable: true,
+    description: 'Jam short code for QR/typing',
+  })
+  shortCode: string | null;
 
   @ApiProperty({
     description: 'Current jam status',

@@ -25,6 +25,12 @@ export class JamResponseDto {
   @ApiProperty({ required: false })
   qrCode?: string | null;
 
+  @ApiProperty({ required: false })
+  slug?: string | null;
+
+  @ApiProperty({ required: false })
+  shortCode?: string | null;
+
   @ApiProperty({ enum: ['ACTIVE', 'INACTIVE', 'LIVE', 'FINISHED'] })
   status: string;
 

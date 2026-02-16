@@ -26,7 +26,7 @@ export function validate(config: Record<string, unknown>) {
     SPOTIFY_CLIENT_SECRET: Joi.string().optional(),
 
     // Frontend URL for QR code generation
-    FRONTEND_URL: Joi.string().uri().default('http://localhost:3000'),
+    FRONTEND_URL: Joi.string().uri().default('http://localhost:5173'),
   });
 
   const { error, value } = schema.validate(config, {

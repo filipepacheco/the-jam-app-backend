@@ -25,7 +25,7 @@ import { TokenCacheService } from './services/token-cache.service';
     ThrottlerModule.forRoot([
       {
         ttl: 60000, // 1 minute
-        limit: 5, // 5 requests per minute
+        limit: 30, // 30 requests per minute (GET /auth/me fires on every page navigation)
       },
     ]),
     PrismaModule,

@@ -17,6 +17,7 @@ import { GetTrackDto } from './dto/get-track.dto';
 import { TrackMetadataDto } from './dto/track-metadata.dto';
 import { MusicStatus } from '@prisma/client';
 import { SpotifyApiError } from './types/spotify.types';
+import { generateShortCode, generateSlug } from '../common/utils/slug';
 
 @Injectable()
 export class SpotifyService {
@@ -141,13 +142,19 @@ export class SpotifyService {
       // Get existing music IDs to avoid duplicates within the jam
       existingJamMusicIds = new Set(jam.jamMusics.map((jm) => jm.musicId));
     } else {
-      // Create new jam
+      // Create new jam with shortCode and slug
+      const shortCode = await generateShortCode(this.prisma);
+      const jamName = dto.name || playlistMeta.name;
+      const slug = dto.slug || generateSlug(jamName, shortCode);
+
       jam = await this.prisma.jam.create({
         data: {
-          name: dto.name || playlistMeta.name,
+          name: jamName,
           description: dto.description || playlistMeta.description || undefined,
           date: dto.date ? new Date(dto.date) : undefined,
           location: dto.location,
+          slug,
+          shortCode,
           hostMusicianId,
         },
       });

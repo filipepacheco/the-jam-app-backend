@@ -1,37 +1,66 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { JamService } from './jam.service';
-import { LiveStateResponseDto } from './dto/live-state-response.dto';
+import { LiveStateResponseDto, LiveStateSongDto } from './dto/live-state-response.dto';
 import { LiveDashboardResponseDto, DashboardSongDto } from './dto/live-dashboard-response.dto';
 
 @Injectable()
 export class JamLiveStateService {
-  constructor(
-    private prisma: PrismaService,
-    private jamService: JamService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async getLiveState(jamId: string): Promise<LiveStateResponseDto> {
-    const jam = await this.jamService.findOne(jamId);
+    const jam = await this.prisma.jam.findUnique({
+      where: { id: jamId },
+      select: { id: true, status: true, playbackState: true },
+    });
 
     if (!jam) {
       throw new NotFoundException(`Jam with ID ${jamId} not found`);
     }
 
-    const currentSong = jam.schedules?.find((s) => s.status === 'IN_PROGRESS') || null;
+    const schedules = await this.prisma.schedule.findMany({
+      where: { jamId },
+      select: {
+        id: true,
+        order: true,
+        status: true,
+        startedAt: true,
+        completedAt: true,
+        music: {
+          select: { title: true, artist: true, duration: true, link: true },
+        },
+        registrations: {
+          select: {
+            instrument: true,
+            musician: { select: { id: true, name: true } },
+          },
+        },
+      },
+      orderBy: { order: 'asc' },
+    });
 
-    const nextSongs =
-      jam.schedules?.filter((s) => s.status === 'SCHEDULED').sort((a, b) => a.order - b.order) ||
-      [];
+    const songs: LiveStateSongDto[] = schedules.map((s) => ({
+      id: s.id,
+      order: s.order,
+      status: s.status,
+      startedAt: s.startedAt,
+      completedAt: s.completedAt,
+      music: {
+        title: s.music.title,
+        artist: s.music.artist,
+        duration: s.music.duration,
+        link: s.music.link,
+      },
+      musicians: s.registrations.map((reg) => ({
+        id: reg.musician.id,
+        name: reg.musician.name,
+        instrument: reg.instrument,
+      })),
+    }));
 
-    const previousSongs =
-      jam.schedules
-        ?.filter((s) => s.status === 'COMPLETED')
-        .sort((a, b) => a.order - b.order) || [];
-
-    const suggestedSongs =
-      jam.schedules?.filter((s) => s.status === 'SUGGESTED').sort((a, b) => a.order - b.order) ||
-      [];
+    const currentSong = songs.find((s) => s.status === 'IN_PROGRESS') || null;
+    const nextSongs = songs.filter((s) => s.status === 'SCHEDULED');
+    const previousSongs = songs.filter((s) => s.status === 'COMPLETED');
+    const suggestedSongs = songs.filter((s) => s.status === 'SUGGESTED');
 
     return {
       currentSong,
@@ -40,9 +69,6 @@ export class JamLiveStateService {
       suggestedSongs,
       jamStatus: jam.status,
       playbackState: jam.playbackState || 'STOPPED',
-      currentSongStartedAt: currentSong?.startedAt || null,
-      currentSongPausedAt: currentSong?.pausedAt || null,
-      timestamp: Date.now(),
     };
   }
 
@@ -62,7 +88,7 @@ export class JamLiveStateService {
         order: true,
         status: true,
         music: {
-          select: { id: true, title: true, artist: true, duration: true },
+          select: { id: true, title: true, artist: true, duration: true, link: true },
         },
         registrations: {
           select: {
@@ -86,6 +112,8 @@ export class JamLiveStateService {
       jamId: jam.id,
       jamName: jam.name,
       qrCode: jam.qrCode,
+      slug: jam.slug,
+      shortCode: jam.shortCode,
       jamStatus: jam.status,
       currentSong,
       nextSongs,
@@ -93,7 +121,7 @@ export class JamLiveStateService {
   }
 
   private mapScheduleToDashboardSong(schedule: {
-    music: { id: string; title: string; artist: string; duration: number | null };
+    music: { id: string; title: string; artist: string; duration: number | null; link: string | null };
     registrations: Array<{
       instrument: string;
       musician: { id: string; name: string | null };
@@ -104,6 +132,7 @@ export class JamLiveStateService {
       title: schedule.music.title,
       artist: schedule.music.artist,
       duration: schedule.music.duration,
+      link: schedule.music.link,
       musicians: schedule.registrations.map((reg) => ({
         id: reg.musician.id,
         name: reg.musician.name,

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDateString, IsUUID, Matches, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ImportPlaylistDto {
@@ -44,4 +44,11 @@ export class ImportPlaylistDto {
   @IsString()
   @IsOptional()
   location?: string;
+
+  @ApiProperty({ description: 'Custom URL slug for the jam (ignored if jamId provided)', required: false })
+  @IsString()
+  @IsOptional()
+  @MaxLength(80)
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: 'Slug must be lowercase alphanumeric with hyphens' })
+  slug?: string;
 }

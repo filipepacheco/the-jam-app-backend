@@ -38,3 +38,10 @@ claude.md
 .claude
 .serena
 .vercel
+
+# Supabase CLI local state
+supabase/.branches
+supabase/.temp
+
+# Local agent tooling
+.github/skills/

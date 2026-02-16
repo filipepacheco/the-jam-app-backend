@@ -33,6 +33,12 @@ export class MusicianProfileResponseDto {
   isHost: boolean;
 
   @ApiProperty({
+    description: 'User role derived from isHost flag',
+    enum: ['user', 'host'],
+  })
+  role: string;
+
+  @ApiProperty({
     description: 'Whether profile registration is complete (has instrument, level, and contact)',
   })
   registrationComplete: boolean;

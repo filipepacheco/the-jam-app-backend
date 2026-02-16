@@ -27,9 +27,12 @@ model Jam {
   description      String?        @map("descricao")
   date             DateTime?      @map("data")
   qrCode           String?
+  slug             String?        @unique @map("slug")
+  shortCode        String?        @unique @map("codigo_curto")
   status           JamStatus      @default(ACTIVE) @map("status")
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime?      @map("excluido_em")
   hostContact      String?        @map("hostContato")
   hostName         String?        @map("hostNome")
   hostMusicianId   String?        @map("hostMusicianId")

@@ -73,15 +73,15 @@ export class JamController {
     return this.jamService.findAll(pagination.skip, pagination.take);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get jam by ID' })
+  @Get(':identifier')
+  @ApiOperation({ summary: 'Get jam by ID, slug, or short code' })
   @ApiResponse({ status: 200, description: 'Jam found', type: JamResponseDto })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.jamService.findOne(id);
+  findOne(@Param('identifier') identifier: string) {
+    return this.jamService.findByIdentifier(identifier);
   }
 
-  @Get(':id/live/state')
+  @Get(':identifier/live/state')
   @ApiOperation({ summary: 'Get live jam state for polling fallback' })
   @ApiResponse({
     status: 200,
@@ -89,11 +89,12 @@ export class JamController {
     type: LiveStateResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async getLiveState(@Param('id', ParseUUIDPipe) id: string): Promise<LiveStateResponseDto> {
-    return this.jamLiveStateService.getLiveState(id);
+  async getLiveState(@Param('identifier') identifier: string): Promise<LiveStateResponseDto> {
+    const jamId = await this.jamService.resolveJamId(identifier);
+    return this.jamLiveStateService.getLiveState(jamId);
   }
 
-  @Get(':id/live/dashboard')
+  @Get(':identifier/live/dashboard')
   @ApiOperation({ summary: 'Get live jam dashboard data (current and next songs with musicians)' })
   @ApiResponse({
     status: 200,
@@ -101,8 +102,9 @@ export class JamController {
     type: LiveDashboardResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async getLiveDashboard(@Param('id', ParseUUIDPipe) id: string): Promise<LiveDashboardResponseDto> {
-    return this.jamLiveStateService.getLiveDashboard(id);
+  async getLiveDashboard(@Param('identifier') identifier: string): Promise<LiveDashboardResponseDto> {
+    const jamId = await this.jamService.resolveJamId(identifier);
+    return this.jamLiveStateService.getLiveDashboard(jamId);
   }
 
   @Post(':id/control/start')
@@ -214,7 +216,7 @@ export class JamController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
   update(@Param('id', ParseUUIDPipe) id: string, @Body() updateJamDto: UpdateJamDto, @Request() req) {
-    return this.jamService.update(id, updateJamDto, req.user?.musicianId);
+    return this.jamService.update(id, updateJamDto, req.user?.musicianId, req.user?.isHost);
   }
 
   @Delete(':id')

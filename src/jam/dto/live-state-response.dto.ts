@@ -1,25 +1,29 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { MusicaResponseDto } from './musica-response.dto';
-import { RegistrationResponseDto } from './registration-response.dto';
+import { DashboardMusicianDto } from './live-dashboard-response.dto';
+
+export class LiveStateMusicDto {
+  @ApiProperty()
+  title: string;
+
+  @ApiProperty()
+  artist: string;
+
+  @ApiProperty({ nullable: true })
+  duration: number | null;
+
+  @ApiProperty({ nullable: true, required: false })
+  link?: string | null;
+}
 
 export class LiveStateSongDto {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
-  jamId: string;
-
-  @ApiProperty()
-  musicId: string;
-
-  @ApiProperty()
   order: number;
 
   @ApiProperty()
   status: string;
-
-  @ApiProperty()
-  createdAt: Date;
 
   @ApiProperty({
     nullable: true,
@@ -29,24 +33,18 @@ export class LiveStateSongDto {
 
   @ApiProperty({
     nullable: true,
-    description: 'When the song was paused (if paused)',
-  })
-  pausedAt?: Date | null;
-
-  @ApiProperty({
-    nullable: true,
     description: 'When the song was completed',
   })
   completedAt?: Date | null;
 
-  @ApiProperty({ type: MusicaResponseDto })
-  music: MusicaResponseDto;
+  @ApiProperty({ type: LiveStateMusicDto })
+  music: LiveStateMusicDto;
 
   @ApiProperty({
-    type: [RegistrationResponseDto],
-    required: false,
+    type: [DashboardMusicianDto],
+    description: 'Musicians performing this song',
   })
-  registrations?: RegistrationResponseDto[];
+  musicians: DashboardMusicianDto[];
 }
 
 export class LiveStateResponseDto {
@@ -59,14 +57,14 @@ export class LiveStateResponseDto {
 
   @ApiProperty({
     type: [LiveStateSongDto],
-    description: 'Next 3 scheduled songs',
+    description: 'Next scheduled songs',
   })
   nextSongs: LiveStateSongDto[];
 
   @ApiProperty({
     type: [LiveStateSongDto],
     required: false,
-    description: 'Previously played songs (up to 3)',
+    description: 'Previously played songs',
   })
   previousSongs?: LiveStateSongDto[];
 
@@ -87,21 +85,4 @@ export class LiveStateResponseDto {
     description: 'Current playback state',
   })
   playbackState: string;
-
-  @ApiProperty({
-    nullable: true,
-    description: 'When the current song started playing',
-  })
-  currentSongStartedAt: Date | null;
-
-  @ApiProperty({
-    nullable: true,
-    description: 'When the current song was paused (if paused)',
-  })
-  currentSongPausedAt: Date | null;
-
-  @ApiProperty({
-    description: 'Timestamp of response',
-  })
-  timestamp: number;
 }
