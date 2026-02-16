@@ -188,12 +188,14 @@ export class JamService {
    * Used by control endpoints that need the UUID for internal operations.
    */
   async resolveJamId(identifier: string): Promise<string> {
-    if (UUID_REGEX.test(identifier)) {
-      return identifier;
-    }
-
     let jam;
-    if (SHORT_CODE_REGEX.test(identifier)) {
+
+    if (UUID_REGEX.test(identifier)) {
+      jam = await this.prisma.jam.findFirst({
+        where: { id: identifier, deletedAt: null },
+        select: { id: true },
+      });
+    } else if (SHORT_CODE_REGEX.test(identifier)) {
       jam = await this.prisma.jam.findFirst({
         where: { shortCode: identifier.toUpperCase(), deletedAt: null },
         select: { id: true },
@@ -355,7 +357,11 @@ export class JamService {
     }
     return this.prisma.jam.update({
       where: { id },
-      data: { deletedAt: new Date() },
+      data: {
+        deletedAt: new Date(),
+        slug: null,
+        shortCode: null,
+      },
     });
   }
 }
