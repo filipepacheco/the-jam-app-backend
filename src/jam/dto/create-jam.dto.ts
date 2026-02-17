@@ -6,6 +6,7 @@ export class CreateJamDto {
   @ApiProperty({ description: 'Jam session name' })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   name: string;
 
   @ApiProperty({
@@ -24,6 +25,7 @@ export class CreateJamDto {
   @ApiProperty({ description: 'Jam session description', required: false })
   @IsString()
   @IsOptional()
+  @MaxLength(5000)
   description?: string;
 
   @ApiProperty({ description: 'Jam session date and time', required: false })
@@ -49,6 +51,7 @@ export class CreateJamDto {
   @ApiProperty({ description: 'Host contact (denormalized cache)', required: false })
   @IsString()
   @IsOptional()
+  @MaxLength(500)
   hostContact?: string;
 
   @ApiProperty({ description: 'Jam session QR Code', required: false })

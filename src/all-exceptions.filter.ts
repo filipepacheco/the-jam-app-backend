@@ -106,8 +106,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private getPrismaErrorMessage(exception: Prisma.PrismaClientKnownRequestError): string {
     switch (exception.code) {
       case 'P2002':
-        const target = (exception.meta?.target as string[]) || [];
-        return `A record with this ${target.join(', ')} already exists`;
+        return 'A record with these values already exists';
       case 'P2025':
         return 'Record not found';
       case 'P2003':

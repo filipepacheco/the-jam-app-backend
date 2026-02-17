@@ -21,9 +21,15 @@ export function validate(config: Record<string, unknown>) {
     // Swagger
     ENABLE_SWAGGER: Joi.string().valid('true', 'false').default('true'),
 
-    // Spotify (optional - enables import feature)
-    SPOTIFY_CLIENT_ID: Joi.string().optional(),
-    SPOTIFY_CLIENT_SECRET: Joi.string().optional(),
+    // Spotify (optional - enables import feature, but both must be present if either is set)
+    SPOTIFY_CLIENT_ID: Joi.string().optional().when('SPOTIFY_CLIENT_SECRET', {
+      is: Joi.exist(),
+      then: Joi.string().required(),
+    }),
+    SPOTIFY_CLIENT_SECRET: Joi.string().optional().when('SPOTIFY_CLIENT_ID', {
+      is: Joi.exist(),
+      then: Joi.string().required(),
+    }),
 
     // Frontend URL for QR code generation
     FRONTEND_URL: Joi.string().uri().default('http://localhost:5173'),

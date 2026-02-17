@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { MusicaService } from './musica.service';
 import { CreateMusicDto } from './dto/create-musica.dto';
@@ -23,8 +23,13 @@ export class MusicaController {
   @Get()
   @ApiOperation({ summary: 'List all musics independent of jam' })
   @ApiResponse({ status: 200, description: 'List of musics' })
-  findAll() {
-    return this.musicaService.findAll();
+  findAll(@Query('skip') skipParam?: string, @Query('take') takeParam?: string) {
+    let skip = skipParam ? parseInt(skipParam, 10) : 0;
+    let take = takeParam ? parseInt(takeParam, 10) : 50;
+    if (isNaN(skip) || skip < 0) skip = 0;
+    if (isNaN(take) || take < 1) take = 50;
+    if (take > 100) take = 100;
+    return this.musicaService.findAll(skip, take);
   }
 
   @Patch(':id')

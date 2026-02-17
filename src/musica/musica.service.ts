@@ -13,8 +13,10 @@ export class MusicaService {
     });
   }
 
-  async findAll() {
+  async findAll(skip = 0, take = 50) {
     return this.prisma.music.findMany({
+      skip,
+      take,
       include: {
         jamMusics: { include: { jam: true } },
       },
