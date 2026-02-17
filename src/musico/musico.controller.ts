@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Request,
+  Query,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -35,8 +36,13 @@ export class MusicoController {
   @ApiOperation({ summary: 'List all musicians' })
   @ApiResponse({ status: 200, description: 'List of musicians' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findAll() {
-    return this.musicoService.findAll();
+  findAll(@Query('skip') skipParam?: string, @Query('take') takeParam?: string) {
+    let skip = skipParam ? parseInt(skipParam, 10) : 0;
+    let take = takeParam ? parseInt(takeParam, 10) : 50;
+    if (isNaN(skip) || skip < 0) skip = 0;
+    if (isNaN(take) || take < 1) take = 50;
+    if (take > 100) take = 100;
+    return this.musicoService.findAll(skip, take);
   }
 
   @Patch(':id')

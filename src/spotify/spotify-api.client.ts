@@ -14,6 +14,39 @@ export interface SpotifyTrack {
   spotifyUrl: string;
 }
 
+export interface SpotifyApiResponse {
+  id?: string;
+  name?: string;
+  description?: string | null;
+  tracks?: {
+    items: Array<{
+      track: {
+        id: string;
+        name: string;
+        artists: Array<{ name: string }>;
+        duration_ms: number;
+        external_urls: { spotify: string };
+        album?: { name: string; images?: Array<{ url: string }> };
+      };
+    }>;
+  };
+  items?: Array<{
+    track: {
+      id: string;
+      name: string;
+      artists: Array<{ name: string }>;
+      duration_ms: number;
+      external_urls: { spotify: string };
+      album?: { name: string; images?: Array<{ url: string }> };
+    };
+  }>;
+  next?: string | null;
+  artists?: Array<{ name: string }>;
+  duration_ms?: number;
+  album?: { name: string; images?: Array<{ url: string }> };
+  error?: { status: number; message: string };
+}
+
 @Injectable()
 export class SpotifyApiClient {
   private readonly logger = new Logger(SpotifyApiClient.name);
@@ -198,8 +231,7 @@ export class SpotifyApiClient {
     return null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async spotifyFetch(url: string, token: string): Promise<any> {
+  private async spotifyFetch(url: string, token: string): Promise<SpotifyApiResponse> {
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     });

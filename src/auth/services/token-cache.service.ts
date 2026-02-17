@@ -32,12 +32,17 @@ export class TokenCacheService implements OnModuleDestroy {
   }
 
   set(token: string, user: { supabaseUserId: string; email: string }): void {
-    // Enforce max cache size with LRU eviction
+    // Enforce max cache size with LRU eviction - evict down to 90% capacity
     if (this.cache.size >= this.maxCacheSize) {
-      // Delete oldest entry (first key in map)
-      const oldestKey = this.cache.keys().next().value;
-      if (oldestKey) {
-        this.cache.delete(oldestKey);
+      const targetSize = Math.floor(this.maxCacheSize * 0.9);
+      const iterator = this.cache.keys();
+      while (this.cache.size > targetSize) {
+        const oldestKey = iterator.next().value;
+        if (oldestKey) {
+          this.cache.delete(oldestKey);
+        } else {
+          break;
+        }
       }
     }
 

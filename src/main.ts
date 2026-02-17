@@ -89,6 +89,10 @@ async function bootstrap() {
   });
 
   // Enable CORS as a secondary layer for all actual requests
+  if (isDevelopment) {
+    logger.warn('Development mode: all CORS origins are allowed');
+  }
+
   app.enableCors({
     origin: function (origin: string, callback: (arg0: Error | null, arg1: boolean) => void) {
       if (isOriginAllowed(origin, isDevelopment, allowedOrigins)) {

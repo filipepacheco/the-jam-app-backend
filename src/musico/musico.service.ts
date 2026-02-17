@@ -17,10 +17,19 @@ export class MusicoService {
     });
   }
 
-  async findAll() {
+  async findAll(skip = 0, take = 50) {
     return this.prisma.musician.findMany({
-      include: {
-        registrations: { include: { jam: true, jamMusic: { include: { music: true } } } },
+      skip,
+      take,
+      select: {
+        id: true,
+        name: true,
+        instrument: true,
+        level: true,
+        isHost: true,
+        contact: true,
+        phone: true,
+        createdAt: true,
       },
     });
   }
@@ -43,10 +52,16 @@ export class MusicoService {
       }
     }
 
-    const data = { ...updateMusicianDto };
-    if (data.instrument) {
-      data.instrument = normalizeInstrument(data.instrument) ?? data.instrument;
+    // Explicit field allowlist to prevent mass assignment of sensitive fields
+    // (isHost, supabaseUserId, email, createdAt, deletedAt are NOT allowed)
+    const data: Record<string, unknown> = {};
+    if (updateMusicianDto.name !== undefined) data.name = updateMusicianDto.name;
+    if (updateMusicianDto.instrument !== undefined) {
+      data.instrument = normalizeInstrument(updateMusicianDto.instrument) ?? updateMusicianDto.instrument;
     }
+    if (updateMusicianDto.level !== undefined) data.level = updateMusicianDto.level;
+    if (updateMusicianDto.phone !== undefined) data.phone = updateMusicianDto.phone;
+    if (updateMusicianDto.contact !== undefined) data.contact = updateMusicianDto.contact;
 
     return this.prisma.musician.update({
       where: { id },

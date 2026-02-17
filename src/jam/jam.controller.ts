@@ -35,7 +35,7 @@ export class JamController {
   ) {}
 
   @Post()
-  @ProtectedRoute('host', 'admin', 'user')
+  @ProtectedRoute('host', 'admin')
   @ApiOperation({ summary: 'Create a new jam session' })
   @ApiResponse({
     status: 201,

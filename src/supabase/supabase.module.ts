@@ -1,6 +1,8 @@
-import { Module, Global } from '@nestjs/common';
+import { Module, Global, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
+const logger = new Logger('SupabaseModule');
 
 @Global()
 @Module({
@@ -14,7 +16,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
         const supabaseAnonKey = configService.get<string>('SUPABASE_ANON_KEY');
 
         if (!supabaseUrl || !supabaseAnonKey) {
-          console.warn('SUPABASE_URL or SUPABASE_ANON_KEY not configured. Supabase auth disabled.');
+          logger.warn('SUPABASE_URL or SUPABASE_ANON_KEY not configured. Supabase auth disabled.');
           return null;
         }
 
@@ -30,7 +32,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
         const serviceRoleKey = configService.get<string>('SUPABASE_SERVICE_ROLE_KEY');
 
         if (!supabaseUrl || !serviceRoleKey) {
-          console.warn(
+          logger.warn(
             'SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not configured. Supabase service operations disabled.',
           );
           return null;
