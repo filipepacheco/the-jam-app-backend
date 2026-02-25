@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsISO8601, IsUUID, Matches, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsISO8601, IsUUID, Matches, MaxLength, IsUrl } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { JamStatus } from '@prisma/client';
 
@@ -58,6 +58,12 @@ export class CreateJamDto {
   @IsString()
   @IsOptional()
   qrCode?: string;
+
+  @ApiProperty({ description: 'Spotify playlist URL', required: false })
+  @IsUrl({}, { message: 'spotifyPlaylistUrl must be a valid URL' })
+  @IsOptional()
+  @MaxLength(500)
+  spotifyPlaylistUrl?: string | null;
 
   @ApiProperty({
     description: 'Jam session status',

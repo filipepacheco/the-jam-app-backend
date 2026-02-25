@@ -156,6 +156,7 @@ export class SpotifyService {
           slug,
           shortCode,
           hostMusicianId,
+          spotifyPlaylistUrl: dto.playlistUrl,
         },
       });
     }

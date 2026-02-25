@@ -39,6 +39,7 @@ model Jam {
   location         String?        @map("local")
   currentScheduleId String?       @unique @map("currentScheduleId")
   playbackState     PlaybackState  @default(STOPPED) @map("playbackState")
+  spotifyPlaylistUrl String?       @map("spotify_playlist_url")
   schedules        Schedule[]
   registrations    Registration[]
   jamMusics        JamMusic[]

@@ -34,6 +34,9 @@ export class JamResponseDto {
   @ApiProperty({ enum: ['ACTIVE', 'INACTIVE', 'LIVE', 'FINISHED'] })
   status: string;
 
+  @ApiProperty({ required: false })
+  spotifyPlaylistUrl?: string | null;
+
   @ApiProperty({ enum: ['STOPPED', 'PLAYING', 'PAUSED'], required: false })
   playbackState?: string;
 
