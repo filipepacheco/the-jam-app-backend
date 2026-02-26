@@ -78,7 +78,7 @@ export class AuthService {
 
   /**
    * Check if musician has completed registration
-   * Registration is complete when: instrument, level, and contact are all set
+   *  is complete when: instrument, level, and contact are all set
    */
   isRegistrationComplete(musician: Musician): boolean {
     return !!(musician.instrument && musician.level && musician.phone);

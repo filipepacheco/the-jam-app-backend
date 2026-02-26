@@ -19,7 +19,7 @@ const MUSICIAN_SAFE_SELECT = {
   id: true,
   name: true,
   instrument: true,
-  contact: true,
+  contact: false,
   level: true,
 } as const;
 
@@ -29,6 +29,7 @@ const MUSIC_PUBLIC_SELECT = {
   title: true,
   artist: true,
   genre: true,
+  description: true,
   duration: true,
   link: true,
   status: true,
@@ -257,22 +258,10 @@ export class JamService {
     spotifyPlaylistUrl: true,
     status: true,
     hostName: true,
-    hostContact: true,
-    hostMusicianId: true,
+    hostContact: false,
+    hostMusicianId: false,
     createdAt: true,
-    updatedAt: true,
-
-    jamMusics: {
-      select: {
-        id: true,
-        jamId: true,
-        musicId: true,
-        music: { select: MUSIC_PUBLIC_SELECT },
-        registrations: { select: REGISTRATION_PUBLIC_SELECT },
-      },
-    },
-
-    registrations: { select: REGISTRATION_PUBLIC_SELECT },
+    updatedAt: false,
 
     schedules: {
       select: {

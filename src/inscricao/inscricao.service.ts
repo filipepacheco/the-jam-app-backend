@@ -102,7 +102,7 @@ export class InscricaoService {
       where: { id: requestingMusicianId },
     });
 
-    // Allow delete if owner OR host
+    // Allow to delete if owner OR host
     const isOwner = registration.musicianId === requestingMusicianId;
     const isHost = requestingMusician?.isHost === true;
 
