@@ -23,11 +23,11 @@ jobs:
 
       - run: npm i -g vercel
 
-      - run: vercel pull --yes --environment=production
+      - run: vercel pull --yes --environment=production --token=${{ env.VERCEL_TOKEN }}
 
-      - run: vercel build --prod
+      - run: vercel build --prod --token=${{ env.VERCEL_TOKEN }}
 
-      - run: vercel deploy --prebuilt --prod
+      - run: vercel deploy --prebuilt --prod --token=${{ env.VERCEL_TOKEN }}
 
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
