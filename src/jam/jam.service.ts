@@ -8,11 +8,10 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateJamDto } from './dto/create-jam.dto';
 import { UpdateJamDto } from './dto/update-jam.dto';
-import { generateShortCode, generateSlug } from '../common/utils/slug';
+import { generateShortCode, generateSlug, SHORT_CODE_REGEX } from '../common/utils/slug';
 import * as QRCode from 'qrcode';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SHORT_CODE_REGEX = /^[A-Z0-9]{6}$/i;
 
 /** Safe musician fields for public responses - excludes email, phone, supabaseUserId */
 const MUSICIAN_SAFE_SELECT = {
@@ -73,7 +72,9 @@ export class JamService {
       hostContact = hostContact || hostMusician.contact || undefined;
     }
 
-    const shortCode = await generateShortCode(this.prisma);
+    const shortCode = await generateShortCode(
+      async (code) => !!(await this.prisma.jam.findUnique({ where: { shortCode: code }, select: { id: true } })),
+    );
     const slug = await this.resolveSlug(createJamDto.slug, createJamDto.name, shortCode);
 
     const jam = await this.prisma.jam.create({
@@ -149,27 +150,36 @@ export class JamService {
     };
   }
 
+  /** Build a Prisma `where` clause from a flexible identifier (UUID, shortCode, or slug). */
+  private buildIdentifierWhere(identifier: string): { deletedAt: null } & Record<string, unknown> {
+    if (UUID_REGEX.test(identifier)) {
+      return { id: identifier, deletedAt: null };
+    }
+    if (SHORT_CODE_REGEX.test(identifier)) {
+      return { shortCode: identifier.toUpperCase(), deletedAt: null };
+    }
+    return { slug: identifier, deletedAt: null };
+  }
+
   /**
    * Find a jam by UUID, slug, or shortCode.
    * Used by public-facing endpoints.
    */
   async findByIdentifier(identifier: string) {
-    let jam;
-
+    // For UUIDs, delegate to findOne which applies schedule mapping
     if (UUID_REGEX.test(identifier)) {
-      jam = await this.findOne(identifier);
-    } else if (SHORT_CODE_REGEX.test(identifier)) {
-      jam = await this.prisma.jam.findFirst({
-        where: { shortCode: identifier.toUpperCase(), deletedAt: null },
-        select: this.findOneSelect,
-      });
-    } else {
-      // Treat as slug
-      jam = await this.prisma.jam.findFirst({
-        where: { slug: identifier, deletedAt: null },
-        select: this.findOneSelect,
-      });
+      const jam = await this.findOne(identifier);
+      if (!jam) {
+        throw new NotFoundException(`Jam not found: ${identifier}`);
+      }
+      return jam;
     }
+
+    const where = this.buildIdentifierWhere(identifier);
+    const jam = await this.prisma.jam.findFirst({
+      where,
+      select: this.findOneSelect,
+    });
 
     if (!jam) {
       throw new NotFoundException(`Jam not found: ${identifier}`);
@@ -190,24 +200,11 @@ export class JamService {
    * Used by control endpoints that need the UUID for internal operations.
    */
   async resolveJamId(identifier: string): Promise<string> {
-    let jam;
-
-    if (UUID_REGEX.test(identifier)) {
-      jam = await this.prisma.jam.findFirst({
-        where: { id: identifier, deletedAt: null },
-        select: { id: true },
-      });
-    } else if (SHORT_CODE_REGEX.test(identifier)) {
-      jam = await this.prisma.jam.findFirst({
-        where: { shortCode: identifier.toUpperCase(), deletedAt: null },
-        select: { id: true },
-      });
-    } else {
-      jam = await this.prisma.jam.findFirst({
-        where: { slug: identifier, deletedAt: null },
-        select: { id: true },
-      });
-    }
+    const where = this.buildIdentifierWhere(identifier);
+    const jam = await this.prisma.jam.findFirst({
+      where,
+      select: { id: true },
+    });
 
     if (!jam) {
       throw new NotFoundException(`Jam not found: ${identifier}`);
@@ -311,7 +308,10 @@ export class JamService {
   }
 
   async update(id: string, updateJamDto: UpdateJamDto, musicianId?: string, isHost?: boolean) {
-    const jam = await this.prisma.jam.findFirst({ where: { id, deletedAt: null } });
+    const jam = await this.prisma.jam.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true, hostMusicianId: true, name: true, shortCode: true },
+    });
     if (!jam) {
       throw new NotFoundException('Jam not found');
     }
@@ -339,7 +339,10 @@ export class JamService {
   }
 
   async remove(id: string, musicianId?: string) {
-    const jam = await this.prisma.jam.findFirst({ where: { id, deletedAt: null } });
+    const jam = await this.prisma.jam.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true, hostMusicianId: true },
+    });
     if (!jam) {
       throw new NotFoundException('Jam not found');
     }

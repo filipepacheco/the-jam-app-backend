@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { MusicianLevel } from '@prisma/client';
 import { AuthService } from './auth.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { LoggingInterceptor } from '../common/interceptors/logging.interceptor';
@@ -43,23 +44,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
   async getProfile(@Request() req): Promise<MusicianProfileResponseDto> {
     const musician = await this.authService.getMusicianProfile(req.user.musicianId);
-    const registrationComplete = this.authService.isRegistrationComplete(musician);
-
-    return {
-      id: musician.id,
-      supabaseUserId: musician.supabaseUserId,
-      name: musician.name,
-      email: musician.email,
-      phone: musician.phone,
-      contact: musician.contact,
-      instrument: musician.instrument,
-      level: musician.level,
-      isHost: musician.isHost,
-      role: musician.isHost ? 'host' : 'user',
-      registrationComplete,
-      isNewUser: !registrationComplete,
-      createdAt: musician.createdAt,
-    };
+    return this.toProfileResponse(musician);
   }
 
   @Patch('profile')
@@ -87,22 +72,36 @@ export class AuthController {
       req.user.musicianId,
       updateProfileDto,
     );
-    const registrationComplete = this.authService.isRegistrationComplete(updatedMusician);
+    return this.toProfileResponse(updatedMusician);
+  }
 
+  private toProfileResponse(musician: {
+    id: string;
+    supabaseUserId: string;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    contact: string | null;
+    instrument: string | null;
+    level: MusicianLevel | null;
+    isHost: boolean;
+    createdAt: Date;
+  }): MusicianProfileResponseDto {
+    const registrationComplete = this.authService.isRegistrationComplete(musician);
     return {
-      id: updatedMusician.id,
-      supabaseUserId: updatedMusician.supabaseUserId,
-      name: updatedMusician.name,
-      email: updatedMusician.email,
-      phone: updatedMusician.phone,
-      contact: updatedMusician.contact,
-      instrument: updatedMusician.instrument,
-      level: updatedMusician.level,
-      isHost: updatedMusician.isHost,
-      role: updatedMusician.isHost ? 'host' : 'user',
+      id: musician.id,
+      supabaseUserId: musician.supabaseUserId,
+      name: musician.name,
+      email: musician.email,
+      phone: musician.phone,
+      contact: musician.contact,
+      instrument: musician.instrument,
+      level: musician.level,
+      isHost: musician.isHost,
+      role: musician.isHost ? 'host' : 'user',
       registrationComplete,
       isNewUser: !registrationComplete,
-      createdAt: updatedMusician.createdAt,
+      createdAt: musician.createdAt,
     };
   }
 }

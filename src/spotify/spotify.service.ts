@@ -143,7 +143,9 @@ export class SpotifyService {
       existingJamMusicIds = new Set(jam.jamMusics.map((jm) => jm.musicId));
     } else {
       // Create new jam with shortCode and slug
-      const shortCode = await generateShortCode(this.prisma);
+      const shortCode = await generateShortCode(
+        async (code) => !!(await this.prisma.jam.findUnique({ where: { shortCode: code }, select: { id: true } })),
+      );
       const jamName = dto.name || playlistMeta.name;
       const slug = dto.slug || generateSlug(jamName, shortCode);
 

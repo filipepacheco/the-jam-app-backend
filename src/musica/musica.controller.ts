@@ -4,6 +4,7 @@ import { MusicaService } from './musica.service';
 import { CreateMusicDto } from './dto/create-musica.dto';
 import { UpdateMusicDto } from './dto/update-musica.dto';
 import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('Musicas')
 @Controller('musicas')
@@ -23,13 +24,8 @@ export class MusicaController {
   @Get()
   @ApiOperation({ summary: 'List all musics independent of jam' })
   @ApiResponse({ status: 200, description: 'List of musics' })
-  findAll(@Query('skip') skipParam?: string, @Query('take') takeParam?: string) {
-    let skip = skipParam ? parseInt(skipParam, 10) : 0;
-    let take = takeParam ? parseInt(takeParam, 10) : 50;
-    if (isNaN(skip) || skip < 0) skip = 0;
-    if (isNaN(take) || take < 1) take = 50;
-    if (take > 100) take = 100;
-    return this.musicaService.findAll(skip, take);
+  findAll(@Query() pagination: PaginationDto) {
+    return this.musicaService.findAll(pagination.skip, pagination.take);
   }
 
   @Patch(':id')

@@ -15,6 +15,7 @@ import { MusicoService } from './musico.service';
 import { CreateMusicianDto } from './dto/create-musico.dto';
 import { UpdateMusicianDto } from './dto/update-musico.dto';
 import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('Musicians')
 @Controller('musicos')
@@ -36,13 +37,8 @@ export class MusicoController {
   @ApiOperation({ summary: 'List all musicians' })
   @ApiResponse({ status: 200, description: 'List of musicians' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findAll(@Query('skip') skipParam?: string, @Query('take') takeParam?: string) {
-    let skip = skipParam ? parseInt(skipParam, 10) : 0;
-    let take = takeParam ? parseInt(takeParam, 10) : 50;
-    if (isNaN(skip) || skip < 0) skip = 0;
-    if (isNaN(take) || take < 1) take = 50;
-    if (take > 100) take = 100;
-    return this.musicoService.findAll(skip, take);
+  findAll(@Query() pagination: PaginationDto) {
+    return this.musicoService.findAll(pagination.skip, pagination.take);
   }
 
   @Patch(':id')

@@ -1,6 +1,7 @@
 import { IsString, IsNotEmpty, IsOptional, IsISO8601, IsUUID, Matches, MaxLength, IsUrl } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { JamStatus } from '@prisma/client';
+import { SLUG_PATTERN, SLUG_VALIDATION_MESSAGE } from '../../common/constants';
 
 export class CreateJamDto {
   @ApiProperty({ description: 'Jam session name' })
@@ -17,9 +18,7 @@ export class CreateJamDto {
   @IsString()
   @IsOptional()
   @MaxLength(80)
-  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-    message: 'Slug must be lowercase alphanumeric with hyphens (e.g. "friday-night-rock")',
-  })
+  @Matches(SLUG_PATTERN, { message: SLUG_VALIDATION_MESSAGE })
   slug?: string;
 
   @ApiProperty({ description: 'Jam session description', required: false })

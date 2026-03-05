@@ -1,5 +1,6 @@
 import { IsString, IsNotEmpty, IsOptional, IsDateString, IsUUID, Matches, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { SLUG_PATTERN, SLUG_VALIDATION_MESSAGE } from '../../common/constants';
 
 export class ImportPlaylistDto {
   @ApiProperty({ description: 'Spotify playlist URL or URI' })
@@ -49,6 +50,6 @@ export class ImportPlaylistDto {
   @IsString()
   @IsOptional()
   @MaxLength(80)
-  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: 'Slug must be lowercase alphanumeric with hyphens' })
+  @Matches(SLUG_PATTERN, { message: SLUG_VALIDATION_MESSAGE })
   slug?: string;
 }

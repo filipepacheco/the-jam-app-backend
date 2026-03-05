@@ -1,9 +1,10 @@
-import { PrismaService } from '../../prisma/prisma.service';
-
 // Safe alphanumeric chars - excludes ambiguous: 0, O, 1, I, L
 const SHORT_CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const SHORT_CODE_LENGTH = 6;
 const MAX_COLLISION_RETRIES = 10;
+
+/** Regex matching the short code format (6 alphanumeric, case-insensitive). */
+export const SHORT_CODE_REGEX = /^[A-Z0-9]{6}$/i;
 
 /**
  * Generate a random short code (e.g. "ABC123").
@@ -18,13 +19,15 @@ function randomShortCode(): string {
 }
 
 /**
- * Generate a unique short code, checking the database for collisions.
+ * Generate a unique short code, checking for collisions via the provided callback.
+ * @param exists - Returns true if the code is already taken.
  */
-export async function generateShortCode(prisma: PrismaService): Promise<string> {
+export async function generateShortCode(
+  exists: (code: string) => Promise<boolean>,
+): Promise<string> {
   for (let i = 0; i < MAX_COLLISION_RETRIES; i++) {
     const code = randomShortCode();
-    const existing = await prisma.jam.findUnique({ where: { shortCode: code } });
-    if (!existing) return code;
+    if (!(await exists(code))) return code;
   }
   throw new Error('Failed to generate unique short code after max retries');
 }

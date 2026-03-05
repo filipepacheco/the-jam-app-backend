@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ScheduleStatus } from '@prisma/client';
 import { LiveStateResponseDto, LiveStateSongDto } from './dto/live-state-response.dto';
 import { LiveDashboardResponseDto, DashboardSongDto } from './dto/live-dashboard-response.dto';
 
@@ -57,10 +58,10 @@ export class JamLiveStateService {
       })),
     }));
 
-    const currentSong = songs.find((s) => s.status === 'IN_PROGRESS') || null;
-    const nextSongs = songs.filter((s) => s.status === 'SCHEDULED');
-    const previousSongs = songs.filter((s) => s.status === 'COMPLETED');
-    const suggestedSongs = songs.filter((s) => s.status === 'SUGGESTED');
+    const currentSong = songs.find((s) => s.status === ScheduleStatus.IN_PROGRESS) || null;
+    const nextSongs = songs.filter((s) => s.status === ScheduleStatus.SCHEDULED);
+    const previousSongs = songs.filter((s) => s.status === ScheduleStatus.COMPLETED);
+    const suggestedSongs = songs.filter((s) => s.status === ScheduleStatus.SUGGESTED);
 
     return {
       currentSong,
@@ -75,6 +76,7 @@ export class JamLiveStateService {
   async getLiveDashboard(jamId: string): Promise<LiveDashboardResponseDto> {
     const jam = await this.prisma.jam.findUnique({
       where: { id: jamId },
+      select: { id: true, name: true, qrCode: true, slug: true, shortCode: true, status: true },
     });
 
     if (!jam) {
@@ -100,12 +102,12 @@ export class JamLiveStateService {
       orderBy: { order: 'asc' },
     });
 
-    const currentSchedule = schedules.find((s) => s.status === 'IN_PROGRESS');
+    const currentSchedule = schedules.find((s) => s.status === ScheduleStatus.IN_PROGRESS);
     const currentSong: DashboardSongDto | null = currentSchedule
       ? this.mapScheduleToDashboardSong(currentSchedule)
       : null;
 
-    const nextSchedules = schedules.filter((s) => s.status === 'SCHEDULED').slice(0, 3);
+    const nextSchedules = schedules.filter((s) => s.status === ScheduleStatus.SCHEDULED).slice(0, 3);
     const nextSongs = nextSchedules.map((schedule) => this.mapScheduleToDashboardSong(schedule));
 
     return {

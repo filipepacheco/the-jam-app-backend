@@ -1,29 +1,40 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PlaybackState, PlaybackAction, Prisma } from '@prisma/client';
+import { PlaybackState, PlaybackAction, ScheduleStatus, Prisma } from '@prisma/client';
 import { DEFAULT_HISTORY_LIMIT } from '../common/constants';
+
+/** Minimal fields needed for playback state checks */
+const PLAYBACK_JAM_SELECT = {
+  id: true,
+  status: true,
+  playbackState: true,
+  currentScheduleId: true,
+} as const;
 
 @Injectable()
 export class JamPlaybackService {
   constructor(private prisma: PrismaService) {}
 
-  async startJam(jamId: string, userId?: string) {
+  private async findJamForPlayback(jamId: string) {
     const jam = await this.prisma.jam.findUnique({
       where: { id: jamId },
-      include: { currentSchedule: true },
+      select: PLAYBACK_JAM_SELECT,
     });
-
     if (!jam) {
       throw new NotFoundException('Jam not found');
     }
+    return jam;
+  }
 
+  async startJam(jamId: string, userId?: string) {
+    const jam = await this.findJamForPlayback(jamId);
 
     if (jam.playbackState === PlaybackState.PLAYING) {
       throw new BadRequestException('Jam is already playing');
     }
 
     const firstSchedule = await this.prisma.schedule.findFirst({
-      where: { jamId, status: 'SCHEDULED' },
+      where: { jamId, status: ScheduleStatus.SCHEDULED },
       orderBy: { order: 'asc' },
     });
 
@@ -34,7 +45,7 @@ export class JamPlaybackService {
     return this.prisma.$transaction(async (tx) => {
       await tx.schedule.update({
         where: { id: firstSchedule.id },
-        data: { status: 'IN_PROGRESS', startedAt: new Date() },
+        data: { status: ScheduleStatus.IN_PROGRESS, startedAt: new Date() },
       });
 
       const updatedJam = await tx.jam.update({
@@ -68,15 +79,7 @@ export class JamPlaybackService {
   }
 
   async stopJam(jamId: string, userId?: string) {
-    const jam = await this.prisma.jam.findUnique({
-      where: { id: jamId },
-      include: { currentSchedule: true },
-    });
-
-    if (!jam) {
-      throw new NotFoundException('Jam not found');
-    }
-
+    const jam = await this.findJamForPlayback(jamId);
 
     if (jam.playbackState === PlaybackState.STOPPED) {
       throw new BadRequestException('Jam is already stopped');
@@ -88,7 +91,7 @@ export class JamPlaybackService {
       if (scheduleId) {
         await tx.schedule.update({
           where: { id: scheduleId },
-          data: { status: 'COMPLETED', completedAt: new Date(), pausedAt: null },
+          data: { status: ScheduleStatus.COMPLETED, completedAt: new Date(), pausedAt: null },
         });
       }
 
@@ -119,15 +122,7 @@ export class JamPlaybackService {
   }
 
   async nextSong(jamId: string, userId?: string) {
-    const jam = await this.prisma.jam.findUnique({
-      where: { id: jamId },
-      include: { currentSchedule: true },
-    });
-
-    if (!jam) {
-      throw new NotFoundException('Jam not found');
-    }
-
+    const jam = await this.findJamForPlayback(jamId);
 
     if (!jam.currentScheduleId) {
       throw new BadRequestException('No current song playing');
@@ -145,12 +140,12 @@ export class JamPlaybackService {
       if (currentSong) {
         await tx.schedule.update({
           where: { id: jam.currentScheduleId },
-          data: { status: 'COMPLETED', completedAt: new Date(), pausedAt: null },
+          data: { status: ScheduleStatus.COMPLETED, completedAt: new Date(), pausedAt: null },
         });
       }
 
       const nextSchedule = await tx.schedule.findFirst({
-        where: { jamId, status: 'SCHEDULED' },
+        where: { jamId, status: ScheduleStatus.SCHEDULED },
         orderBy: { order: 'asc' },
       });
 
@@ -160,7 +155,7 @@ export class JamPlaybackService {
       if (nextSchedule) {
         await tx.schedule.update({
           where: { id: nextSchedule.id },
-          data: { status: 'IN_PROGRESS', startedAt: new Date(), pausedAt: null },
+          data: { status: ScheduleStatus.IN_PROGRESS, startedAt: new Date(), pausedAt: null },
         });
         newScheduleId = nextSchedule.id;
       } else {
@@ -189,15 +184,7 @@ export class JamPlaybackService {
   }
 
   async previousSong(jamId: string, userId?: string) {
-    const jam = await this.prisma.jam.findUnique({
-      where: { id: jamId },
-      include: { currentSchedule: true },
-    });
-
-    if (!jam) {
-      throw new NotFoundException('Jam not found');
-    }
-
+    const jam = await this.findJamForPlayback(jamId);
 
     if (!jam.currentScheduleId) {
       throw new BadRequestException('No current song playing');
@@ -215,12 +202,12 @@ export class JamPlaybackService {
       if (currentSong) {
         await tx.schedule.update({
           where: { id: jam.currentScheduleId },
-          data: { status: 'SCHEDULED', startedAt: null, pausedAt: null },
+          data: { status: ScheduleStatus.SCHEDULED, startedAt: null, pausedAt: null },
         });
       }
 
       const previousSchedule = await tx.schedule.findFirst({
-        where: { jamId, status: 'COMPLETED' },
+        where: { jamId, status: ScheduleStatus.COMPLETED },
         orderBy: { order: 'desc' },
       });
 
@@ -229,12 +216,12 @@ export class JamPlaybackService {
       if (previousSchedule) {
         await tx.schedule.update({
           where: { id: previousSchedule.id },
-          data: { status: 'IN_PROGRESS', startedAt: new Date(), completedAt: null, pausedAt: null },
+          data: { status: ScheduleStatus.IN_PROGRESS, startedAt: new Date(), completedAt: null, pausedAt: null },
         });
         newScheduleId = previousSchedule.id;
       } else {
         const firstSchedule = await tx.schedule.findFirst({
-          where: { jamId, status: 'SCHEDULED' },
+          where: { jamId, status: ScheduleStatus.SCHEDULED },
           orderBy: { order: 'asc' },
         });
 
@@ -244,7 +231,7 @@ export class JamPlaybackService {
 
         await tx.schedule.update({
           where: { id: firstSchedule.id },
-          data: { status: 'IN_PROGRESS', startedAt: new Date(), pausedAt: null },
+          data: { status: ScheduleStatus.IN_PROGRESS, startedAt: new Date(), pausedAt: null },
         });
         newScheduleId = firstSchedule.id;
       }
@@ -271,15 +258,7 @@ export class JamPlaybackService {
   }
 
   async pauseSong(jamId: string, userId?: string) {
-    const jam = await this.prisma.jam.findUnique({
-      where: { id: jamId },
-      include: { currentSchedule: true },
-    });
-
-    if (!jam) {
-      throw new NotFoundException('Jam not found');
-    }
-
+    const jam = await this.findJamForPlayback(jamId);
 
     if (jam.playbackState !== PlaybackState.PLAYING) {
       throw new BadRequestException('Jam is not currently playing');
@@ -320,15 +299,7 @@ export class JamPlaybackService {
   }
 
   async resumeSong(jamId: string, userId?: string) {
-    const jam = await this.prisma.jam.findUnique({
-      where: { id: jamId },
-      include: { currentSchedule: true },
-    });
-
-    if (!jam) {
-      throw new NotFoundException('Jam not found');
-    }
-
+    const jam = await this.findJamForPlayback(jamId);
 
     if (jam.playbackState !== PlaybackState.PAUSED) {
       throw new BadRequestException('Jam is not paused');
@@ -377,7 +348,10 @@ export class JamPlaybackService {
       throw new BadRequestException('Updates array cannot be empty');
     }
 
-    const jam = await this.prisma.jam.findUnique({ where: { id: jamId } });
+    const jam = await this.prisma.jam.findUnique({
+      where: { id: jamId },
+      select: { id: true, currentScheduleId: true },
+    });
     if (!jam) {
       throw new NotFoundException('Jam not found');
     }
@@ -399,24 +373,25 @@ export class JamPlaybackService {
       throw new BadRequestException('Duplicate schedule IDs in payload');
     }
 
-    await this.prisma.$transaction(
-      updates.map(({ scheduleId, order }) =>
-        this.prisma.schedule.update({
+    const scheduleIdForHistory = jam.currentScheduleId || scheduleIds[0];
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const { scheduleId, order } of updates) {
+        await tx.schedule.update({
           where: { id: scheduleId },
           data: { order },
-        }),
-      ),
-    );
+        });
+      }
 
-    const scheduleIdForHistory = jam.currentScheduleId || scheduleIds[0];
-    await this.prisma.playbackHistory.create({
-      data: {
-        jamId,
-        scheduleId: scheduleIdForHistory,
-        action: PlaybackAction.REORDER_QUEUE,
-        userId,
-        metadata: { updates, totalUpdates: updates.length },
-      },
+      await tx.playbackHistory.create({
+        data: {
+          jamId,
+          scheduleId: scheduleIdForHistory,
+          action: PlaybackAction.REORDER_QUEUE,
+          userId,
+          metadata: { updates, totalUpdates: updates.length },
+        },
+      });
     });
 
     return true;
@@ -437,8 +412,10 @@ export class JamPlaybackService {
       metadata: Prisma.JsonValue;
     }[]
   > {
-    const jam = await this.prisma.jam.findUnique({ where: { id: jamId } });
-
+    const jam = await this.prisma.jam.findUnique({
+      where: { id: jamId },
+      select: { id: true },
+    });
     if (!jam) {
       throw new NotFoundException('Jam not found');
     }
@@ -455,7 +432,7 @@ export class JamPlaybackService {
           select: {
             music: { select: { title: true, artist: true } },
             registrations: {
-              where: { status: 'APPROVED' },
+              where: { status: 'APPROVED' as const },
               select: { musician: { select: { name: true } } },
               take: 1,
             },
