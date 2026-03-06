@@ -74,19 +74,21 @@ model Music {
 }
 
 model Musician {
-  id             String         @id @default(uuid())
-  supabaseUserId String?        @unique @map("supabaseUserId") // Step 2: Link to Supabase auth
-  name           String?        @map("nome")
-  instrument     String?        @map("instrumento")
-  level          MusicianLevel? @map("nivel")
-  contact        String?        @map("contato")
-  createdAt      DateTime       @default(now())
-  email          String?        @unique @map("email")
-  phone          String?        @unique @map("telefone")
-  isHost         Boolean        @default(false) @map("isHost")
-  registrations  Registration[]
-  hostedJams     Jam[]
-  feedbacks      Feedback[]
+  id               String         @id @default(uuid())
+  supabaseUserId   String?        @unique @map("supabaseUserId") // Step 2: Link to Supabase auth
+  name             String?        @map("nome")
+  instrument       String?        @map("instrumento")
+  level            MusicianLevel? @map("nivel")
+  contact          String?        @map("contato")
+  createdAt        DateTime       @default(now())
+  email            String?        @unique @map("email")
+  phone            String?        @unique @map("telefone")
+  isHost           Boolean        @default(false) @map("isHost")
+  bio              String?        @map("bio")
+  otherInstruments String?        @map("outros_instrumentos")
+  registrations    Registration[]
+  hostedJams       Jam[]
+  feedbacks        Feedback[]
 
   @@map("musicos")
 }

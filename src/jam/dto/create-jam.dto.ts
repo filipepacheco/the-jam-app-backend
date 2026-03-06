@@ -35,6 +35,7 @@ export class CreateJamDto {
   @ApiProperty({ description: 'Jam session location' })
   @IsString()
   @IsOptional()
+  @MaxLength(500)
   location?: string;
 
   @ApiProperty({ description: 'Host musician ID (UUID)', required: false })
@@ -45,6 +46,7 @@ export class CreateJamDto {
   @ApiProperty({ description: 'Host name (denormalized cache)', required: false })
   @IsString()
   @IsOptional()
+  @MaxLength(255)
   hostName?: string;
 
   @ApiProperty({ description: 'Host contact (denormalized cache)', required: false })
@@ -56,6 +58,7 @@ export class CreateJamDto {
   @ApiProperty({ description: 'Jam session QR Code', required: false })
   @IsString()
   @IsOptional()
+  @MaxLength(500)
   qrCode?: string;
 
   @ApiProperty({ description: 'Spotify playlist URL', required: false })

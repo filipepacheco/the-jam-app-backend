@@ -9,4 +9,16 @@ export class UpdateMusicianDto extends PartialType(CreateMusicianDto) {
   @IsOptional()
   @MaxLength(500)
   phone?: string;
+
+  @ApiProperty({ description: 'Short biography / music background', required: false })
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  bio?: string;
+
+  @ApiProperty({ description: 'Other instruments (comma-separated)', required: false })
+  @IsString()
+  @IsOptional()
+  @MaxLength(200)
+  otherInstruments?: string;
 }

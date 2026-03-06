@@ -41,6 +41,16 @@ export class MusicoController {
     return this.musicoService.findAll(pagination.skip, pagination.take);
   }
 
+  @Get(':id')
+  @ProtectedRoute()
+  @ApiOperation({ summary: 'Get musician profile with participation stats' })
+  @ApiResponse({ status: 200, description: 'Musician profile with stats' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Musician not found' })
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.musicoService.findOne(id);
+  }
+
   @Patch(':id')
   @ProtectedRoute()
   @ApiOperation({ summary: 'Update musician (self or host)' })

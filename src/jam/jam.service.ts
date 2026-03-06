@@ -20,6 +20,8 @@ const MUSICIAN_SAFE_SELECT = {
   instrument: true,
   contact: false,
   level: true,
+  bio: true,
+  otherInstruments: true,
 } as const;
 
 /** Music fields actually used by frontend consumers */
@@ -319,8 +321,19 @@ export class JamService {
       throw new ForbiddenException('Only the jam host can update this jam');
     }
 
+    // Explicit field allowlist to prevent mass assignment of sensitive fields
+    // (hostMusicianId, shortCode, qrCode, deletedAt are NOT allowed via update)
+    const data: Record<string, unknown> = {};
+    if (updateJamDto.name !== undefined) data.name = updateJamDto.name;
+    if (updateJamDto.description !== undefined) data.description = updateJamDto.description;
+    if (updateJamDto.date !== undefined) data.date = updateJamDto.date;
+    if (updateJamDto.location !== undefined) data.location = updateJamDto.location;
+    if (updateJamDto.hostName !== undefined) data.hostName = updateJamDto.hostName;
+    if (updateJamDto.hostContact !== undefined) data.hostContact = updateJamDto.hostContact;
+    if (updateJamDto.spotifyPlaylistUrl !== undefined) data.spotifyPlaylistUrl = updateJamDto.spotifyPlaylistUrl;
+    if (updateJamDto.status !== undefined) data.status = updateJamDto.status;
+
     // Handle slug: custom slug takes priority, otherwise regenerate on name change
-    const data: Record<string, unknown> = { ...updateJamDto };
     if (updateJamDto.slug !== undefined) {
       data.slug = await this.resolveSlug(
         updateJamDto.slug,

@@ -12,7 +12,7 @@ export class MusicaController {
   constructor(private readonly musicaService: MusicaService) {}
 
   @Post()
-  @ProtectedRoute('host', 'admin', 'user')
+  @ProtectedRoute('host', 'admin')
   @ApiOperation({ summary: 'Create a new music' })
   @ApiResponse({ status: 201, description: 'Music created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -39,7 +39,7 @@ export class MusicaController {
   }
 
   @Patch(':id/link-jam/:jamId')
-  @ProtectedRoute('host', 'admin', 'user')
+  @ProtectedRoute('host', 'admin')
   @ApiOperation({ summary: 'Link music to a jam' })
   @ApiResponse({ status: 200, description: 'Music linked to jam successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

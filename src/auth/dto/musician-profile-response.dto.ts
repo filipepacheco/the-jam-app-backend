@@ -29,6 +29,12 @@ export class MusicianProfileResponseDto {
   })
   level?: MusicianLevel;
 
+  @ApiProperty({ description: 'Short biography / music background', required: false })
+  bio?: string;
+
+  @ApiProperty({ description: 'Other instruments (comma-separated)', required: false })
+  otherInstruments?: string;
+
   @ApiProperty({ description: 'Whether user is a jam host' })
   isHost: boolean;
 

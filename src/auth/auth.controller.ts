@@ -84,6 +84,8 @@ export class AuthController {
     contact: string | null;
     instrument: string | null;
     level: MusicianLevel | null;
+    bio: string | null;
+    otherInstruments: string | null;
     isHost: boolean;
     createdAt: Date;
   }): MusicianProfileResponseDto {
@@ -97,6 +99,8 @@ export class AuthController {
       contact: musician.contact,
       instrument: musician.instrument,
       level: musician.level,
+      bio: musician.bio,
+      otherInstruments: musician.otherInstruments,
       isHost: musician.isHost,
       role: musician.isHost ? 'host' : 'user',
       registrationComplete,
