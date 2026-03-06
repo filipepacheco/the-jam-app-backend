@@ -12,6 +12,7 @@ model JamMusic {
   jamId         String
   id            String         @id @default(uuid())
   musicId       String
+  notes         String?        @map("observacoes")
   registrations Registration[]
   jam           Jam            @relation(fields: [jamId], references: [id], onDelete: Cascade)
   music         Music          @relation(fields: [musicId], references: [id], onDelete: Cascade)

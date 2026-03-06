@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { MusicaService } from './musica.service';
 import { CreateMusicDto } from './dto/create-musica.dto';
 import { UpdateMusicDto } from './dto/update-musica.dto';
+import { UpdateJamMusicDto } from './dto/update-jam-music.dto';
 import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
 import { PaginationDto } from '../common/dto/pagination.dto';
 
@@ -36,6 +37,21 @@ export class MusicaController {
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
   update(@Param('id', ParseUUIDPipe) id: string, @Body() updateMusicDto: UpdateMusicDto) {
     return this.musicaService.update(id, updateMusicDto);
+  }
+
+  @Patch('jam-music/:jamMusicId/jam/:jamId')
+  @ProtectedRoute('host', 'admin')
+  @ApiOperation({ summary: 'Update arrangement notes for a song in a jam' })
+  @ApiResponse({ status: 200, description: 'Jam music updated successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - host only' })
+  @ApiResponse({ status: 404, description: 'Song not found in this jam' })
+  updateJamMusic(
+    @Param('jamMusicId', ParseUUIDPipe) jamMusicId: string,
+    @Param('jamId', ParseUUIDPipe) jamId: string,
+    @Body() dto: UpdateJamMusicDto,
+  ) {
+    return this.musicaService.updateJamMusic(jamMusicId, jamId, dto);
   }
 
   @Patch(':id/link-jam/:jamId')

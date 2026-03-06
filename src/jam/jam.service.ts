@@ -278,6 +278,14 @@ export class JamService {
       orderBy: { order: 'asc' as const },
     },
 
+    jamMusics: {
+      select: {
+        id: true,
+        musicId: true,
+        notes: true,
+      },
+    },
+
     _count: {
       select: {
         jamMusics: true,

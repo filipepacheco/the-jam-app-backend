@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMusicDto } from './dto/create-musica.dto';
 import { UpdateMusicDto } from './dto/update-musica.dto';
+import { UpdateJamMusicDto } from './dto/update-jam-music.dto';
 
 @Injectable()
 export class MusicaService {
@@ -44,6 +45,20 @@ export class MusicaService {
     }
     return this.prisma.music.delete({
       where: { id },
+    });
+  }
+
+  async updateJamMusic(jamMusicId: string, jamId: string, dto: UpdateJamMusicDto) {
+    const jamMusic = await this.prisma.jamMusic.findFirst({
+      where: { id: jamMusicId, jamId },
+    });
+    if (!jamMusic) {
+      throw new NotFoundException('Song not found in this jam');
+    }
+
+    return this.prisma.jamMusic.update({
+      where: { id: jamMusicId },
+      data: { notes: dto.notes },
     });
   }
 

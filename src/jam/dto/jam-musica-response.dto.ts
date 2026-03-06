@@ -12,6 +12,9 @@ export class JamMusicaResponseDto {
   @ApiProperty()
   musicId: string;
 
+  @ApiProperty({ description: 'Arrangement notes (key, tempo, structure, etc.)', required: false })
+  notes?: string;
+
   @ApiProperty({ type: MusicaResponseDto })
   music: MusicaResponseDto;
 
