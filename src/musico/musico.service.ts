@@ -32,11 +32,25 @@ export class MusicoService {
   }
 
   async findAll(skip = 0, take = 50) {
-    return this.prisma.musician.findMany({
-      skip,
-      take,
-      select: MUSICIAN_LIST_SELECT,
-    });
+    const [data, total] = await Promise.all([
+      this.prisma.musician.findMany({
+        skip,
+        take,
+        select: MUSICIAN_LIST_SELECT,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.musician.count(),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        skip,
+        take,
+        hasMore: skip + take < total,
+      },
+    };
   }
 
   async findOne(id: string) {

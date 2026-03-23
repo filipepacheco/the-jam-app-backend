@@ -39,6 +39,15 @@ export class CreateMusicDto {
   link?: string | null;
 
   @ApiProperty({
+    description: 'Additional info, notes, or resource links for the song',
+    required: false,
+    nullable: true,
+  })
+  @IsString()
+  @IsOptional()
+  info?: string | null;
+
+  @ApiProperty({
     description: 'Music status',
     enum: MusicStatus,
     default: MusicStatus.SUGGESTED,

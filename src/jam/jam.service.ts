@@ -33,6 +33,7 @@ const MUSIC_PUBLIC_SELECT = {
   description: true,
   duration: true,
   link: true,
+  info: true,
   status: true,
   neededDrums: true,
   neededGuitars: true,

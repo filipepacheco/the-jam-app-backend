@@ -60,6 +60,7 @@ model Music {
   duration      Int?        @map("duracao")
   description   String?     @map("descricao")
   link          String?     @map("link")
+  info          String?     @map("info")
   status        MusicStatus @default(SUGGESTED) @map("status")
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt @map("atualizado_em")
