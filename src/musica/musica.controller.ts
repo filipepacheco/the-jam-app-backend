@@ -25,8 +25,8 @@ export class MusicaController {
   @Get()
   @ApiOperation({ summary: 'List all musics independent of jam' })
   @ApiResponse({ status: 200, description: 'List of musics' })
-  findAll(@Query() pagination: PaginationDto) {
-    return this.musicaService.findAll(pagination.skip, pagination.take);
+  findAll(@Query() pagination: PaginationDto, @Query('status') status?: string) {
+    return this.musicaService.findAll(pagination.skip, pagination.take, status);
   }
 
   @Patch(':id')

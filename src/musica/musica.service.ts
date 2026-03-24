@@ -14,17 +14,32 @@ export class MusicaService {
     });
   }
 
-  async findAll(skip = 0, take = 50) {
-    return this.prisma.music.findMany({
-      skip,
-      take,
-      include: {
-        jamMusics: { include: { jam: true } },
+  async findAll(skip = 0, take = 50, status?: string) {
+    const where = status ? { status: status as any } : {};
+    const [data, total] = await Promise.all([
+      this.prisma.music.findMany({
+        where,
+        skip,
+        take,
+        include: {
+          jamMusics: { include: { jam: true } },
+        },
+        orderBy: {
+          title: 'asc',
+        },
+      }),
+      this.prisma.music.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        skip,
+        take,
+        hasMore: skip + take < total,
       },
-      orderBy: {
-        title: 'asc',
-      },
-    });
+    };
   }
 
   async update(id: string, updateMusicDto: UpdateMusicDto) {
