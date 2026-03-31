@@ -375,15 +375,24 @@ export class JamPlaybackService {
 
     const scheduleIdForHistory = jam.currentScheduleId || scheduleIds[0];
 
-    await this.prisma.$transaction(async (tx) => {
-      for (const { scheduleId, order } of updates) {
-        await tx.schedule.update({
-          where: { id: scheduleId },
-          data: { order },
-        });
+    // Build a single CASE-based UPDATE to avoid N sequential round-trips
+    // which cause transaction timeouts with Prisma Accelerate
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    for (const u of updates) {
+      if (!uuidRegex.test(u.scheduleId) || !Number.isInteger(u.order)) {
+        throw new BadRequestException('Invalid schedule ID or order value');
       }
+    }
+    const caseClauses = updates
+      .map((u) => `WHEN id = '${u.scheduleId}' THEN ${u.order}`)
+      .join(' ');
+    const idList = updates.map((u) => `'${u.scheduleId}'`).join(', ');
 
-      await tx.playbackHistory.create({
+    await this.prisma.$transaction([
+      this.prisma.$executeRawUnsafe(
+        `UPDATE escalas SET ordem = CASE ${caseClauses} END WHERE id IN (${idList})`,
+      ),
+      this.prisma.playbackHistory.create({
         data: {
           jamId,
           scheduleId: scheduleIdForHistory,
@@ -391,8 +400,8 @@ export class JamPlaybackService {
           userId,
           metadata: { updates, totalUpdates: updates.length },
         },
-      });
-    });
+      }),
+    ]);
 
     return true;
   }
