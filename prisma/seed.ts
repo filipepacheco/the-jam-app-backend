@@ -46,11 +46,31 @@ async function main() {
   console.log('Creating 25 musicians...');
   const musicians = [];
   const musicianNames = [
-    'João Silva', 'Maria Santos', 'Pedro Oliveira', 'Ana Costa', 'Carlos Ferreira',
-    'Lucas Martins', 'Beatriz Rocha', 'Felipe Gomes', 'Juliana Lima', 'Rafael Alves',
-    'Camila Souza', 'Thiago Ribeiro', 'Fernanda Pereira', 'Bruno Castro', 'Mariana Dias',
-    'André Mendes', 'Sophia Barbosa', 'Gabriel Teixeira', 'Larissa Moura', 'Victor Carvalho',
-    'Isabela Freitas', 'Gustavo Lourenço', 'Amanda Silva', 'Daniel Cardoso', 'Vanessa Tavares',
+    'João Silva',
+    'Maria Santos',
+    'Pedro Oliveira',
+    'Ana Costa',
+    'Carlos Ferreira',
+    'Lucas Martins',
+    'Beatriz Rocha',
+    'Felipe Gomes',
+    'Juliana Lima',
+    'Rafael Alves',
+    'Camila Souza',
+    'Thiago Ribeiro',
+    'Fernanda Pereira',
+    'Bruno Castro',
+    'Mariana Dias',
+    'André Mendes',
+    'Sophia Barbosa',
+    'Gabriel Teixeira',
+    'Larissa Moura',
+    'Victor Carvalho',
+    'Isabela Freitas',
+    'Gustavo Lourenço',
+    'Amanda Silva',
+    'Daniel Cardoso',
+    'Vanessa Tavares',
   ];
 
   const instruments = ['guitarra', 'bateria', 'baixo', 'teclado', 'vocal'];
@@ -112,10 +132,10 @@ async function main() {
     { title: 'Dream On', artist: 'Aerosmith', genre: 'Rock' },
     { title: 'Sweet Emotion', artist: 'Aerosmith', genre: 'Rock' },
     { title: 'Walk This Way', artist: 'Aerosmith', genre: 'Rock' },
-    { title: 'I Don\'t Want to Miss a Thing', artist: 'Aerosmith', genre: 'Rock' },
-    { title: 'Cryin\'', artist: 'Aerosmith', genre: 'Rock' },
+    { title: "I Don't Want to Miss a Thing", artist: 'Aerosmith', genre: 'Rock' },
+    { title: "Cryin'", artist: 'Aerosmith', genre: 'Rock' },
     { title: 'Love in an Elevator', artist: 'Aerosmith', genre: 'Rock' },
-    { title: 'Janie\'s Got a Gun', artist: 'Aerosmith', genre: 'Rock' },
+    { title: "Janie's Got a Gun", artist: 'Aerosmith', genre: 'Rock' },
     { title: 'Dude (Looks Like a Lady)', artist: 'Aerosmith', genre: 'Rock' },
     { title: 'Mama Said Knock You Out', artist: 'LL Cool J', genre: 'Hip Hop' },
     { title: 'Love the Way You Lie', artist: 'Eminem', genre: 'Hip Hop' },
@@ -128,7 +148,7 @@ async function main() {
     { title: 'Sunshine of My Life', artist: 'Stevie Wonder', genre: 'Soul' },
     { title: 'Superstition', artist: 'Stevie Wonder', genre: 'Soul' },
     { title: 'Sir Duke', artist: 'Stevie Wonder', genre: 'Soul' },
-    { title: 'Isn\'t She Lovely', artist: 'Stevie Wonder', genre: 'Soul' },
+    { title: "Isn't She Lovely", artist: 'Stevie Wonder', genre: 'Soul' },
     { title: 'I Wish', artist: 'Stevie Wonder', genre: 'Soul' },
     { title: 'Higher Ground', artist: 'Stevie Wonder', genre: 'Soul' },
   ];
@@ -193,11 +213,11 @@ async function main() {
     });
     jams.push(jam);
   }
-  console.log(`✓ Created ${jams.length} jams with various states:`)
-  console.log(`  - Jam 1: ACTIVE, PLAYING (currently playing)`)
-  console.log(`  - Jam 2: ACTIVE, PAUSED (paused mid-session)`)
-  console.log(`  - Jam 3: ACTIVE, STOPPED (scheduled for future)`)
-  console.log(`  - Jam 4: INACTIVE, STOPPED (upcoming but not active)`)
+  console.log(`✓ Created ${jams.length} jams with various states:`);
+  console.log(`  - Jam 1: ACTIVE, PLAYING (currently playing)`);
+  console.log(`  - Jam 2: ACTIVE, PAUSED (paused mid-session)`);
+  console.log(`  - Jam 3: ACTIVE, STOPPED (scheduled for future)`);
+  console.log(`  - Jam 4: INACTIVE, STOPPED (upcoming but not active)`);
   console.log(`  - Jam 5: FINISHED, STOPPED (completed session)`);
 
   // Create schedules with playback state and timestamps + registrations
@@ -211,12 +231,10 @@ async function main() {
 
   for (let jamIdx = 0; jamIdx < jams.length; jamIdx++) {
     const jam = jams[jamIdx];
-    
+
     // Select 8-12 songs per jam
     const songsPerJam = Math.floor(Math.random() * 5) + 8;
-    const selectedSongs = songs
-      .sort(() => Math.random() - 0.5)
-      .slice(0, songsPerJam);
+    const selectedSongs = songs.sort(() => Math.random() - 0.5).slice(0, songsPerJam);
 
     // Create schedules with realistic progression
     const schedules = [];
@@ -332,7 +350,6 @@ async function main() {
       // Jam 1 is actively playing - create realistic history
       const schedule1 = schedules[0];
 
-
       // START_JAM action
       await prisma.playbackHistory.create({
         data: {
@@ -439,8 +456,8 @@ async function main() {
     }
   }
 
-  console.log(`✓ Created ${scheduleCount} schedules with timestamps`)
-  console.log(`✓ Created ${registrationCount} registrations`)
+  console.log(`✓ Created ${scheduleCount} schedules with timestamps`);
+  console.log(`✓ Created ${registrationCount} registrations`);
   console.log(`✓ Created ${playbackHistoryCount} playback history entries`);
 
   console.log('\n✅ Database seed completed successfully!\n');
@@ -459,19 +476,19 @@ async function main() {
   console.log('  🟢 Jam 1 (Carlos Mendes) - PLAYING');
   console.log('     └─ 2 songs completed, currently on song 2/10');
   console.log('     └─ Perfect for testing: NEXT, PAUSE, RESUME, PREVIOUS\n');
-  
+
   console.log('  🟠 Jam 2 (Marina Oliveira) - PAUSED');
   console.log('     └─ 1 song completed, paused during song 2');
   console.log('     └─ Perfect for testing: RESUME, PREVIOUS, STOP\n');
-  
+
   console.log('  🔵 Jam 3 (Roberto Silva) - STOPPED');
   console.log('     └─ No songs started yet, 10 songs in queue');
   console.log('     └─ Perfect for testing: START_JAM lifecycle\n');
-  
+
   console.log('  ⚪ Jam 4 (Juliana Costa) - STOPPED');
   console.log('     └─ No songs started yet, 10 songs in queue');
   console.log('     └─ Perfect for testing: START_JAM and full navigation\n');
-  
+
   console.log('  ⚫ Jam 5 (Gustavo Ferreira) - FINISHED');
   console.log('     └─ 6 completed songs from 24 hours ago');
   console.log('     └─ Perfect for testing: PLAYBACK_HISTORY query\n');
@@ -480,25 +497,25 @@ async function main() {
   console.log('───────────────────────────────────────────────────────');
   console.log('  # Get Jam 1 live state (PLAYING)');
   console.log('  GET /api/jams/{jam1Id}/live/state\n');
-  
+
   console.log('  # Start Jam 3 (STOPPED → PLAYING)');
   console.log('  POST /api/jams/{jam3Id}/control/start\n');
-  
+
   console.log('  # Skip to next song');
   console.log('  POST /api/jams/{jamId}/control/next\n');
-  
+
   console.log('  # Pause current song');
   console.log('  POST /api/jams/{jamId}/control/pause\n');
-  
+
   console.log('  # Resume paused song');
   console.log('  POST /api/jams/{jamId}/control/resume\n');
-  
+
   console.log('  # Go back to previous song');
   console.log('  POST /api/jams/{jamId}/control/previous\n');
-  
+
   console.log('  # Stop the jam completely');
   console.log('  POST /api/jams/{jamId}/control/stop\n');
-  
+
   console.log('  # Get playback history');
   console.log('  GET /api/jams/{jamId}/playback-history\n');
 
@@ -521,4 +538,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsInt, Min, IsOptional, IsEnum, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsInt, Min, IsOptional, IsEnum, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ScheduleStatus } from '@prisma/client';
 

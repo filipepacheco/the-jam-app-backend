@@ -6,6 +6,7 @@ import {
   testFixtures,
   setupTestData,
   getPrismaService,
+  controlRequest,
 } from './test-helpers';
 
 describe('Live Jam Control System E2E Tests', () => {
@@ -241,16 +242,10 @@ describe('Live Jam Control System E2E Tests', () => {
       const jamId = testData.jam.id;
 
       // Start the jam
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
 
       // Try to start again
-      const response = await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(400);
+      const response = await controlRequest('start', jamId, 400);
 
       expect(response.body.message).toContain('already playing');
     });
@@ -261,10 +256,7 @@ describe('Live Jam Control System E2E Tests', () => {
       const jamId = testData.jam.id;
 
       // Start jam
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
 
       // Go to next
       const response = await request(app.getHttpServer())
@@ -283,17 +275,11 @@ describe('Live Jam Control System E2E Tests', () => {
       const jamId = testData.jam.id;
 
       // Start jam
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
 
       // Skip all songs
       for (let i = 0; i < testData.schedules.length; i++) {
-        await request(app.getHttpServer())
-          .post(`/jams/${jamId}/control/next`)
-          .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-          .expect(201);
+        await controlRequest('next', jamId);
       }
 
       // Verify jam is stopped
@@ -306,10 +292,7 @@ describe('Live Jam Control System E2E Tests', () => {
     it('should fail to skip when jam is stopped', async () => {
       const jamId = testData.jam.id;
 
-      const response = await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/next`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(400);
+      const response = await controlRequest('next', jamId, 400);
 
       expect(response.body.message).toContain('No current song');
     });
@@ -320,16 +303,10 @@ describe('Live Jam Control System E2E Tests', () => {
       const jamId = testData.jam.id;
 
       // Start jam
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
 
       // Go to next (completes song 1, starts song 2)
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/next`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('next', jamId);
 
       // Go to previous (should go back to song 1)
       const response = await request(app.getHttpServer())
@@ -348,10 +325,7 @@ describe('Live Jam Control System E2E Tests', () => {
       const jamId = testData.jam.id;
 
       // Start jam
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
 
       // Go to previous immediately (no completed songs)
       const response = await request(app.getHttpServer())
@@ -371,10 +345,7 @@ describe('Live Jam Control System E2E Tests', () => {
       const jamId = testData.jam.id;
 
       // Start jam
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
 
       // Pause
       let response = await request(app.getHttpServer())
@@ -412,10 +383,7 @@ describe('Live Jam Control System E2E Tests', () => {
       const jamId = testData.jam.id;
 
       // Start jam
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
 
       // Try to resume without pausing
       const response = await request(app.getHttpServer())
@@ -432,10 +400,7 @@ describe('Live Jam Control System E2E Tests', () => {
       const jamId = testData.jam.id;
 
       // Start jam
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
 
       // Stop
       const response = await request(app.getHttpServer())
@@ -468,20 +433,9 @@ describe('Live Jam Control System E2E Tests', () => {
       const jamId = testData.jam.id;
 
       // Execute multiple actions
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
-
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/pause`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
-
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/resume`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
+      await controlRequest('pause', jamId);
+      await controlRequest('resume', jamId);
 
       // Get history
       const response = await request(app.getHttpServer())
@@ -504,20 +458,9 @@ describe('Live Jam Control System E2E Tests', () => {
       const jamId = testData.jam.id;
 
       // Execute multiple actions
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
-
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/next`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
-
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/next`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
+      await controlRequest('next', jamId);
+      await controlRequest('next', jamId);
 
       // Get history with limit
       const response = await request(app.getHttpServer())
@@ -533,10 +476,7 @@ describe('Live Jam Control System E2E Tests', () => {
       const jamId = testData.jam.id;
 
       // Start jam
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
 
       // Get live state
       const response = await request(app.getHttpServer())
@@ -561,10 +501,7 @@ describe('Live Jam Control System E2E Tests', () => {
         .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
         .expect(201);
 
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/next`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('next', jamId);
 
       // Get live state
       const response = await request(app.getHttpServer())
@@ -634,10 +571,7 @@ describe('Live Jam Control System E2E Tests', () => {
       const scheduleIds = testData.schedules.map((s: any) => s.id);
 
       // Start jam
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
 
       // Get current schedule before reorder
       const prismaService = await getPrismaService();
@@ -799,10 +733,7 @@ describe('Live Jam Control System E2E Tests', () => {
       const prismaService = await getPrismaService();
 
       // Start jam
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
 
       // Verify database state
       const jam = await prismaService.jam.findUnique({
@@ -817,10 +748,7 @@ describe('Live Jam Control System E2E Tests', () => {
       expect(jam.currentSchedule.status).toBe('IN_PROGRESS');
 
       // Skip song
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/next`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('next', jamId);
 
       // Verify state changed
       const jamAfterSkip = await prismaService.jam.findUnique({
@@ -843,10 +771,7 @@ describe('Live Jam Control System E2E Tests', () => {
       const prismaService = await getPrismaService();
 
       // Start jam
-      await request(app.getHttpServer())
-        .post(`/jams/${jamId}/control/start`)
-        .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-        .expect(201);
+      await controlRequest('start', jamId);
 
       // Verify only one IN_PROGRESS schedule
       const inProgressSchedules = await prismaService.schedule.findMany({

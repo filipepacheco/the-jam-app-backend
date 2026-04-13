@@ -1,4 +1,12 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString, IsUUID, Matches, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsDateString,
+  IsUUID,
+  Matches,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { SLUG_PATTERN, SLUG_VALIDATION_MESSAGE } from '../../common/constants';
 
@@ -46,7 +54,10 @@ export class ImportPlaylistDto {
   @IsOptional()
   location?: string;
 
-  @ApiProperty({ description: 'Custom URL slug for the jam (ignored if jamId provided)', required: false })
+  @ApiProperty({
+    description: 'Custom URL slug for the jam (ignored if jamId provided)',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   @MaxLength(80)

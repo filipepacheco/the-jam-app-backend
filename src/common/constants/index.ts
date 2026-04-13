@@ -4,7 +4,8 @@ export type { CanonicalInstrument } from './instruments';
 
 // Slug validation
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-export const SLUG_VALIDATION_MESSAGE = 'Slug must be lowercase alphanumeric with hyphens (e.g. "friday-night-rock")';
+export const SLUG_VALIDATION_MESSAGE =
+  'Slug must be lowercase alphanumeric with hyphens (e.g. "friday-night-rock")';
 
 // Pagination
 export const DEFAULT_TAKE = 20;

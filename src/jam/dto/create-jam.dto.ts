@@ -1,4 +1,13 @@
-import { IsString, IsNotEmpty, IsOptional, IsISO8601, IsUUID, Matches, MaxLength, IsUrl } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsISO8601,
+  IsUUID,
+  Matches,
+  MaxLength,
+  IsUrl,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { JamStatus } from '@prisma/client';
 import { SLUG_PATTERN, SLUG_VALIDATION_MESSAGE } from '../../common/constants';
@@ -11,7 +20,8 @@ export class CreateJamDto {
   name: string;
 
   @ApiProperty({
-    description: 'Custom slug for friendly URLs. Lowercase alphanumeric and hyphens only. Auto-generated from name if not provided.',
+    description:
+      'Custom slug for friendly URLs. Lowercase alphanumeric and hyphens only. Auto-generated from name if not provided.',
     required: false,
     example: 'friday-night-rock',
   })

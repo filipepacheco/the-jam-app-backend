@@ -30,7 +30,6 @@ function isOriginAllowed(
   if (origin.endsWith('-filipepachecos-projects.vercel.app')) return true;
   if (origin.endsWith('.the-jam-app.vercel.app')) return true;
   return origin.endsWith('.jamapp.com.br') || origin === 'https://jamapp.com.br';
-
 }
 
 async function bootstrap() {

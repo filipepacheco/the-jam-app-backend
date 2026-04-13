@@ -76,7 +76,8 @@ export class JamService {
     }
 
     const shortCode = await generateShortCode(
-      async (code) => !!(await this.prisma.jam.findUnique({ where: { shortCode: code }, select: { id: true } })),
+      async (code) =>
+        !!(await this.prisma.jam.findUnique({ where: { shortCode: code }, select: { id: true } })),
     );
     const slug = await this.resolveSlug(createJamDto.slug, createJamDto.name, shortCode);
 
@@ -339,7 +340,8 @@ export class JamService {
     if (updateJamDto.location !== undefined) data.location = updateJamDto.location;
     if (updateJamDto.hostName !== undefined) data.hostName = updateJamDto.hostName;
     if (updateJamDto.hostContact !== undefined) data.hostContact = updateJamDto.hostContact;
-    if (updateJamDto.spotifyPlaylistUrl !== undefined) data.spotifyPlaylistUrl = updateJamDto.spotifyPlaylistUrl;
+    if (updateJamDto.spotifyPlaylistUrl !== undefined)
+      data.spotifyPlaylistUrl = updateJamDto.spotifyPlaylistUrl;
     if (updateJamDto.status !== undefined) data.status = updateJamDto.status;
 
     // Handle slug: custom slug takes priority, otherwise regenerate on name change

@@ -216,7 +216,12 @@ export class JamPlaybackService {
       if (previousSchedule) {
         await tx.schedule.update({
           where: { id: previousSchedule.id },
-          data: { status: ScheduleStatus.IN_PROGRESS, startedAt: new Date(), completedAt: null, pausedAt: null },
+          data: {
+            status: ScheduleStatus.IN_PROGRESS,
+            startedAt: new Date(),
+            completedAt: null,
+            pausedAt: null,
+          },
         });
         newScheduleId = previousSchedule.id;
       } else {
@@ -383,9 +388,7 @@ export class JamPlaybackService {
         throw new BadRequestException('Invalid schedule ID or order value');
       }
     }
-    const caseClauses = updates
-      .map((u) => `WHEN id = '${u.scheduleId}' THEN ${u.order}`)
-      .join(' ');
+    const caseClauses = updates.map((u) => `WHEN id = '${u.scheduleId}' THEN ${u.order}`).join(' ');
     const idList = updates.map((u) => `'${u.scheduleId}'`).join(', ');
 
     await this.prisma.$transaction([

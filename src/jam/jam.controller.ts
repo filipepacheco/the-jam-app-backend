@@ -102,7 +102,9 @@ export class JamController {
     type: LiveDashboardResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async getLiveDashboard(@Param('identifier') identifier: string): Promise<LiveDashboardResponseDto> {
+  async getLiveDashboard(
+    @Param('identifier') identifier: string,
+  ): Promise<LiveDashboardResponseDto> {
     const jamId = await this.jamService.resolveJamId(identifier);
     return this.jamLiveStateService.getLiveDashboard(jamId);
   }
@@ -202,7 +204,10 @@ export class JamController {
   @ApiResponse({ status: 200, description: 'Playback history retrieved' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
-  async getPlaybackHistory(@Param('id', ParseUUIDPipe) jamId: string, @Query('limit') limitParam?: string) {
+  async getPlaybackHistory(
+    @Param('id', ParseUUIDPipe) jamId: string,
+    @Query('limit') limitParam?: string,
+  ) {
     let limit = limitParam ? parseInt(limitParam, 10) : DEFAULT_HISTORY_LIMIT;
     if (isNaN(limit) || limit < 1) limit = DEFAULT_HISTORY_LIMIT;
     if (limit > MAX_HISTORY_LIMIT) limit = MAX_HISTORY_LIMIT;
@@ -215,7 +220,11 @@ export class JamController {
   @ApiResponse({ status: 200, description: 'Jam updated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateJamDto: UpdateJamDto, @Request() req) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateJamDto: UpdateJamDto,
+    @Request() req,
+  ) {
     return this.jamService.update(id, updateJamDto, req.user?.musicianId, req.user?.isHost);
   }
 

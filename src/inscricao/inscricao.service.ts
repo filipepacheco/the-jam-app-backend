@@ -70,7 +70,8 @@ export class InscricaoService {
     const updateData: { instrument?: string; status?: RegistrationStatus } = {};
 
     if (updateRegistrationDto.instrument !== undefined) {
-      updateData.instrument = normalizeInstrument(updateRegistrationDto.instrument) ?? updateRegistrationDto.instrument;
+      updateData.instrument =
+        normalizeInstrument(updateRegistrationDto.instrument) ?? updateRegistrationDto.instrument;
     }
 
     if (updateRegistrationDto.status !== undefined) {

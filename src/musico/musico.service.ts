@@ -26,7 +26,8 @@ export class MusicoService {
     return this.prisma.musician.create({
       data: {
         ...createMusicianDto,
-        instrument: normalizeInstrument(createMusicianDto.instrument) ?? createMusicianDto.instrument,
+        instrument:
+          normalizeInstrument(createMusicianDto.instrument) ?? createMusicianDto.instrument,
       },
     });
   }
@@ -64,10 +65,12 @@ export class MusicoService {
 
     // Compute participation stats from registrations
     const [totalJams, totalSongs, instrumentRows] = await Promise.all([
-      this.prisma.registration.groupBy({
-        by: ['jamId'],
-        where: { musicianId: id, status: 'APPROVED' },
-      }).then((rows) => rows.length),
+      this.prisma.registration
+        .groupBy({
+          by: ['jamId'],
+          where: { musicianId: id, status: 'APPROVED' },
+        })
+        .then((rows) => rows.length),
       this.prisma.registration.count({
         where: { musicianId: id, status: 'APPROVED' },
       }),
@@ -112,13 +115,15 @@ export class MusicoService {
     const data: Record<string, unknown> = {};
     if (updateMusicianDto.name !== undefined) data.name = updateMusicianDto.name;
     if (updateMusicianDto.instrument !== undefined) {
-      data.instrument = normalizeInstrument(updateMusicianDto.instrument) ?? updateMusicianDto.instrument;
+      data.instrument =
+        normalizeInstrument(updateMusicianDto.instrument) ?? updateMusicianDto.instrument;
     }
     if (updateMusicianDto.level !== undefined) data.level = updateMusicianDto.level;
     if (updateMusicianDto.phone !== undefined) data.phone = updateMusicianDto.phone;
     if (updateMusicianDto.contact !== undefined) data.contact = updateMusicianDto.contact;
     if (updateMusicianDto.bio !== undefined) data.bio = updateMusicianDto.bio;
-    if (updateMusicianDto.otherInstruments !== undefined) data.otherInstruments = updateMusicianDto.otherInstruments;
+    if (updateMusicianDto.otherInstruments !== undefined)
+      data.otherInstruments = updateMusicianDto.otherInstruments;
 
     return this.prisma.musician.update({
       where: { id },

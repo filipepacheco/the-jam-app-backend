@@ -84,7 +84,4 @@ export class TokenCacheService implements OnModuleDestroy {
   }
 
   // For monitoring purposes
-  getCacheSize(): number {
-    return this.cache.size;
-  }
 }

@@ -107,7 +107,9 @@ export class JamLiveStateService {
       ? this.mapScheduleToDashboardSong(currentSchedule)
       : null;
 
-    const nextSchedules = schedules.filter((s) => s.status === ScheduleStatus.SCHEDULED).slice(0, 3);
+    const nextSchedules = schedules
+      .filter((s) => s.status === ScheduleStatus.SCHEDULED)
+      .slice(0, 3);
     const nextSongs = nextSchedules.map((schedule) => this.mapScheduleToDashboardSong(schedule));
 
     return {
@@ -123,7 +125,13 @@ export class JamLiveStateService {
   }
 
   private mapScheduleToDashboardSong(schedule: {
-    music: { id: string; title: string; artist: string; duration: number | null; link: string | null };
+    music: {
+      id: string;
+      title: string;
+      artist: string;
+      duration: number | null;
+      link: string | null;
+    };
     registrations: Array<{
       instrument: string;
       musician: { id: string; name: string | null };

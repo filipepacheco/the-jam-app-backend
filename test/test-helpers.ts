@@ -1,5 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 
@@ -153,6 +154,21 @@ export const testFixtures = {
     await prismaService.musician.deleteMany({});
   },
 };
+
+/**
+ * Helper to make authenticated control requests against a jam.
+ * Reduces boilerplate for the repeated supertest pattern in E2E tests.
+ */
+export function controlRequest(
+  action: string,
+  jamId: string,
+  expectedStatus = 201,
+) {
+  return request(app.getHttpServer())
+    .post(`/jams/${jamId}/control/${action}`)
+    .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
+    .expect(expectedStatus);
+}
 
 /**
  * Helper to create a complete test setup

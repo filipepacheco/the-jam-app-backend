@@ -55,7 +55,8 @@ export class AuthService {
       updatePayload['name'] = updateData.name;
     }
     if (updateData.instrument !== undefined) {
-      updatePayload['instrument'] = normalizeInstrument(updateData.instrument) ?? updateData.instrument;
+      updatePayload['instrument'] =
+        normalizeInstrument(updateData.instrument) ?? updateData.instrument;
     }
     if (updateData.level !== undefined) {
       updatePayload['level'] = updateData.level;

@@ -28,13 +28,3 @@ export class PaginationDto {
   @IsOptional()
   take?: number = DEFAULT_TAKE;
 }
-
-export interface PaginatedResult<T> {
-  data: T[];
-  meta: {
-    total: number;
-    skip: number;
-    take: number;
-    hasMore: boolean;
-  };
-}
