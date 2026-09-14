@@ -24,9 +24,6 @@ yarn-debug.log*
 .DS_Store
 Thumbs.db
 
-# Prisma
-/prisma/migrations/
-
 /*/claude.md
 /**/claude.md
 /**/**/claude.md
