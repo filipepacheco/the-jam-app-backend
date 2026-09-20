@@ -22,7 +22,7 @@ export class MusicaService {
         skip,
         take,
         include: {
-          jamMusics: { include: { jam: true } },
+          jamMusics: { where: { jam: { deletedAt: null } }, include: { jam: true } },
         },
         orderBy: {
           title: 'asc',
@@ -65,7 +65,7 @@ export class MusicaService {
 
   async updateJamMusic(jamMusicId: string, jamId: string, dto: UpdateJamMusicDto) {
     const jamMusic = await this.prisma.jamMusic.findFirst({
-      where: { id: jamMusicId, jamId },
+      where: { id: jamMusicId, jamId, jam: { deletedAt: null } },
     });
     if (!jamMusic) {
       throw new NotFoundException('Song not found in this jam');
@@ -79,6 +79,11 @@ export class MusicaService {
 
   async linkToJam(musicaId: string, jamId: string) {
     return this.prisma.$transaction(async (tx) => {
+      const jam = await tx.jam.findUnique({ where: { id: jamId, deletedAt: null } });
+      if (!jam) {
+        throw new NotFoundException('Jam not found');
+      }
+
       const existingLink = await tx.jamMusic.findFirst({
         where: {
           jamId,

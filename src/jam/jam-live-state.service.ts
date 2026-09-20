@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ScheduleStatus } from '@prisma/client';
+import { RegistrationStatus, ScheduleStatus } from '@prisma/client';
 import { LiveStateResponseDto, LiveStateSongDto } from './dto/live-state-response.dto';
 import { LiveDashboardResponseDto, DashboardSongDto } from './dto/live-dashboard-response.dto';
 
@@ -10,7 +10,7 @@ export class JamLiveStateService {
 
   async getLiveState(jamId: string): Promise<LiveStateResponseDto> {
     const jam = await this.prisma.jam.findUnique({
-      where: { id: jamId },
+      where: { id: jamId, deletedAt: null },
       select: { id: true, status: true, playbackState: true },
     });
 
@@ -30,6 +30,7 @@ export class JamLiveStateService {
           select: { title: true, artist: true, duration: true, link: true },
         },
         registrations: {
+          where: { status: RegistrationStatus.APPROVED },
           select: {
             instrument: true,
             musician: { select: { id: true, name: true } },
@@ -75,7 +76,7 @@ export class JamLiveStateService {
 
   async getLiveDashboard(jamId: string): Promise<LiveDashboardResponseDto> {
     const jam = await this.prisma.jam.findUnique({
-      where: { id: jamId },
+      where: { id: jamId, deletedAt: null },
       select: { id: true, name: true, qrCode: true, slug: true, shortCode: true, status: true },
     });
 
@@ -93,6 +94,7 @@ export class JamLiveStateService {
           select: { id: true, title: true, artist: true, duration: true, link: true },
         },
         registrations: {
+          where: { status: RegistrationStatus.APPROVED },
           select: {
             instrument: true,
             musician: { select: { id: true, name: true } },

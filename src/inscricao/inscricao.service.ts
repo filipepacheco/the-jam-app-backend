@@ -26,6 +26,9 @@ export class InscricaoService {
     if (!schedule) {
       throw new NotFoundException('Schedule not found');
     }
+    if (schedule.jam.deletedAt) {
+      throw new NotFoundException('Jam not found');
+    }
 
     // Check if musician is already registered for this schedule with the same instrument
     const existingRegistration = await this.prisma.registration.findFirst({
@@ -61,10 +64,14 @@ export class InscricaoService {
   async update(id: string, updateRegistrationDto: UpdateRegistrationDto) {
     const registration = await this.prisma.registration.findUnique({
       where: { id },
+      include: { jam: true },
     });
 
     if (!registration) {
       throw new NotFoundException('Registration not found');
+    }
+    if (registration.jam.deletedAt) {
+      throw new NotFoundException('Jam not found');
     }
 
     const updateData: { instrument?: string; status?: RegistrationStatus } = {};
@@ -92,10 +99,14 @@ export class InscricaoService {
   async remove(id: string, requestingMusicianId: string) {
     const registration = await this.prisma.registration.findUnique({
       where: { id },
+      include: { jam: true },
     });
 
     if (!registration) {
       throw new NotFoundException('Registration not found');
+    }
+    if (registration.jam.deletedAt) {
+      throw new NotFoundException('Jam not found');
     }
 
     // Look up requesting musician to check if host

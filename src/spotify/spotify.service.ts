@@ -46,7 +46,7 @@ export class SpotifyService {
     if (dto.jamId) {
       // Import to existing jam
       jam = await this.prisma.jam.findUnique({
-        where: { id: dto.jamId },
+        where: { id: dto.jamId, deletedAt: null },
         include: {
           schedules: { orderBy: { order: 'desc' }, take: 1 },
           jamMusics: { select: { musicId: true } },
@@ -232,7 +232,7 @@ export class SpotifyService {
 
   async exportPlaylist(dto: ExportPlaylistDto): Promise<ExportResultDto> {
     const jam = await this.prisma.jam.findUnique({
-      where: { id: dto.jamId },
+      where: { id: dto.jamId, deletedAt: null },
       include: {
         schedules: {
           include: { music: true },

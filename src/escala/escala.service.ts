@@ -27,7 +27,7 @@ export class EscalaService {
 
     // Verify that jam exists
     const jam = await this.prisma.jam.findUnique({
-      where: { id: createScheduleDto.jamId },
+      where: { id: createScheduleDto.jamId, deletedAt: null },
     });
 
     if (!jam) {
@@ -64,6 +64,18 @@ export class EscalaService {
     if (!schedule) {
       throw new NotFoundException('Schedule not found');
     }
+    if (schedule.jam.deletedAt) {
+      throw new NotFoundException('Jam not found');
+    }
+    if (updateScheduleDto.jamId && updateScheduleDto.jamId !== schedule.jamId) {
+      const targetJam = await this.prisma.jam.findUnique({
+        where: { id: updateScheduleDto.jamId, deletedAt: null },
+        select: { id: true },
+      });
+      if (!targetJam) {
+        throw new NotFoundException('Jam not found');
+      }
+    }
 
     return this.prisma.schedule.update({
       where: { id },
@@ -78,10 +90,14 @@ export class EscalaService {
   async remove(id: string) {
     const schedule = await this.prisma.schedule.findUnique({
       where: { id },
+      include: { jam: true },
     });
 
     if (!schedule) {
       throw new NotFoundException('Schedule not found');
+    }
+    if (schedule.jam.deletedAt) {
+      throw new NotFoundException('Jam not found');
     }
 
     return this.prisma.schedule.delete({

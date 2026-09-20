@@ -4,6 +4,8 @@ GitHub is the source of truth: [tracking issue](https://github.com/filipepacheco
 
 ## Notes
 
+**Progress after backlog creation:** the baseline repairs and safety/authentication batch were reviewed and committed locally as `0275672`. All 75 checks passed (27 regression tests, 30 PostgreSQL E2E tests and 18 command-safety checks). Typecheck passed; lint retained one existing warning. Feedback limiting remains per instance. Publishing and issue closure are still pending. The original ticket-status snapshot below predates that commit; consult the pass reports for implementation evidence. [Pass 3](remediation-pass-3.md) implements #13 and #15, with all 83 tests/checks passing.
+
 This is the completed remediation backlog for the backend health audit, dated 2026-09-20 UTC. Baseline: `689ccb25236d3c3472978a551e87b602420e79a7`.
 
 **Plan:** establish a baseline (done) → audit the backend (done) → define the remediation backlog (done) → implement in small batches (first local batch verified; further implementation paused for backlog creation) → verify and close (per ticket after review/commit).

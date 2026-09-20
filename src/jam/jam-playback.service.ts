@@ -17,7 +17,7 @@ export class JamPlaybackService {
 
   private async findJamForPlayback(jamId: string) {
     const jam = await this.prisma.jam.findUnique({
-      where: { id: jamId },
+      where: { id: jamId, deletedAt: null },
       select: PLAYBACK_JAM_SELECT,
     });
     if (!jam) {
@@ -363,7 +363,7 @@ export class JamPlaybackService {
     }
 
     const jam = await this.prisma.jam.findUnique({
-      where: { id: jamId },
+      where: { id: jamId, deletedAt: null },
       select: { id: true, currentScheduleId: true },
     });
     if (!jam) {
@@ -434,7 +434,7 @@ export class JamPlaybackService {
     }[]
   > {
     const jam = await this.prisma.jam.findUnique({
-      where: { id: jamId },
+      where: { id: jamId, deletedAt: null },
       select: { id: true },
     });
     if (!jam) {
