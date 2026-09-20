@@ -16,8 +16,7 @@
                     "status": {
                       "type": "string",
                       "enum": [
-                        "ok",
-                        "error"
+                        "ok"
                       ]
                     },
                     "timestamp": {
@@ -27,22 +26,6 @@
                     "uptime": {
                       "type": "number",
                       "description": "Server uptime in seconds"
-                    },
-                    "database": {
-                      "type": "object",
-                      "properties": {
-                        "status": {
-                          "type": "string",
-                          "enum": [
-                            "connected",
-                            "disconnected"
-                          ]
-                        },
-                        "latency": {
-                          "type": "number",
-                          "description": "Database query latency in ms"
-                        }
-                      }
                     }
                   }
                 }
@@ -50,7 +33,7 @@
             }
           }
         },
-        "summary": "Health check endpoint - includes database connectivity",
+        "summary": "Process liveness probe",
         "tags": [
           "Health Check"
         ]
@@ -75,14 +58,32 @@
                     "timestamp": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "database": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "connected"
+                          ]
+                        },
+                        "latency": {
+                          "type": "number",
+                          "description": "Database query latency in ms"
+                        }
+                      }
                     }
                   }
                 }
               }
             }
+          },
+          "503": {
+            "description": "Database is unavailable"
           }
         },
-        "summary": "Readiness probe endpoint - lightweight check for load balancers",
+        "summary": "Database-backed readiness probe for load balancers",
         "tags": [
           "Health Check"
         ]

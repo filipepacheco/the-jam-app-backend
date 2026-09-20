@@ -26,6 +26,8 @@ The audit produced 21 findings plus three decision/investigation tickets. Three 
 - [ ] #16 — Spotify imports are atomic; existing-event retries are naturally idempotent and new-event retries use an idempotency key.
 - [ ] #20 — Production dependency advisories reduced from 15 to zero with compatible updates and targeted overrides.
 - [ ] #22 — Portable verification guidance and generated OpenAPI are current; CI rejects OpenAPI drift.
+- [ ] #24 — Liveness/readiness HTTP semantics, Spotify request deadlines and partial-export recovery details are implemented and verified locally.
+- [ ] #25 — Unused local JWT, anonymous Supabase client and analytics dependencies removed after reference validation; operational scripts retained intentionally.
 
 ### Partial
 
@@ -41,11 +43,6 @@ The audit produced 21 findings plus three decision/investigation tickets. Three 
 - [ ] #7 — Schedule lifecycle/identity safeguards implemented and verified locally; publication/closure pending. Per-event management mode remains separate #23 work.
 - [ ] #10 — Serialized append/import/reorder, unique queue-order migration and accepted partial-reorder behavior implemented and verified on disposable PostgreSQL. Existing-target migration transition remains under #18; publication/closure pending.
 - [ ] #19 — Pull requests and `main` pushes run build, lint, unit, safety, disposable-PostgreSQL E2E and OpenAPI drift gates; production tag deployment depends on the reusable gate and pins its Vercel CLI. A real hosted CI run and publication/closure remain.
-
-### Other remaining work
-
-- [ ] #24 — Readiness and integration failure contracts; decisions needed.
-- [ ] #25 — Validate leftovers before deleting code; operational scripts are not presumed dead.
 
 ## Decisions-so-far
 

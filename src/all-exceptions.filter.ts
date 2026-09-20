@@ -16,6 +16,7 @@ interface ErrorResponse {
   timestamp: string;
   path: string;
   requestId?: string;
+  details?: unknown;
 }
 
 @Catch()
@@ -32,6 +33,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let status: number;
     let message: string | string[];
     let error: string;
+    let details: unknown;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -41,6 +43,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         const responseObj = exceptionResponse as Record<string, unknown>;
         message = (responseObj.message as string | string[]) || exception.message;
         error = (responseObj.error as string) || exception.name;
+        details = responseObj.details;
       } else {
         message = exception.message;
         error = exception.name;
@@ -83,6 +86,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (requestId) {
       errorResponse.requestId = requestId;
+    }
+    if (details !== undefined) {
+      errorResponse.details = details;
     }
 
     response.status(status).json(errorResponse);

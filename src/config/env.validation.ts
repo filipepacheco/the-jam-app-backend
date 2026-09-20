@@ -3,7 +3,6 @@ import * as Joi from 'joi';
 export function validate(config: Record<string, unknown>) {
   const schema = Joi.object({
     // Required
-    JWT_SECRET: Joi.string().min(32).required(),
     DATABASE_URL: Joi.string().required(),
     DIRECT_URL: Joi.string().required(),
     PORT: Joi.number().default(3001),
@@ -11,8 +10,6 @@ export function validate(config: Record<string, unknown>) {
 
     // Required Supabase
     SUPABASE_URL: Joi.string().uri().required(),
-    SUPABASE_ANON_KEY: Joi.string().required(),
-    SUPABASE_JWT_SECRET: Joi.string().optional(), // No longer used for local validation
     SUPABASE_SERVICE_ROLE_KEY: Joi.string().required(),
 
     // CORS

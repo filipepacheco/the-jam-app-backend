@@ -34,9 +34,7 @@ jobs:
           NODE_ENV: test
           DATABASE_URL: postgresql://docs:docs@127.0.0.1:1/docs
           DIRECT_URL: postgresql://docs:docs@127.0.0.1:1/docs
-          JWT_SECRET: docs-only-placeholder-secret-32-characters
           SUPABASE_URL: http://127.0.0.1:1
-          SUPABASE_ANON_KEY: docs-only
           SUPABASE_SERVICE_ROLE_KEY: docs-only
       - run: git diff --exit-code -- swagger.json swagger.yaml
       - run: npm test -- --runInBand

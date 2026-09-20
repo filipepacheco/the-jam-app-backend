@@ -323,10 +323,26 @@ export class SpotifyService {
         dto.public ?? false,
         dto.spotifyAccessToken,
       );
-
-      await this.spotifyApi.addTracksToPlaylist(playlist.id, trackUris, dto.spotifyAccessToken);
     } catch (err: unknown) {
       this.handleSpotifyApiError(err, 'export');
+    }
+
+    try {
+      await this.spotifyApi.addTracksToPlaylist(playlist.id, trackUris, dto.spotifyAccessToken);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Spotify playlist population failed: ${message}`);
+      throw new HttpException(
+        {
+          message: 'Spotify playlist was created but tracks could not be added',
+          error: 'Bad Gateway',
+          details: {
+            partialPlaylistId: playlist.id,
+            partialPlaylistUrl: playlist.externalUrl,
+          },
+        },
+        502,
+      );
     }
 
     return {

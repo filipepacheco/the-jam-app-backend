@@ -1,13 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
 
 export interface HealthCheckResult {
-  status: 'ok' | 'error';
+  status: 'ok';
   timestamp: string;
   uptime: number;
-  database?: {
-    status: 'connected' | 'disconnected';
-    latency?: number;
+}
+
+export interface ReadinessCheckResult {
+  status: 'ready';
+  timestamp: string;
+  database: {
+    status: 'connected';
+    latency: number;
   };
 }
 
@@ -17,39 +22,30 @@ export class AppService {
 
   constructor(private prisma: PrismaService) {}
 
-  async getHealth(): Promise<HealthCheckResult> {
+  getHealth(): HealthCheckResult {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    };
+  }
+
+  async getReady(): Promise<ReadinessCheckResult> {
     const startTime = Date.now();
 
     try {
       await this.prisma.$queryRaw`SELECT 1`;
-      const latency = Date.now() - startTime;
-
       return {
-        status: 'ok',
+        status: 'ready',
         timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
         database: {
           status: 'connected',
-          latency,
+          latency: Date.now() - startTime,
         },
       };
     } catch (error) {
-      this.logger.warn('Health check: DB connection failed', error);
-      return {
-        status: 'error',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        database: {
-          status: 'disconnected',
-        },
-      };
+      this.logger.warn('Readiness check: DB connection failed', error);
+      throw new ServiceUnavailableException('Database is not ready');
     }
-  }
-
-  getReady(): { status: 'ready'; timestamp: string } {
-    return {
-      status: 'ready',
-      timestamp: new Date().toISOString(),
-    };
   }
 }

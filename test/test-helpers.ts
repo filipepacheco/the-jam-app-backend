@@ -28,8 +28,6 @@ export async function initializeApp(): Promise<INestApplication> {
         }),
       },
     })
-    .overrideProvider('SUPABASE_CLIENT')
-    .useValue({})
     .compile();
   const candidate = module.createNestApplication({ logger: false });
   candidate.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
