@@ -11,7 +11,7 @@ import {
   Ip,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { FeedbackService } from './feedback.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { FeedbackResponseDto } from './dto/feedback-response.dto';
@@ -41,7 +41,7 @@ export class FeedbackController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(OptionalJwtGuard)
+  @UseGuards(ThrottlerGuard, OptionalJwtGuard)
   @Throttle({ default: { limit: FEEDBACK_RATE_LIMIT, ttl: FEEDBACK_RATE_WINDOW_MS } })
   @ApiOperation({ summary: 'Submit feedback (authentication optional)' })
   @ApiResponse({ status: 201, description: 'Feedback submitted', type: FeedbackResponseDto })

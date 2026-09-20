@@ -1,4 +1,13 @@
-import { Controller, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseUUIDPipe,
+  Request,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { EscalaService } from './escala.service';
 import { CreateScheduleDto } from './dto/create-escala.dto';
@@ -16,8 +25,8 @@ export class EscalaController {
   @ApiResponse({ status: 201, description: 'Schedule created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  create(@Body() createScheduleDto: CreateScheduleDto) {
-    return this.escalaService.create(createScheduleDto);
+  create(@Body() createScheduleDto: CreateScheduleDto, @Request() req) {
+    return this.escalaService.create(createScheduleDto, req.musician?.isHost === true);
   }
 
   @Patch(':id')

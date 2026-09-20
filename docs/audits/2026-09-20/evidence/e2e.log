@@ -1,0 +1,1666 @@
+
+> karaoke-jam-backend@0.0.1 test:e2e
+> jest --config ./test/jest-e2e.json --runInBand --watchman=false
+
+FAIL test/jam-control.e2e-spec.ts (16.188 s)
+  Live Jam Control System E2E Tests
+    Complete Lifecycle: start → next → pause → resume → previous → stop
+      ✕ should execute full jam control lifecycle (54 ms)
+    Start Jam Endpoint
+      ✕ should start jam with first scheduled song (2 ms)
+      ✕ should fail to start jam with no scheduled songs (1 ms)
+      ✕ should fail to start already playing jam (1 ms)
+    Next Song Endpoint
+      ✕ should skip to next scheduled song (1 ms)
+      ✕ should stop jam when skipping last song (1 ms)
+      ✕ should fail to skip when jam is stopped (12 ms)
+    Previous Song Endpoint
+      ✕ should go back to previous completed song (1 ms)
+      ✕ should start first song when no previous completed songs (2 ms)
+    Pause/Resume Endpoints
+      ✕ should pause and resume song (1 ms)
+      ✕ should fail to pause when not playing (3 ms)
+      ✕ should fail to resume when not paused (2 ms)
+    Stop Jam Endpoint
+      ✕ should stop jam and complete current song
+      ✕ should fail to stop already stopped jam
+    Playback History Endpoint
+      ✕ should return complete action history (2 ms)
+      ✕ should support pagination with limit parameter (1 ms)
+    Live State Endpoint
+      ✕ should return updated state after actions (1 ms)
+      ✕ should include previous songs after skipping (1 ms)
+    Reorder Schedules Endpoint
+      ✕ should successfully reorder schedules (2 ms)
+      ✕ should preserve missing schedules at end when reordering partial list (1 ms)
+      ✕ should maintain currentScheduleId when reordering during playback
+      ✕ should record REORDER_QUEUE action in playback history
+      ✕ should reject empty scheduleIds array (1 ms)
+      ✕ should reject duplicate schedule IDs
+      ✕ should reject schedule IDs from different jam (1 ms)
+      ✕ should reject invalid UUID format (1 ms)
+      ✕ should handle transaction rollback on constraint violation (1 ms)
+    Error Handling
+      ✕ should return 404 for non-existent jam
+      ✕ should require authentication (1 ms)
+    Database State Verification
+      ✕ should maintain database consistency during operations (1 ms)
+      ✕ should prevent multiple IN_PROGRESS songs via database constraint
+
+  ● Live Jam Control System E2E Tests › Complete Lifecycle: start → next → pause → resume → previous → stop › should execute full jam control lifecycle
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Complete Lifecycle: start → next → pause → resume → previous → stop › should execute full jam control lifecycle
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Start Jam Endpoint › should start jam with first scheduled song
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Start Jam Endpoint › should start jam with first scheduled song
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Start Jam Endpoint › should fail to start jam with no scheduled songs
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Start Jam Endpoint › should fail to start jam with no scheduled songs
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Start Jam Endpoint › should fail to start already playing jam
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Start Jam Endpoint › should fail to start already playing jam
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Next Song Endpoint › should skip to next scheduled song
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Next Song Endpoint › should skip to next scheduled song
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Next Song Endpoint › should stop jam when skipping last song
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Next Song Endpoint › should stop jam when skipping last song
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Next Song Endpoint › should fail to skip when jam is stopped
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Next Song Endpoint › should fail to skip when jam is stopped
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Previous Song Endpoint › should go back to previous completed song
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Previous Song Endpoint › should go back to previous completed song
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Previous Song Endpoint › should start first song when no previous completed songs
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Previous Song Endpoint › should start first song when no previous completed songs
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Pause/Resume Endpoints › should pause and resume song
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Pause/Resume Endpoints › should pause and resume song
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Pause/Resume Endpoints › should fail to pause when not playing
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Pause/Resume Endpoints › should fail to pause when not playing
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Pause/Resume Endpoints › should fail to resume when not paused
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Pause/Resume Endpoints › should fail to resume when not paused
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Stop Jam Endpoint › should stop jam and complete current song
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Stop Jam Endpoint › should stop jam and complete current song
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Stop Jam Endpoint › should fail to stop already stopped jam
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Stop Jam Endpoint › should fail to stop already stopped jam
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Playback History Endpoint › should return complete action history
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Playback History Endpoint › should return complete action history
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Playback History Endpoint › should support pagination with limit parameter
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Playback History Endpoint › should support pagination with limit parameter
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Live State Endpoint › should return updated state after actions
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Live State Endpoint › should return updated state after actions
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Live State Endpoint › should include previous songs after skipping
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Live State Endpoint › should include previous songs after skipping
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should successfully reorder schedules
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should successfully reorder schedules
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should preserve missing schedules at end when reordering partial list
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should preserve missing schedules at end when reordering partial list
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should maintain currentScheduleId when reordering during playback
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should maintain currentScheduleId when reordering during playback
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should record REORDER_QUEUE action in playback history
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should record REORDER_QUEUE action in playback history
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should reject empty scheduleIds array
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should reject empty scheduleIds array
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should reject duplicate schedule IDs
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should reject duplicate schedule IDs
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should reject schedule IDs from different jam
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should reject schedule IDs from different jam
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should reject invalid UUID format
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should reject invalid UUID format
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should handle transaction rollback on constraint violation
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Reorder Schedules Endpoint › should handle transaction rollback on constraint violation
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Error Handling › should return 404 for non-existent jam
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Error Handling › should return 404 for non-existent jam
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Error Handling › should require authentication
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Error Handling › should require authentication
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Database State Verification › should maintain database consistency during operations
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Database State Verification › should maintain database consistency during operations
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+  ● Live Jam Control System E2E Tests › Database State Verification › should prevent multiple IN_PROGRESS songs via database constraint
+
+    PrismaClientInitializationError: Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+       7 |
+       8 |   async onModuleInit() {
+    >  9 |     await this.$connect();
+         |     ^
+      10 |     this.logger.log('Database connection established');
+      11 |   }
+      12 |
+
+      at t (../node_modules/@prisma/client/runtime/library.js:112:2488)
+      at Proxy.onModuleInit (../src/prisma/prisma.service.ts:9:5)
+          at async Promise.all (index 0)
+      at callModuleInitHook (../node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+      at NestApplication.callInitHook (../node_modules/@nestjs/core/nest-application-context.js:252:13)
+      at NestApplication.init (../node_modules/@nestjs/core/nest-application.js:103:9)
+      at initializeApp (test-helpers.ts:27:3)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:17:11)
+
+  ● Live Jam Control System E2E Tests › Database State Verification › should prevent multiple IN_PROGRESS songs via database constraint
+
+    PrismaClientInitializationError:
+    Invalid `prismaService.playbackHistory.deleteMany()` invocation in
+    /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts:148:41
+
+      145 const prismaService = await getPrismaService();
+      146
+      147 // Delete in correct order due to foreign keys
+    → 148 await prismaService.playbackHistory.deleteMany(
+    Can't reach database server at `127.0.0.1:1`
+
+    Please make sure your database server is running at `127.0.0.1:1`.
+
+      146 |
+      147 |     // Delete in correct order due to foreign keys
+    > 148 |     await prismaService.playbackHistory.deleteMany({});
+          |     ^
+      149 |     await prismaService.registration.deleteMany({});
+      150 |     await prismaService.schedule.deleteMany({});
+      151 |     await prismaService.jamMusic.deleteMany({});
+
+      at $n.handleRequestError (../node_modules/@prisma/client/runtime/library.js:121:7615)
+      at $n.handleAndLogRequestError (../node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (../node_modules/@prisma/client/runtime/library.js:121:6307)
+      at l (../node_modules/@prisma/client/runtime/library.js:130:9633)
+      at Object.cleanup (test-helpers.ts:148:5)
+      at Object.<anonymous> (jam-control.e2e-spec.ts:30:5)
+
+Test Suites: 1 failed, 1 total
+Tests:       31 failed, 31 total
+Snapshots:   0 total
+Time:        17.033 s
+Ran all test suites.

@@ -327,7 +327,7 @@ export class JamService {
     if (!jam) {
       throw new NotFoundException('Jam not found');
     }
-    if (musicianId && !isHost && jam.hostMusicianId && jam.hostMusicianId !== musicianId) {
+    if (!musicianId || (!isHost && jam.hostMusicianId !== musicianId)) {
       throw new ForbiddenException('Only the jam host can update this jam');
     }
 

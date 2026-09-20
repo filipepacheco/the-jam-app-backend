@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { ScheduleStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateScheduleDto } from './dto/create-escala.dto';
 import { UpdateScheduleDto } from './dto/update-escala.dto';
@@ -7,7 +8,14 @@ import { UpdateScheduleDto } from './dto/update-escala.dto';
 export class EscalaService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createScheduleDto: CreateScheduleDto) {
+  async create(createScheduleDto: CreateScheduleDto, isHost = false) {
+    if (
+      !isHost &&
+      createScheduleDto.status &&
+      createScheduleDto.status !== ScheduleStatus.SUGGESTED
+    ) {
+      throw new ForbiddenException('Only hosts can approve suggested songs');
+    }
     // Verify that the music exists
     const music = await this.prisma.music.findUnique({
       where: { id: createScheduleDto.musicId },

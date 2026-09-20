@@ -19,13 +19,14 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e": "node scripts/test-e2e.cjs",
     "swagger:generate": "ts-node scripts/generate-swagger.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:format": "prisma format ",
     "prisma:studio": "prisma studio",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts",
+    "test:safety": "node --test scripts/test-database.spec.cjs scripts/seed-safety.spec.cjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",

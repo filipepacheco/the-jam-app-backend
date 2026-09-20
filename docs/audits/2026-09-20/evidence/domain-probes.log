@@ -1,0 +1,7 @@
+CONFIRMED paused -> start writes a second IN_PROGRESS without clearing the first; pointer=b.
+LIMITATION adapter has no DB constraints: a deployed partial unique index would reject this invalid write instead.
+CONFIRMED queue exhausted -> LIVE / STOPPED / null; stop rejects "Jam is already stopped".
+CONFIRMED schedule create after deleting order 2 computes duplicate orders [1,3,3] and accepts IN_PROGRESS.
+LIMITATION adapter has no DB constraints: deployed order uniqueness would reject the create instead. Controller user-role allowance verified separately in source.
+CONFIRMED ordinary user can update ownerless jam through JamService.update.
+All audit probes passed. These prove service decisions, not real PostgreSQL isolation, index presence, or HTTP guard behavior.

@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PlaybackState, PlaybackAction, ScheduleStatus, Prisma } from '@prisma/client';
+import { PlaybackState, PlaybackAction, ScheduleStatus, Prisma, JamStatus } from '@prisma/client';
 import { DEFAULT_HISTORY_LIMIT } from '../common/constants';
 
 /** Minimal fields needed for playback state checks */
@@ -31,6 +31,10 @@ export class JamPlaybackService {
 
     if (jam.playbackState === PlaybackState.PLAYING) {
       throw new BadRequestException('Jam is already playing');
+    }
+
+    if (jam.playbackState === PlaybackState.PAUSED) {
+      throw new BadRequestException('Jam is paused; resume the current song');
     }
 
     const firstSchedule = await this.prisma.schedule.findFirst({
@@ -164,9 +168,14 @@ export class JamPlaybackService {
 
       const updatedJam = await tx.jam.update({
         where: { id: jamId },
-        data: { playbackState: newPlaybackState, currentScheduleId: newScheduleId },
+        data: {
+          playbackState: newPlaybackState,
+          currentScheduleId: newScheduleId,
+          ...(nextSchedule ? {} : { status: JamStatus.FINISHED }),
+        },
         select: {
           id: true,
+          status: true,
           playbackState: true,
           currentScheduleId: true,
           updatedAt: true,

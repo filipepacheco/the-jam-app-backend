@@ -1,0 +1,43 @@
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "jam_test_cd5e4b98acb81fb3e013fd7f", schema "public" at "127.0.0.1:51227"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 189ms
+
+PASS test/jam-control.e2e-spec.ts (35.45 s)
+  Live Jam Control HTTP contract (disposable PostgreSQL)
+    ✓ supports start, next, pause, resume, previous and stop with public state and history (326 ms)
+    ✓ rejects start while paused and resumes the same song (120 ms)
+    ✓ finishes after advancing beyond the last song (138 ms)
+    ✓ rejects start with no scheduled songs (29 ms)
+    ✓ rejects stop before playback starts (53 ms)
+    ✓ rejects next before playback starts (38 ms)
+    ✓ rejects previous before playback starts (54 ms)
+    ✓ rejects pause before playback starts (48 ms)
+    ✓ rejects resume before playback starts (62 ms)
+    ✓ rejects starting an already playing jam (102 ms)
+    ✓ rejects resume when playing (74 ms)
+    ✓ replays the first song when there is no previous completed song (115 ms)
+    ✓ requires authentication for start (65 ms)
+    ✓ requires authentication for stop (123 ms)
+    ✓ requires authentication for next (70 ms)
+    ✓ requires authentication for previous (39 ms)
+    ✓ requires authentication for pause (46 ms)
+    ✓ requires authentication for resume (47 ms)
+    ✓ requires authentication for reorder (31 ms)
+    ✓ forbids playback for a non-host musician (49 ms)
+    ✓ returns 404 for a valid but unknown jam ID (76 ms)
+    ✓ returns 400 for a malformed jam UUID (87 ms)
+    ✓ paginates playback history for an authenticated host (131 ms)
+    ✓ reorders the queue without changing the current song (291 ms)
+    ✓ preserves untouched positions when applying a partial reorder (60 ms)
+    ✓ rejects empty reorder updates (38 ms)
+    ✓ rejects duplicate schedule IDs (51 ms)
+    ✓ rejects foreign schedule IDs and preserves the queue (59 ms)
+    ✓ rejects malformed reorder UUIDs (57 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       29 passed, 29 total
+Snapshots:   0 total
+Time:        36.31 s
+Ran all test suites.

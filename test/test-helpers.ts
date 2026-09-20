@@ -1,218 +1,143 @@
+import './require-test-database.cjs';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { Test } from '@nestjs/testing';
+import { randomUUID } from 'crypto';
+import { Prisma } from '@prisma/client';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { AllExceptionsFilter } from '../src/all-exceptions.filter';
 
-let app: INestApplication;
-let prisma: PrismaService;
+// The runner creates this database; repeat the guard immediately before deletion.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { assertTestDatabase } = require('../scripts/test-database.cjs');
+let app: INestApplication | null = null;
+let prisma: PrismaService | null = null;
+const identities = new Map<string, { id: string; email: string }>();
 
 export async function initializeApp(): Promise<INestApplication> {
-  if (app) {
+  assertTestDatabase();
+  if (app) return app;
+  const module = await Test.createTestingModule({ imports: [AppModule] })
+    .overrideProvider('SUPABASE_SERVICE_CLIENT')
+    .useValue({
+      auth: {
+        getUser: async (token: string) => ({
+          data: { user: identities.get(token) ?? null },
+          error: identities.has(token) ? null : new Error('Invalid test token'),
+        }),
+      },
+    })
+    .overrideProvider('SUPABASE_CLIENT')
+    .useValue({})
+    .compile();
+  const candidate = module.createNestApplication({ logger: false });
+  candidate.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  candidate.useGlobalFilters(new AllExceptionsFilter());
+  try {
+    await candidate.init();
+    prisma = candidate.get(PrismaService);
+    app = candidate;
     return app;
+  } catch (error) {
+    await candidate.close();
+    throw error;
   }
-
-  app = await NestFactory.create(AppModule, {
-    logger: ['error'],
-  });
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-    }),
-  );
-
-  prisma = app.get(PrismaService);
-  await app.init();
-
-  return app;
 }
 
 export async function closeApp(): Promise<void> {
-  if (app) {
-    await app.close();
-    app = null;
-  }
+  if (app) await app.close();
+  app = null;
+  prisma = null;
+  identities.clear();
 }
 
-export async function getPrismaService(): Promise<PrismaService> {
-  if (!prisma) {
-    await initializeApp();
-  }
+export function getPrismaService(): PrismaService {
+  if (!prisma) throw new Error('Test app has not initialized');
   return prisma;
 }
 
-/**
- * Test data fixtures
- */
 export const testFixtures = {
-  /**
-   * Create a test musician
-   */
-  async createMusician(data?: Partial<any>) {
-    const prismaService = await getPrismaService();
-    return prismaService.musician.create({
+  async createMusician(data: Partial<Prisma.MusicianUncheckedCreateInput> = {}) {
+    const id = randomUUID();
+    const musician = await getPrismaService().musician.create({
       data: {
-        name: data?.name || 'Test Musician',
-        email: data?.email || `musician-${Date.now()}@test.com`,
-        instrument: data?.instrument || 'guitar',
-        level: data?.level || 'INTERMEDIATE',
-        isHost: data?.isHost ?? false,
+        name: 'Test Musician',
+        email: `${id}@example.invalid`,
+        supabaseUserId: id,
+        instrument: 'guitar',
+        level: 'INTERMEDIATE',
+        isHost: false,
+        ...data,
+      },
+    });
+    const token = `test-${id}`;
+    identities.set(token, { id: musician.supabaseUserId, email: musician.email });
+    return { ...musician, token };
+  },
+  async createMusic(data: Partial<Prisma.MusicUncheckedCreateInput> = {}) {
+    return getPrismaService().music.create({
+      data: {
+        title: `Test Song ${randomUUID()}`,
+        artist: 'Test Artist',
+        duration: 180,
         ...data,
       },
     });
   },
-
-  /**
-   * Create a test music/song
-   */
-  async createMusic(data?: Partial<any>) {
-    const prismaService = await getPrismaService();
-    return prismaService.music.create({
-      data: {
-        title: data?.title || `Test Song ${Date.now()}`,
-        artist: data?.artist || 'Test Artist',
-        duration: data?.duration || 180,
-        ...data,
-      },
+  async createJam(hostMusicianId?: string, data: Partial<Prisma.JamUncheckedCreateInput> = {}) {
+    return getPrismaService().jam.create({
+      data: { name: 'Test Jam', hostMusicianId, status: 'ACTIVE', ...data },
     });
   },
-
-  /**
-   * Create a test jam session
-   */
-  async createJam(hostMusicianId?: string, data?: Partial<any>) {
-    const prismaService = await getPrismaService();
-    return prismaService.jam.create({
-      data: {
-        name: data?.name || `Test Jam ${Date.now()}`,
-        description: data?.description || 'Test jam session',
-        status: data?.status || 'ACTIVE',
-        hostMusicianId: hostMusicianId,
-        hostName: data?.hostName || 'Test Host',
-        ...data,
-      },
-    });
+  async createSchedules(jamId: string, musicIds: string[]) {
+    return Promise.all(
+      musicIds.map((musicId, i) =>
+        getPrismaService().schedule.create({
+          data: { jamId, musicId, order: i + 1, status: 'SCHEDULED' },
+        }),
+      ),
+    );
   },
-
-  /**
-   * Create multiple scheduled songs for a jam
-   */
-  async createSchedules(jamId: string, musicIds: string[], data?: Partial<any>) {
-    const prismaService = await getPrismaService();
-    const schedules = [];
-
-    for (let i = 0; i < musicIds.length; i++) {
-      const schedule = await prismaService.schedule.create({
-        data: {
-          jamId,
-          musicId: musicIds[i],
-          order: i + 1,
-          status: 'SCHEDULED',
-          ...data,
-        },
-        include: {
-          music: true,
-        },
-      });
-      schedules.push(schedule);
-    }
-
-    return schedules;
-  },
-
-  /**
-   * Create a registration (musician signup for a song)
-   */
-  async createRegistration(jamId: string, musicianId: string, data?: Partial<any>) {
-    const prismaService = await getPrismaService();
-    return prismaService.registration.create({
-      data: {
-        jamId,
-        musicianId,
-        status: data?.status || 'APPROVED',
-        instrument: data?.instrument || 'guitar',
-        ...data,
-      },
-    });
-  },
-
-  /**
-   * Clean up all test data
-   */
   async cleanup() {
-    const prismaService = await getPrismaService();
-
-    // Delete in correct order due to foreign keys
-    await prismaService.playbackHistory.deleteMany({});
-    await prismaService.registration.deleteMany({});
-    await prismaService.schedule.deleteMany({});
-    await prismaService.jamMusic.deleteMany({});
-    await prismaService.jam.deleteMany({});
-    await prismaService.music.deleteMany({});
-    await prismaService.musician.deleteMany({});
+    assertTestDatabase();
+    if (!prisma) return;
+    await prisma.playbackHistory.deleteMany();
+    await prisma.registration.deleteMany();
+    await prisma.schedule.deleteMany();
+    await prisma.jamMusic.deleteMany();
+    await prisma.jam.deleteMany();
+    await prisma.music.deleteMany();
+    await prisma.feedback.deleteMany();
+    await prisma.musician.deleteMany();
+    identities.clear();
   },
 };
 
-/**
- * Helper to make authenticated control requests against a jam.
- * Reduces boilerplate for the repeated supertest pattern in E2E tests.
- */
 export function controlRequest(
+  token: string,
   action: string,
   jamId: string,
-  expectedStatus = 201,
+  expectedStatus = 200,
+  body?: object,
 ) {
   return request(app.getHttpServer())
     .post(`/jams/${jamId}/control/${action}`)
-    .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
+    .set('Authorization', `Bearer ${token}`)
+    .send(body)
     .expect(expectedStatus);
 }
 
-/**
- * Helper to create a complete test setup
- */
 export async function setupTestData() {
-  // Create test musicians
-  const hostMusician = await testFixtures.createMusician({
-    name: 'Test Host',
-    isHost: true,
-  });
-
-  const musician2 = await testFixtures.createMusician({
-    name: 'Musician 2',
-  });
-
-  // Create test songs
-  const songs = await Promise.all([
-    testFixtures.createMusic({ title: 'Song 1', artist: 'Artist 1' }),
-    testFixtures.createMusic({ title: 'Song 2', artist: 'Artist 2' }),
-    testFixtures.createMusic({ title: 'Song 3', artist: 'Artist 3' }),
-    testFixtures.createMusic({ title: 'Song 4', artist: 'Artist 4' }),
-  ]);
-
-  // Create jam session
+  const hostMusician = await testFixtures.createMusician({ name: 'Test Host', isHost: true });
+  const musician = await testFixtures.createMusician();
+  const songs = await Promise.all(
+    [1, 2, 3, 4].map((n) => testFixtures.createMusic({ title: `Song ${n}` })),
+  );
   const jam = await testFixtures.createJam(hostMusician.id);
-
-  // Create schedules for the jam
   const schedules = await testFixtures.createSchedules(
     jam.id,
     songs.map((s) => s.id),
   );
-
-  // Create registrations
-  const registrations = await Promise.all([
-    testFixtures.createRegistration(jam.id, hostMusician.id),
-    testFixtures.createRegistration(jam.id, musician2.id),
-  ]);
-
-  return {
-    hostMusician,
-    musician2,
-    songs,
-    jam,
-    schedules,
-    registrations,
-  };
+  return { hostMusician, musician, songs, jam, schedules };
 }
