@@ -27,7 +27,7 @@ Supabase user lookup is replaced with an in-memory identity provider; the real J
 
 The suite covers playback lifecycle, invalid transitions, authenticated history, authentication/role failures, public live state and reorder request validation. Assertions use HTTP 200 compact command results and GET projections, matching the current contract.
 
-The baseline reproduces the current Prisma declaration. Historical queue-order and one-IN_PROGRESS indexes are not included pending their coordinated application fixes. This suite does **not** establish deployed partial-index guarantees or PostgreSQL concurrency correctness; those remain audit follow-ups. Destructive seed commands are separate from this runner and now require the same strict disposable database configuration before Prisma initializes.
+The baseline reproduces the current Prisma declaration. A subsequent migration enforces unique queue positions, covered by concurrent append/reorder/import tests. The historical one-IN_PROGRESS index is not included pending its coordinated playback fix. This suite does **not** establish deployed partial-index guarantees or PostgreSQL concurrency correctness; those remain audit follow-ups. Destructive seed commands are separate from this runner and now require the same strict disposable database configuration before Prisma initializes.
 
 ## Verification
 

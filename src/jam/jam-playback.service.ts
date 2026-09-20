@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { PlaybackState, PlaybackAction, ScheduleStatus, Prisma, JamStatus } from '@prisma/client';
 import { DEFAULT_HISTORY_LIMIT } from '../common/constants';
+import { lockJamQueue } from '../escala/queue-lock';
 
 /** Minimal fields needed for playback state checks */
 const PLAYBACK_JAM_SELECT = {
@@ -10,6 +11,8 @@ const PLAYBACK_JAM_SELECT = {
   playbackState: true,
   currentScheduleId: true,
 } as const;
+
+const MAX_QUEUE_ORDER = 2_147_483_647;
 
 @Injectable()
 export class JamPlaybackService {
@@ -362,58 +365,89 @@ export class JamPlaybackService {
       throw new BadRequestException('Updates array cannot be empty');
     }
 
-    const jam = await this.prisma.jam.findUnique({
-      where: { id: jamId, deletedAt: null },
-      select: { id: true, currentScheduleId: true },
-    });
-    if (!jam) {
-      throw new NotFoundException('Jam not found');
-    }
-
     const scheduleIds = updates.map((u) => u.scheduleId);
-    const schedules = await this.prisma.schedule.findMany({
-      where: { id: { in: scheduleIds }, jamId },
-      select: { id: true },
-    });
-
-    if (schedules.length !== scheduleIds.length) {
-      const foundIds = new Set(schedules.map((s) => s.id));
-      const invalidIds = scheduleIds.filter((id) => !foundIds.has(id));
-      throw new BadRequestException(`Invalid schedule IDs: ${invalidIds.join(', ')}`);
-    }
-
     const uniqueIds = new Set(scheduleIds);
     if (uniqueIds.size !== scheduleIds.length) {
       throw new BadRequestException('Duplicate schedule IDs in payload');
     }
 
-    const scheduleIdForHistory = jam.currentScheduleId || scheduleIds[0];
-
-    // Build a single CASE-based UPDATE to avoid N sequential round-trips
-    // which cause transaction timeouts with Prisma Accelerate
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     for (const u of updates) {
-      if (!uuidRegex.test(u.scheduleId) || !Number.isInteger(u.order)) {
+      if (!uuidRegex.test(u.scheduleId) || !Number.isInteger(u.order) || u.order < 1) {
         throw new BadRequestException('Invalid schedule ID or order value');
       }
     }
-    const caseClauses = updates.map((u) => `WHEN id = '${u.scheduleId}' THEN ${u.order}`).join(' ');
-    const idList = updates.map((u) => `'${u.scheduleId}'`).join(', ');
 
-    await this.prisma.$transaction([
-      this.prisma.$executeRawUnsafe(
-        `UPDATE escalas SET ordem = CASE ${caseClauses} END WHERE id IN (${idList})`,
-      ),
-      this.prisma.playbackHistory.create({
+    const uniqueOrders = new Set(updates.map((u) => u.order));
+    if (uniqueOrders.size !== updates.length) {
+      throw new BadRequestException('Duplicate order values in payload');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await lockJamQueue(tx, jamId);
+
+      const [jam, schedules] = await Promise.all([
+        tx.jam.findUniqueOrThrow({
+          where: { id: jamId },
+          select: { currentScheduleId: true },
+        }),
+        tx.schedule.findMany({
+          where: { jamId },
+          select: { id: true, order: true },
+          orderBy: { order: 'asc' },
+        }),
+      ]);
+      const schedulesById = new Map(schedules.map((schedule) => [schedule.id, schedule]));
+      const invalidIds = scheduleIds.filter((id) => !schedulesById.has(id));
+      if (invalidIds.length > 0) {
+        throw new BadRequestException(`Invalid schedule IDs: ${invalidIds.join(', ')}`);
+      }
+
+      const requestedIds = new Set(scheduleIds);
+      const requestedSchedules = [...updates]
+        .sort((left, right) => left.order - right.order)
+        .map((update) => schedulesById.get(update.scheduleId)!);
+      const omittedSchedules = schedules.filter((schedule) => !requestedIds.has(schedule.id));
+      const reorderedSchedules = [...requestedSchedules, ...omittedSchedules];
+
+      // Use unoccupied temporary positions so immediate uniqueness checks permit
+      // swaps, including legacy queues already at either PostgreSQL integer limit.
+      const occupiedOrders = new Set(schedules.map((schedule) => schedule.order));
+      let temporaryOrder = -2_147_483_648;
+      const temporaryCases = reorderedSchedules.map((schedule) => {
+        while (
+          occupiedOrders.has(temporaryOrder) ||
+          (temporaryOrder >= 1 && temporaryOrder <= reorderedSchedules.length)
+        ) {
+          temporaryOrder++;
+        }
+        if (temporaryOrder > MAX_QUEUE_ORDER) {
+          throw new BadRequestException('No temporary queue positions available');
+        }
+        const position = temporaryOrder++;
+        return Prisma.sql`WHEN "id" = ${schedule.id} THEN ${position}`;
+      });
+      await tx.$executeRaw(
+        Prisma.sql`UPDATE "escalas" SET "ordem" = CASE ${Prisma.join(temporaryCases, ' ')} END WHERE "jamId" = ${jamId}`,
+      );
+
+      const cases = reorderedSchedules.map(
+        (schedule, index) => Prisma.sql`WHEN "id" = ${schedule.id} THEN ${index + 1}`,
+      );
+      await tx.$executeRaw(
+        Prisma.sql`UPDATE "escalas" SET "ordem" = CASE ${Prisma.join(cases, ' ')} END WHERE "jamId" = ${jamId}`,
+      );
+
+      await tx.playbackHistory.create({
         data: {
           jamId,
-          scheduleId: scheduleIdForHistory,
+          scheduleId: jam.currentScheduleId || reorderedSchedules[0].id,
           action: PlaybackAction.REORDER_QUEUE,
           userId,
           metadata: { updates, totalUpdates: updates.length },
         },
-      }),
-    ]);
+      });
+    });
 
     return true;
   }

@@ -194,18 +194,13 @@ describe('Live Jam Control HTTP contract (disposable PostgreSQL)', () => {
     );
   });
 
-  it('preserves untouched positions when applying a partial reorder', async () => {
+  it('moves partial-reorder selections to the front and renumbers the queue', async () => {
     await controlRequest('reorder', data.jam.id, 200, {
       updates: [{ scheduleId: data.schedules[0].id, order: 5 }],
     });
     const songs = (await state()).body.nextSongs;
-    expect(songs.map((song: { id: string }) => song.id)).toEqual([
-      data.schedules[1].id,
-      data.schedules[2].id,
-      data.schedules[3].id,
-      data.schedules[0].id,
-    ]);
-    expect(songs.map((song: { order: number }) => song.order)).toEqual([2, 3, 4, 5]);
+    expect(songs.map((song: { id: string }) => song.id)).toEqual(data.schedules.map((s) => s.id));
+    expect(songs.map((song: { order: number }) => song.order)).toEqual([1, 2, 3, 4]);
   });
 
   it('rejects empty reorder updates', async () => {

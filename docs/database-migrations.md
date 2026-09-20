@@ -8,7 +8,7 @@ Run `npm run test:e2e` with Docker running. The runner creates an isolated Postg
 
 Migration directories and `migration_lock.toml` are versioned. Add future schema changes as new migrations; do not edit an already deployed baseline. The baseline was generated using the installed Prisma 5.22 CLI with `migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script`.
 
-The baseline preserves existing declared keys and foreign-key actions, including the legacy nullable registration key. It does not add queue-order uniqueness, the historical one-IN_PROGRESS partial index, or the accepted slot/instrument identity. Those require coordinated application fixes and constraint verification under #7/#10/#11/#14/#18. A successful schema comparison does not verify PostgreSQL-only partial indexes or concurrency behavior.
+The baseline preserves existing declared keys and foreign-key actions, including the legacy nullable registration key. The subsequent `20260920010000_add_unique_schedule_queue_order` migration adds unique queue positions alongside serialized allocation/reorder code (#7/#10). The historical one-IN_PROGRESS partial index and accepted slot/instrument identity remain outstanding under #11/#14/#18. Existing targets must pass duplicate-position data preflight before the new unique index is applied. A successful schema comparison does not verify PostgreSQL-only partial indexes or concurrency behavior.
 
 ## Existing staging and production databases
 

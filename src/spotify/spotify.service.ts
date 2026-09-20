@@ -18,6 +18,9 @@ import { TrackMetadataDto } from './dto/track-metadata.dto';
 import { MusicStatus } from '@prisma/client';
 import { SpotifyApiError } from './types/spotify.types';
 import { generateShortCode, generateSlug } from '../common/utils/slug';
+import { lockJamQueue } from '../escala/queue-lock';
+
+const MAX_QUEUE_ORDER = 2_147_483_647;
 
 @Injectable()
 export class SpotifyService {
@@ -39,7 +42,6 @@ export class SpotifyService {
     }
 
     let jam;
-    let startingOrder = 0;
     let existingJamMusicIds = new Set<string>();
     const isExistingJam = !!dto.jamId;
 
@@ -48,7 +50,6 @@ export class SpotifyService {
       jam = await this.prisma.jam.findUnique({
         where: { id: dto.jamId, deletedAt: null },
         include: {
-          schedules: { orderBy: { order: 'desc' }, take: 1 },
           jamMusics: { select: { musicId: true } },
         },
       });
@@ -66,9 +67,6 @@ export class SpotifyService {
       if (jam.status !== 'ACTIVE' && jam.status !== 'LIVE') {
         throw new BadRequestException('Cannot import to a jam that is not active or live');
       }
-
-      // Get starting order for new tracks (append after existing)
-      startingOrder = jam.schedules[0]?.order || 0;
 
       // Get existing music IDs to avoid duplicates within the jam
       existingJamMusicIds = new Set(jam.jamMusics.map((jm) => jm.musicId));
@@ -184,24 +182,38 @@ export class SpotifyService {
       }
 
       try {
-        await this.prisma.jamMusic.create({
-          data: { jamId: jam.id, musicId },
+        await this.prisma.$transaction(async (tx) => {
+          await lockJamQueue(tx, jam.id);
+          const lastSchedule = await tx.schedule.findFirst({
+            where: { jamId: jam.id },
+            orderBy: { order: 'desc' },
+            select: { order: true },
+          });
+
+          const lastOrder = Math.max(lastSchedule?.order ?? 0, 0);
+          if (lastOrder >= MAX_QUEUE_ORDER) {
+            throw new BadRequestException('Queue order limit reached');
+          }
+
+          await tx.jamMusic.create({
+            data: { jamId: jam.id, musicId },
+          });
+          await tx.schedule.create({
+            data: {
+              jamId: jam.id,
+              musicId,
+              order: lastOrder + 1,
+              status: 'SCHEDULED',
+            },
+          });
         });
 
-        // Calculate order: for existing jams, append after current tracks
-        const order = startingOrder + addedTracks + 1;
-
-        await this.prisma.schedule.create({
-          data: {
-            jamId: jam.id,
-            musicId,
-            order,
-            status: 'SCHEDULED',
-          },
-        });
-
+        existingJamMusicIds.add(musicId);
         addedTracks++;
       } catch (err: unknown) {
+        if (err instanceof BadRequestException) {
+          throw err;
+        }
         const message = err instanceof Error ? err.message : String(err);
         this.logger.warn(`Failed to add track to jam: ${message}`);
         errors.push(`Failed to add track to jam`);

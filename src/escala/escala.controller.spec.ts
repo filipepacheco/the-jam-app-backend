@@ -15,6 +15,7 @@ describe('Schedule creation permissions over HTTP', () => {
   let app: INestApplication;
   beforeEach(async () => {
     const db = {
+      $queryRaw: async () => [{ id: jamId }],
       musician: {
         findUnique: async ({ where }: { where: { id?: string; supabaseUserId?: string } }) => ({
           id: where.id ?? where.supabaseUserId,
@@ -24,7 +25,7 @@ describe('Schedule creation permissions over HTTP', () => {
       music: { findUnique: async () => ({ id: musicId }) },
       jam: { findUnique: async () => ({ id: jamId }) },
       schedule: {
-        count: async () => 0,
+        findFirst: async () => null,
         create: async ({ data }: { data: object }) => ({ id: 'new', ...data }),
       },
     };

@@ -31,8 +31,13 @@ export class EscalaController {
 
   @Patch(':id')
   @ProtectedRoute('host', 'admin')
-  @ApiOperation({ summary: 'Update schedule' })
+  @ApiOperation({
+    summary: 'Edit an unplayed schedule',
+    description:
+      'Unplayed slots may be suggested, scheduled or canceled. Playback controls own active/completed transitions. Jam moves and direct order edits are rejected; use queue reorder. Music cannot be replaced after registration or playback history exists.',
+  })
   @ApiResponse({ status: 200, description: 'Schedule updated successfully' })
+  @ApiResponse({ status: 400, description: 'Edit violates schedule lifecycle or identity' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - host only' })
   update(@Param('id', ParseUUIDPipe) id: string, @Body() updateScheduleDto: UpdateScheduleDto) {
@@ -41,8 +46,13 @@ export class EscalaController {
 
   @Delete(':id')
   @ProtectedRoute('host', 'admin')
-  @ApiOperation({ summary: 'Remove from schedule' })
+  @ApiOperation({
+    summary: 'Remove an unplayed schedule',
+    description:
+      'Current/completed songs cannot be removed. Slots with registrations or history are canceled and retained; empty unplayed slots are deleted.',
+  })
   @ApiResponse({ status: 200, description: 'Schedule removed successfully' })
+  @ApiResponse({ status: 400, description: 'Current or completed song cannot be removed' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - host only' })
   remove(@Param('id', ParseUUIDPipe) id: string) {

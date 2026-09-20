@@ -30,12 +30,12 @@ The audit produced 21 findings plus three decision/investigation tickets. Three 
 ### Foundations — current focus
 
 - [ ] #23 — Authorization, participation and lifecycle decisions. Accepted: per-event owner-only/shared-host management option; generic schedule edits cannot transfer events or set playback status; current/completed deletion prohibited; unique queue positions with explicit reorder; registration identity per musician/slot/instrument; instrument counts are guidance; removal of an unplayed slot with registrations cancels it and preserves history. Remaining decisions are tracked in policy-decisions.md.
-- [ ] #18 — Reproducible schema and constraints. Repository inventory and staging-only read-only catalog inspection performed. Staging lacks unique queue positions and the one-IN_PROGRESS index; the playback-history schedule foreign key is present; migration ledger trails current columns. Current-schema clean-install baseline implemented locally with archived legacy SQL; the full 54-case HTTP suite now uses migrate deploy/status/schema comparison. New constraints, existing-target forward rollout and conflicting-write checks remain outstanding. No real database migration authorized.
+- [ ] #18 — Reproducible schema and constraints. Repository inventory and staging-only read-only catalog inspection performed. Staging lacks unique queue positions and the one-IN_PROGRESS index; the playback-history schedule foreign key is present; migration ledger trails current columns. Current-schema clean-install baseline implemented locally with archived legacy SQL; the full 54-case HTTP suite now uses migrate deploy/status/schema comparison. Unique queue-order migration and concurrent HTTP writer checks now exist locally. Registration identity, the playback partial index, existing-target forward rollout and direct constraint-rejection checks remain outstanding. No real database migration authorized.
 
 ### Dependent domain repairs
 
-- [ ] #7 — Safe generic schedule edits/removal. Blocked by #23.
-- [ ] #10 — Safe queue order allocation. Blocked by #23 and #18.
+- [ ] #7 — Schedule lifecycle/identity safeguards implemented and verified locally; publication/closure pending. Per-event management mode remains separate #23 work.
+- [ ] #10 — Serialized append/import/reorder, unique queue-order migration and accepted partial-reorder behavior implemented and verified on disposable PostgreSQL. Existing-target migration transition remains under #18; publication/closure pending.
 - [ ] #11 — Registration identity and uniqueness. Blocked by #23 and #18.
 - [ ] #14 — Serialized playback transitions. Blocked by #18 and #7.
 - [ ] #16 — Atomic/retryable Spotify imports. Blocked by #5 and #10.
@@ -52,6 +52,7 @@ The audit produced 21 findings plus three decision/investigation tickets. Three 
 - Prefer targeted repairs; the audit does not justify a rewrite.
 - User-approved test seams are HTTP routes, public playback/import operations and test-database safety boundaries. PostgreSQL behavior is tested against disposable containers.
 - First two repair batches: 27 regression tests, 30 PostgreSQL E2E tests and 18 safety checks passed. Latest batch: full run of 27 regression + 38 E2E + 18 safety checks passed; after splitting broad tests during review, the two changed E2E files passed 22 focused cases. Typecheck passed; lint has one existing warning.
+- Schedule/queue repair verification: full run passed 80 PostgreSQL HTTP tests, 27 regression tests and 18 safety checks (125). After the integer-limit review fix, 23 focused queue/lifecycle tests passed. Typecheck and lint pass, with one existing warning.
 - Current-schema baseline verification: all 54 PostgreSQL HTTP tests, 27 regression tests and 18 safety checks pass (99 total). Typecheck passes; lint retains one existing warning.
 - Standards and spec reviews have no remaining findings for the committed batches.
 - Feedback protection remains per instance. Token revocation/logout and deletion/write concurrency remain separate work.

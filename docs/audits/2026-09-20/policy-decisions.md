@@ -28,17 +28,19 @@ Accepted by the user:
 - Generic edits cannot move songs between jams or change playback status; playback controls own those transitions.
 - Current/completed songs cannot be deleted.
 - Removing an unplayed song with registrations cancels the slot and preserves its registrations/history.
-- Queue positions remain unique; explicit reorder renumbers them.
+- Queue positions remain unique; explicit reorder renumbers them. Partial reorder moves supplied songs to the front in their requested order, then retains omitted songs in their prior relative order.
+- Removing an unplayed slot without registrations deletes it. Registered slots are canceled and preserve history.
+- PATCH may transition unplayed slots among SUGGESTED, SCHEDULED and CANCELED; IN_PROGRESS/COMPLETED belong to playback controls. Song replacement is refused once registrations or playback history exist.
 
 These decisions unblock the core behavior definition for #7/#10. The following elaborations remain proposals unless they directly restate those accepted rules:
 
 - Generic schedule PATCH cannot move a song to another event or set playback-owned statuses. Once referenced by registrations, replacing its music should also be refused unless an explicit migration flow is designed.
 - Playback controls own IN_PROGRESS/COMPLETED transitions. Queue approval/rejection should use explicitly allowed SUGGESTED/SCHEDULED/CANCELED transitions, not arbitrary enum assignment.
-- The accepted cancellation rule preserves the slot and registrations; handling removal of an unplayed slot without registrations remains to be specified.
+- Removal of an unplayed slot without registrations deletes it; registered slots are canceled. Existing history must remain preserved.
 - Queue positions are positive and unique per event. Allocation must work after gaps and under concurrent appends. Reorder explicitly assigns contiguous positions; whether cancellation compacts positions immediately remains a separate decision.
 - Do not create new participation on canceled/completed songs or finished/deleted events; exact event-status eligibility requires agreement.
 
-Current evidence: `UpdateScheduleDto` inherits jamId, musicId, order and status; `EscalaService.update` forwards it directly; create allocates count+1; generic remove deletes the row. Partial reorders exist, and their contract must remain compatible or be deliberately changed. Tickets #7/#10 must be refined before implementation.
+Historical audit evidence: `UpdateScheduleDto` inherited jamId, musicId, order and status; `EscalaService.update` forwarded it directly; create allocated count+1; generic remove deleted the row. The schedule/queue repair now guards those fields and serializes allocation and mutation. The accepted partial-reorder contract now moves supplied songs to the front and renumbers the whole queue; this deliberately replaces arbitrary sparse order assignment.
 
 ## Registration identity and instrument-count guidance accepted
 

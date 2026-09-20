@@ -187,11 +187,11 @@ paths:
                         type: boolean
       summary: List all jams with pagination
       tags: *ref_2
-  /jams/{id}:
+  /jams/{identifier}:
     get:
       operationId: JamController_findOne
       parameters:
-        - name: id
+        - name: identifier
           required: true
           in: path
           schema:
@@ -205,57 +205,13 @@ paths:
                 $ref: '#/components/schemas/JamResponseDto'
         '404':
           description: Jam not found
-      summary: Get jam by ID
+      summary: Get jam by ID, slug, or short code
       tags: *ref_2
-    patch:
-      operationId: JamController_update
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateJamDto'
-      responses:
-        '200':
-          description: Jam updated successfully
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden - insufficient permissions
-      security:
-        - bearer: []
-      summary: Update jam
-      tags: *ref_2
-    delete:
-      operationId: JamController_remove
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Jam deleted successfully
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden - insufficient permissions
-      security:
-        - bearer: []
-      summary: Delete jam
-      tags: *ref_2
-  /jams/{id}/live/state:
+  /jams/{identifier}/live/state:
     get:
       operationId: JamController_getLiveState
       parameters:
-        - name: id
+        - name: identifier
           required: true
           in: path
           schema:
@@ -271,11 +227,11 @@ paths:
           description: Jam not found
       summary: Get live jam state for polling fallback
       tags: *ref_2
-  /jams/{id}/live/dashboard:
+  /jams/{identifier}/live/dashboard:
     get:
       operationId: JamController_getLiveDashboard
       parameters:
-        - name: id
+        - name: identifier
           required: true
           in: path
           schema:
@@ -482,6 +438,51 @@ paths:
         - bearer: []
       summary: Get playback history for jam
       tags: *ref_2
+  /jams/{id}:
+    patch:
+      operationId: JamController_update
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateJamDto'
+      responses:
+        '200':
+          description: Jam updated successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - insufficient permissions
+      security:
+        - bearer: []
+      summary: Update jam
+      tags: *ref_2
+    delete:
+      operationId: JamController_remove
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Jam deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - insufficient permissions
+      security:
+        - bearer: []
+      summary: Delete jam
+      tags: *ref_2
   /musicos:
     post:
       operationId: MusicoController_create
@@ -506,7 +507,24 @@ paths:
         - Musicians
     get:
       operationId: MusicoController_findAll
-      parameters: []
+      parameters:
+        - name: skip
+          required: false
+          in: query
+          description: Number of records to skip
+          schema:
+            minimum: 0
+            default: 0
+            type: number
+        - name: take
+          required: false
+          in: query
+          description: Number of records to take
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
       responses:
         '200':
           description: List of musicians
@@ -517,6 +535,25 @@ paths:
       summary: List all musicians
       tags: *ref_3
   /musicos/{id}:
+    get:
+      operationId: MusicoController_findOne
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Musician profile with stats
+        '401':
+          description: Unauthorized
+        '404':
+          description: Musician not found
+      security:
+        - bearer: []
+      summary: Get musician profile with participation stats
+      tags: *ref_3
     patch:
       operationId: MusicoController_update
       parameters:
@@ -585,7 +622,29 @@ paths:
         - Musicas
     get:
       operationId: MusicaController_findAll
-      parameters: []
+      parameters:
+        - name: skip
+          required: false
+          in: query
+          description: Number of records to skip
+          schema:
+            minimum: 0
+            default: 0
+            type: number
+        - name: take
+          required: false
+          in: query
+          description: Number of records to take
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+        - name: status
+          required: true
+          in: query
+          schema:
+            type: string
       responses:
         '200':
           description: List of musics
@@ -635,6 +694,39 @@ paths:
       security:
         - bearer: []
       summary: Delete music
+      tags: *ref_4
+  /musicas/jam-music/{jamMusicId}/jam/{jamId}:
+    patch:
+      operationId: MusicaController_updateJamMusic
+      parameters:
+        - name: jamMusicId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: jamId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateJamMusicDto'
+      responses:
+        '200':
+          description: Jam music updated successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - host only
+        '404':
+          description: Song not found in this jam
+      security:
+        - bearer: []
+      summary: Update arrangement notes for a song in a jam
       tags: *ref_4
   /musicas/{id}/link-jam/{jamId}:
     patch:
@@ -754,6 +846,11 @@ paths:
         - Schedules
   /escalas/{id}:
     patch:
+      description: >-
+        Unplayed slots may be suggested, scheduled or canceled. Playback
+        controls own active/completed transitions. Jam moves and direct order
+        edits are rejected; use queue reorder. Music cannot be replaced after
+        registration or playback history exists.
       operationId: EscalaController_update
       parameters:
         - name: id
@@ -770,15 +867,20 @@ paths:
       responses:
         '200':
           description: Schedule updated successfully
+        '400':
+          description: Edit violates schedule lifecycle or identity
         '401':
           description: Unauthorized
         '403':
           description: Forbidden - host only
       security:
         - bearer: []
-      summary: Update schedule
+      summary: Edit an unplayed schedule
       tags: *ref_6
     delete:
+      description: >-
+        Current/completed songs cannot be removed. Slots with registrations or
+        history are canceled and retained; empty unplayed slots are deleted.
       operationId: EscalaController_remove
       parameters:
         - name: id
@@ -789,13 +891,15 @@ paths:
       responses:
         '200':
           description: Schedule removed successfully
+        '400':
+          description: Current or completed song cannot be removed
         '401':
           description: Unauthorized
         '403':
           description: Forbidden - host only
       security:
         - bearer: []
-      summary: Remove from schedule
+      summary: Remove an unplayed schedule
       tags: *ref_6
   /feedback:
     get:
@@ -986,9 +1090,21 @@ components:
             - INTERMEDIATE
             - ADVANCED
             - PROFESSIONAL
+        bio:
+          type: string
+          description: Short biography / music background
+        otherInstruments:
+          type: string
+          description: Other instruments (comma-separated)
         isHost:
           type: boolean
           description: Whether user is a jam host
+        role:
+          type: string
+          description: User role derived from isHost flag
+          enum:
+            - user
+            - host
         registrationComplete:
           type: boolean
           description: >-
@@ -1011,6 +1127,7 @@ components:
         - instrument
         - level
         - isHost
+        - role
         - registrationComplete
         - isNewUser
         - createdAt
@@ -1037,12 +1154,24 @@ components:
         phone:
           type: string
           description: Phone number
+        bio:
+          type: string
+          description: Short biography / music background
+        otherInstruments:
+          type: string
+          description: Other instruments (comma-separated)
     CreateJamDto:
       type: object
       properties:
         name:
           type: string
           description: Jam session name
+        slug:
+          type: string
+          description: >-
+            Custom slug for friendly URLs. Lowercase alphanumeric and hyphens
+            only. Auto-generated from name if not provided.
+          example: friday-night-rock
         description:
           type: string
           description: Jam session description
@@ -1064,6 +1193,9 @@ components:
         qrCode:
           type: string
           description: Jam session QR Code
+        spotifyPlaylistUrl:
+          type: string
+          description: Spotify playlist URL
         status:
           type: string
           description: Jam session status
@@ -1194,6 +1326,9 @@ components:
           type: string
         musicId:
           type: string
+        notes:
+          type: string
+          description: Arrangement notes (key, tempo, structure, etc.)
         music:
           $ref: '#/components/schemas/MusicaResponseDto'
         registrations:
@@ -1267,6 +1402,10 @@ components:
           type: string
         qrCode:
           type: string
+        slug:
+          type: string
+        shortCode:
+          type: string
         status:
           type: string
           enum:
@@ -1274,6 +1413,8 @@ components:
             - INACTIVE
             - LIVE
             - FINISHED
+        spotifyPlaylistUrl:
+          type: string
         playbackState:
           type: string
           enum:
@@ -1306,54 +1447,70 @@ components:
         - status
         - createdAt
         - updatedAt
+    LiveStateMusicDto:
+      type: object
+      properties:
+        title:
+          type: string
+        artist:
+          type: string
+        duration:
+          type: number
+          nullable: true
+        link:
+          type: string
+          nullable: true
+      required:
+        - title
+        - artist
+        - duration
+    DashboardMusicianDto:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        instrument:
+          type: string
+      required:
+        - id
+        - name
+        - instrument
     LiveStateSongDto:
       type: object
       properties:
         id:
           type: string
-        jamId:
-          type: string
-        musicId:
-          type: string
         order:
           type: number
         status:
-          type: string
-        createdAt:
-          format: date-time
           type: string
         startedAt:
           format: date-time
           type: string
           nullable: true
           description: When the song started playing
-        pausedAt:
-          format: date-time
-          type: string
-          nullable: true
-          description: When the song was paused (if paused)
         completedAt:
           format: date-time
           type: string
           nullable: true
           description: When the song was completed
         music:
-          $ref: '#/components/schemas/MusicaResponseDto'
-        registrations:
+          $ref: '#/components/schemas/LiveStateMusicDto'
+        musicians:
+          description: Musicians performing this song
           type: array
           items:
-            $ref: '#/components/schemas/RegistrationResponseDto'
+            $ref: '#/components/schemas/DashboardMusicianDto'
       required:
         - id
-        - jamId
-        - musicId
         - order
         - status
-        - createdAt
         - startedAt
-        - pausedAt
         - completedAt
         - music
+        - musicians
     LiveStateResponseDto:
       type: object
       properties:
@@ -1363,12 +1520,12 @@ components:
           allOf:
             - $ref: '#/components/schemas/LiveStateSongDto'
         nextSongs:
-          description: Next 3 scheduled songs
+          description: Next scheduled songs
           type: array
           items:
             $ref: '#/components/schemas/LiveStateSongDto'
         previousSongs:
-          description: Previously played songs (up to 3)
+          description: Previously played songs
           type: array
           items:
             $ref: '#/components/schemas/LiveStateSongDto'
@@ -1387,40 +1544,11 @@ components:
             - PLAYING
             - PAUSED
           description: Current playback state
-        currentSongStartedAt:
-          format: date-time
-          type: string
-          nullable: true
-          description: When the current song started playing
-        currentSongPausedAt:
-          format: date-time
-          type: string
-          nullable: true
-          description: When the current song was paused (if paused)
-        timestamp:
-          type: number
-          description: Timestamp of response
       required:
         - currentSong
         - nextSongs
         - jamStatus
         - playbackState
-        - currentSongStartedAt
-        - currentSongPausedAt
-        - timestamp
-    DashboardMusicianDto:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        instrument:
-          type: string
-      required:
-        - id
-        - name
-        - instrument
     DashboardSongDto:
       type: object
       properties:
@@ -1432,6 +1560,9 @@ components:
           type: string
         duration:
           type: number
+          nullable: true
+        link:
+          type: string
           nullable: true
         musicians:
           type: array
@@ -1456,6 +1587,14 @@ components:
           type: string
           nullable: true
           description: Jam QR code (data URL)
+        slug:
+          type: string
+          nullable: true
+          description: Jam slug for friendly URLs
+        shortCode:
+          type: string
+          nullable: true
+          description: Jam short code for QR/typing
         jamStatus:
           type: string
           description: Current jam status
@@ -1473,6 +1612,8 @@ components:
         - jamId
         - jamName
         - qrCode
+        - slug
+        - shortCode
         - jamStatus
         - currentSong
         - nextSongs
@@ -1485,7 +1626,7 @@ components:
           format: uuid
         order:
           type: number
-          description: New order position (1-based)
+          description: Relative rank among supplied songs (positive, unique integer)
           minimum: 1
       required:
         - scheduleId
@@ -1494,7 +1635,9 @@ components:
       type: object
       properties:
         updates:
-          description: Array of schedule order updates
+          description: >-
+            Move supplied songs to the front by rank; omitted songs retain
+            relative order. The entire queue is renumbered from 1.
           example:
             - scheduleId: 123e4567-e89b-12d3-a456-426614174000
               order: 1
@@ -1508,6 +1651,39 @@ components:
     UpdateJamDto:
       type: object
       properties:
+        name:
+          type: string
+          description: Jam session name
+        slug:
+          type: string
+          description: >-
+            Custom slug for friendly URLs. Lowercase alphanumeric and hyphens
+            only. Auto-generated from name if not provided.
+          example: friday-night-rock
+        description:
+          type: string
+          description: Jam session description
+        date:
+          type: string
+          description: Jam session date and time
+        location:
+          type: string
+          description: Jam session location
+        hostMusicianId:
+          type: string
+          description: Host musician ID (UUID)
+        hostName:
+          type: string
+          description: Host name (denormalized cache)
+        hostContact:
+          type: string
+          description: Host contact (denormalized cache)
+        qrCode:
+          type: string
+          description: Jam session QR Code
+        spotifyPlaylistUrl:
+          type: string
+          description: Spotify playlist URL
         status:
           type: string
           description: Jam status
@@ -1531,7 +1707,7 @@ components:
         level:
           type: string
           description: Experience level
-          enum:
+          enum: &ref_9
             - BEGINNER
             - INTERMEDIATE
             - ADVANCED
@@ -1543,7 +1719,29 @@ components:
         - level
     UpdateMusicianDto:
       type: object
-      properties: {}
+      properties:
+        name:
+          type: string
+          description: Musician name
+        contact:
+          type: string
+          description: Musician contact
+        instrument:
+          type: string
+          description: Primary instrument
+        level:
+          type: string
+          description: Experience level
+          enum: *ref_9
+        phone:
+          type: string
+          description: Musician phone number
+        bio:
+          type: string
+          description: Short biography / music background
+        otherInstruments:
+          type: string
+          description: Other instruments (comma-separated)
     CreateMusicDto:
       type: object
       properties:
@@ -1569,10 +1767,14 @@ components:
           type: string
           description: Link to music (YouTube, Spotify, etc)
           nullable: true
+        info:
+          type: string
+          description: Additional info, notes, or resource links for the song
+          nullable: true
         status:
           type: string
           description: Music status
-          enum:
+          enum: &ref_10
             - SUGGESTED
             - APPROVED
           default: SUGGESTED
@@ -1611,7 +1813,69 @@ components:
         - neededKeys
     UpdateMusicDto:
       type: object
-      properties: {}
+      properties:
+        title:
+          type: string
+          description: Music title
+        artist:
+          type: string
+          description: Artist name
+        genre:
+          type: string
+          description: Music genre
+          nullable: true
+        duration:
+          type: number
+          description: Duration in seconds
+          nullable: true
+        description:
+          type: string
+          description: Music description
+          nullable: true
+        link:
+          type: string
+          description: Link to music (YouTube, Spotify, etc)
+          nullable: true
+        info:
+          type: string
+          description: Additional info, notes, or resource links for the song
+          nullable: true
+        status:
+          type: string
+          description: Music status
+          enum: *ref_10
+          default: SUGGESTED
+        neededDrums:
+          type: number
+          description: Number of drummers needed
+          example: 0
+          default: 0
+        neededGuitars:
+          type: number
+          description: Number of guitarists needed
+          example: 0
+          default: 0
+        neededVocals:
+          type: number
+          description: Number of vocalists needed
+          example: 0
+          default: 0
+        neededBass:
+          type: number
+          description: Number of bassists needed
+          example: 0
+          default: 0
+        neededKeys:
+          type: number
+          description: Number of keyboardists needed
+          example: 0
+          default: 0
+    UpdateJamMusicDto:
+      type: object
+      properties:
+        notes:
+          type: string
+          description: Arrangement notes (key, tempo, structure, etc.)
     CreateRegistrationDto:
       type: object
       properties:
@@ -1650,10 +1914,14 @@ components:
           description: Music ID
         order:
           type: number
-          description: Order in schedule
+          description: Legacy input; allocation appends after the highest occupied position
+          deprecated: true
         status:
           type: string
-          description: Performance status
+          description: >-
+            Initial queue status. Musicians may suggest; hosts may suggest,
+            schedule or cancel. Playback-owned IN_PROGRESS/COMPLETED are
+            rejected.
           enum:
             - SUGGESTED
             - SCHEDULED
@@ -1666,7 +1934,28 @@ components:
         - order
     UpdateScheduleDto:
       type: object
-      properties: {}
+      properties:
+        jamId:
+          type: string
+          description: Must remain the existing jam ID; transfers are rejected
+        musicId:
+          type: string
+          description: May change only before registration or playback history exists
+        order:
+          type: number
+          description: >-
+            Direct order edits are rejected with 400; use the jam queue reorder
+            operation
+          deprecated: true
+        status:
+          type: string
+          description: >-
+            Only unplayed slots may change among SUGGESTED, SCHEDULED and
+            CANCELED
+          enum:
+            - SUGGESTED
+            - SCHEDULED
+            - CANCELED
     FeedbackListItemDto:
       type: object
       properties:
@@ -1788,6 +2077,9 @@ components:
         location:
           type: string
           description: Jam location (ignored if jamId provided)
+        slug:
+          type: string
+          description: Custom URL slug for the jam (ignored if jamId provided)
       required:
         - playlistUrl
     ImportResultDto:

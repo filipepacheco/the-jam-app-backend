@@ -132,6 +132,7 @@ model Schedule {
   playbackHistory PlaybackHistory[]
   currentForJam Jam?           @relation("CurrentSchedule")
 
+  @@unique([jamId, order])
   @@index([jamId, status, order])
   @@index([musicId])
   @@map("escalas")
