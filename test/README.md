@@ -19,7 +19,7 @@ Start Docker, then run:
 npm run test:e2e
 ```
 
-The runner creates a fresh `postgres:16-alpine` container with a random database name, password and loopback port. It applies `prisma/schema.prisma` to that database, supplies dummy provider configuration, runs Jest serially, and removes the container on completion or handled interruption. It never selects the application's existing DATABASE_URL/DIRECT_URL. Initial execution may download the PostgreSQL image.
+The runner creates a fresh `postgres:16-alpine` container with a random database name, password and loopback port. It runs the versioned `prisma migrate deploy` path, checks migration status and checks the resulting database against `prisma/schema.prisma`, supplies dummy provider configuration, runs Jest serially, and removes the container on completion or handled interruption. It never selects the application's existing DATABASE_URL/DIRECT_URL. Initial execution may download the PostgreSQL image.
 
 An early setup guard rejects direct Jest execution unless the runner's isolated database configuration is present. Cleanup repeats this guard before deleting fixtures. Do not manually configure these internal variables to bypass isolation.
 
@@ -27,7 +27,7 @@ Supabase user lookup is replaced with an in-memory identity provider; the real J
 
 The suite covers playback lifecycle, invalid transitions, authenticated history, authentication/role failures, public live state and reorder request validation. Assertions use HTTP 200 compact command results and GET projections, matching the current contract.
 
-A schema-pushed database does not reproduce ignored historical SQL indexes. This suite does **not** establish deployed partial-index guarantees or PostgreSQL concurrency correctness; those remain audit follow-ups. Destructive seed commands are separate from this runner and now require the same strict disposable database configuration before Prisma initializes.
+The baseline reproduces the current Prisma declaration. Historical queue-order and one-IN_PROGRESS indexes are not included pending their coordinated application fixes. This suite does **not** establish deployed partial-index guarantees or PostgreSQL concurrency correctness; those remain audit follow-ups. Destructive seed commands are separate from this runner and now require the same strict disposable database configuration before Prisma initializes.
 
 ## Verification
 
@@ -66,7 +66,7 @@ export NODE_ENV=test
 export JAM_TEST_DATABASE_URL="postgresql://test:$seed_password@$seed_address/$seed_database"
 export DATABASE_URL="$JAM_TEST_DATABASE_URL" DIRECT_URL="$JAM_TEST_DATABASE_URL"
 node -e "require('./scripts/require-seed-database.cjs')"
-node node_modules/prisma/build/index.js db push --skip-generate
+node node_modules/prisma/build/index.js migrate deploy
 npm run seed
 # Alternatively use: node -r ts-node/register prisma/seed-test-users.ts
 # Perform any desired disposable-database inspection here, before the shell exits.

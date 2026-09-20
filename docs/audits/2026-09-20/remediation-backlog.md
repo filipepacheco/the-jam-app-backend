@@ -30,7 +30,7 @@ The audit produced 21 findings plus three decision/investigation tickets. Three 
 ### Foundations — current focus
 
 - [ ] #23 — Authorization, participation and lifecycle decisions. Accepted: per-event owner-only/shared-host management option; generic schedule edits cannot transfer events or set playback status; current/completed deletion prohibited; unique queue positions with explicit reorder; registration identity per musician/slot/instrument; instrument counts are guidance; removal of an unplayed slot with registrations cancels it and preserves history. Remaining decisions are tracked in policy-decisions.md.
-- [ ] #18 — Reproducible schema and constraints. Repository inventory and staging-only read-only catalog inspection performed. Staging lacks unique queue positions and the one-IN_PROGRESS index; the playback-history schedule foreign key is present; migration ledger trails current columns. Reproducible baseline/forward rollout and conflicting-write checks remain outstanding. No real database migration authorized.
+- [ ] #18 — Reproducible schema and constraints. Repository inventory and staging-only read-only catalog inspection performed. Staging lacks unique queue positions and the one-IN_PROGRESS index; the playback-history schedule foreign key is present; migration ledger trails current columns. Current-schema clean-install baseline implemented locally with archived legacy SQL; the full 54-case HTTP suite now uses migrate deploy/status/schema comparison. New constraints, existing-target forward rollout and conflicting-write checks remain outstanding. No real database migration authorized.
 
 ### Dependent domain repairs
 
@@ -52,6 +52,7 @@ The audit produced 21 findings plus three decision/investigation tickets. Three 
 - Prefer targeted repairs; the audit does not justify a rewrite.
 - User-approved test seams are HTTP routes, public playback/import operations and test-database safety boundaries. PostgreSQL behavior is tested against disposable containers.
 - First two repair batches: 27 regression tests, 30 PostgreSQL E2E tests and 18 safety checks passed. Latest batch: full run of 27 regression + 38 E2E + 18 safety checks passed; after splitting broad tests during review, the two changed E2E files passed 22 focused cases. Typecheck passed; lint has one existing warning.
+- Current-schema baseline verification: all 54 PostgreSQL HTTP tests, 27 regression tests and 18 safety checks pass (99 total). Typecheck passes; lint retains one existing warning.
 - Standards and spec reviews have no remaining findings for the committed batches.
 - Feedback protection remains per instance. Token revocation/logout and deletion/write concurrency remain separate work.
 - Close tickets only with acceptance evidence and a published reviewed commit/PR link. Publication, deployment and production migrations are distinct steps.

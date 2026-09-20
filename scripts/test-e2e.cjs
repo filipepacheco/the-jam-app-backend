@@ -90,7 +90,17 @@ process.on('SIGTERM', () => {
       if (result.status !== 0)
         throw new Error(`Test command failed (exit ${result.status ?? result.signal}).`);
     };
-    run('node_modules/prisma/build/index.js', ['db', 'push', '--skip-generate']);
+    run('node_modules/prisma/build/index.js', ['migrate', 'deploy']);
+    run('node_modules/prisma/build/index.js', ['migrate', 'status']);
+    run('node_modules/prisma/build/index.js', [
+      'migrate',
+      'diff',
+      '--from-schema-datasource',
+      'prisma/schema.prisma',
+      '--to-schema-datamodel',
+      'prisma/schema.prisma',
+      '--exit-code',
+    ]);
     run('node_modules/jest/bin/jest.js', [
       '--config',
       'test/jest-e2e.json',

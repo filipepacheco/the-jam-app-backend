@@ -199,3 +199,7 @@
    Total estimado anual (profissional): ~R$ 1.600 a R$ 5.400
 
 
+
+## Database migration history
+
+Fresh disposable databases use the committed migration baseline through `npm run test:e2e`. Existing staging/production databases require a separate reviewed transition; see [the migration runbook](docs/database-migrations.md).
