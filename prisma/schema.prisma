@@ -23,31 +23,34 @@ model JamMusic {
 }
 
 model Jam {
-  id               String         @id @default(uuid())
-  name             String         @map("nome")
-  description      String?        @map("descricao")
-  date             DateTime?      @map("data")
-  qrCode           String?
-  slug             String?        @unique @map("slug")
-  shortCode        String?        @unique @map("codigo_curto")
-  status           JamStatus      @default(ACTIVE) @map("status")
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  deletedAt        DateTime?      @map("excluido_em")
-  hostContact      String?        @map("hostContato")
-  hostName         String?        @map("hostNome")
-  hostMusicianId   String?        @map("hostMusicianId")
-  location         String?        @map("local")
-  currentScheduleId String?       @unique @map("currentScheduleId")
-  playbackState     PlaybackState  @default(STOPPED) @map("playbackState")
-  spotifyPlaylistUrl String?       @map("spotify_playlist_url")
-  schedules        Schedule[]
-  registrations    Registration[]
-  jamMusics        JamMusic[]
-  playbackHistory  PlaybackHistory[]
-  hostMusician     Musician?      @relation(fields: [hostMusicianId], references: [id], onDelete: SetNull)
-  currentSchedule  Schedule?      @relation("CurrentSchedule", fields: [currentScheduleId], references: [id], onDelete: SetNull)
+  id                 String            @id @default(uuid())
+  name               String            @map("nome")
+  description        String?           @map("descricao")
+  date               DateTime?         @map("data")
+  qrCode             String?
+  slug               String?           @unique @map("slug")
+  shortCode          String?           @unique @map("codigo_curto")
+  status             JamStatus         @default(ACTIVE) @map("status")
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  deletedAt          DateTime?         @map("excluido_em")
+  hostContact        String?           @map("hostContato")
+  hostName           String?           @map("hostNome")
+  hostMusicianId     String?           @map("hostMusicianId")
+  managementMode     JamManagementMode @default(OWNER_ONLY) @map("modoGestao")
+  location           String?           @map("local")
+  currentScheduleId  String?           @unique @map("currentScheduleId")
+  playbackState      PlaybackState     @default(STOPPED) @map("playbackState")
+  spotifyPlaylistUrl String?           @map("spotify_playlist_url")
+  spotifyImportKey   String?           @map("spotify_import_key")
+  schedules          Schedule[]
+  registrations      Registration[]
+  jamMusics          JamMusic[]
+  playbackHistory    PlaybackHistory[]
+  hostMusician       Musician?         @relation(fields: [hostMusicianId], references: [id], onDelete: SetNull)
+  currentSchedule    Schedule?         @relation("CurrentSchedule", fields: [currentScheduleId], references: [id], onDelete: SetNull)
 
+  @@unique([hostMusicianId, spotifyImportKey])
   @@index([currentScheduleId])
   @@map("jams")
 }
@@ -59,7 +62,7 @@ model Music {
   genre         String?     @map("genero")
   duration      Int?        @map("duracao")
   description   String?     @map("descricao")
-  link          String?     @map("link")
+  link          String?     @unique @map("link")
   info          String?     @map("info")
   status        MusicStatus @default(SUGGESTED) @map("status")
   createdAt     DateTime    @default(now())
@@ -111,26 +114,27 @@ model Registration {
   musician   Musician           @relation(fields: [musicianId], references: [id], onDelete: Cascade)
 
   @@unique([musicianId, jamId, jamMusicId])
+  @@unique([musicianId, scheduleId, instrument])
   @@index([musicianId, jamId, scheduleId])
   @@map("inscricoes")
 }
 
 model Schedule {
-  id            String         @id @default(uuid())
-  jamId         String
-  order         Int            @map("ordem")
-  status        ScheduleStatus @default(SUGGESTED) @map("status")
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt @map("atualizado_em")
-  musicId       String
-  startedAt     DateTime?      @map("startedAt")
-  completedAt   DateTime?      @map("completedAt")
-  pausedAt      DateTime?      @map("pausedAt")
-  jam           Jam            @relation(fields: [jamId], references: [id], onDelete: Cascade)
-  music         Music          @relation(fields: [musicId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  registrations Registration[]
+  id              String            @id @default(uuid())
+  jamId           String
+  order           Int               @map("ordem")
+  status          ScheduleStatus    @default(SUGGESTED) @map("status")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt @map("atualizado_em")
+  musicId         String
+  startedAt       DateTime?         @map("startedAt")
+  completedAt     DateTime?         @map("completedAt")
+  pausedAt        DateTime?         @map("pausedAt")
+  jam             Jam               @relation(fields: [jamId], references: [id], onDelete: Cascade)
+  music           Music             @relation(fields: [musicId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  registrations   Registration[]
   playbackHistory PlaybackHistory[]
-  currentForJam Jam?           @relation("CurrentSchedule")
+  currentForJam   Jam?              @relation("CurrentSchedule")
 
   @@unique([jamId, order])
   @@index([jamId, status, order])
@@ -145,6 +149,13 @@ enum JamStatus {
   FINISHED @map("FINALIZADO")
 
   @@map("StatusJam")
+}
+
+enum JamManagementMode {
+  OWNER_ONLY   @map("OWNER_ONLY")
+  SHARED_HOSTS @map("SHARED_HOSTS")
+
+  @@map("ModoGestaoJam")
 }
 
 enum RegistrationStatus {
@@ -190,12 +201,12 @@ enum PlaybackState {
 }
 
 enum PlaybackAction {
-  START_JAM    @map("INICIAR_JAM")
-  STOP_JAM     @map("PARAR_JAM")
-  START_SONG   @map("INICIAR_MUSICA")
-  PAUSE_SONG   @map("PAUSAR_MUSICA")
-  RESUME_SONG  @map("RETOMAR_MUSICA")
-  SKIP_SONG    @map("PULAR_MUSICA")
+  START_JAM     @map("INICIAR_JAM")
+  STOP_JAM      @map("PARAR_JAM")
+  START_SONG    @map("INICIAR_MUSICA")
+  PAUSE_SONG    @map("PAUSAR_MUSICA")
+  RESUME_SONG   @map("RETOMAR_MUSICA")
+  SKIP_SONG     @map("PULAR_MUSICA")
   PREVIOUS_SONG @map("MUSICA_ANTERIOR")
   REORDER_QUEUE @map("REORDENAR_FILA")
 
@@ -203,17 +214,17 @@ enum PlaybackAction {
 }
 
 model Feedback {
-  id         String    @id @default(uuid())
+  id         String   @id @default(uuid())
   rating     Int
-  comment    String?   @db.VarChar(500) @map("comentario")
-  userAgent  String?   @map("userAgent")
-  pageUrl    String?   @map("pageUrl")
-  ipAddress  String?   @map("ipAddress")
-  musicianId String?   @map("musicoId")
-  createdAt  DateTime  @default(now()) @map("criadoEm")
-  updatedAt  DateTime  @updatedAt @map("atualizado_em")
+  comment    String?  @map("comentario") @db.VarChar(500)
+  userAgent  String?  @map("userAgent")
+  pageUrl    String?  @map("pageUrl")
+  ipAddress  String?  @map("ipAddress")
+  musicianId String?  @map("musicoId")
+  createdAt  DateTime @default(now()) @map("criadoEm")
+  updatedAt  DateTime @updatedAt @map("atualizado_em")
 
-  musician   Musician? @relation(fields: [musicianId], references: [id], onDelete: SetNull)
+  musician Musician? @relation(fields: [musicianId], references: [id], onDelete: SetNull)
 
   @@index([musicianId])
   @@index([createdAt])
@@ -221,15 +232,15 @@ model Feedback {
 }
 
 model PlaybackHistory {
-  id        String         @id @default(uuid())
-  jamId     String
+  id         String         @id @default(uuid())
+  jamId      String
   scheduleId String
-  action    PlaybackAction @map("acao")
-  timestamp DateTime       @default(now()) @map("timestamp")
-  userId    String?        @map("userId")
-  metadata  Json?          @map("metadata")
-  jam       Jam            @relation(fields: [jamId], references: [id], onDelete: Cascade)
-  schedule  Schedule       @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  action     PlaybackAction @map("acao")
+  timestamp  DateTime       @default(now()) @map("timestamp")
+  userId     String?        @map("userId")
+  metadata   Json?          @map("metadata")
+  jam        Jam            @relation(fields: [jamId], references: [id], onDelete: Cascade)
+  schedule   Schedule       @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
   @@index([jamId, timestamp])
   @@map("playback_history")

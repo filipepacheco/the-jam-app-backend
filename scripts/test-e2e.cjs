@@ -81,6 +81,24 @@ process.on('SIGTERM', () => {
       SPOTIFY_CLIENT_SECRET: 'test-only',
     };
     assertTestDatabase(env);
+    const assertRequiredIndexes = () => {
+      const indexPresent = docker([
+        'exec',
+        container,
+        'psql',
+        '-U',
+        'test',
+        '-d',
+        database,
+        '--tuples-only',
+        '--no-align',
+        '--command',
+        "SELECT 1 FROM pg_indexes WHERE schemaname = 'public' AND tablename = 'escalas' AND indexname = 'escalas_jamId_in_progress_unique';",
+      ]);
+      if (indexPresent !== '1') {
+        throw new Error('Required one-in-progress-schedule partial index is missing.');
+      }
+    };
     const run = (file, args) => {
       const result = spawnSync(process.execPath, [path.join(root, file), ...args], {
         cwd: root,
@@ -91,6 +109,7 @@ process.on('SIGTERM', () => {
         throw new Error(`Test command failed (exit ${result.status ?? result.signal}).`);
     };
     run('node_modules/prisma/build/index.js', ['migrate', 'deploy']);
+    assertRequiredIndexes();
     run('node_modules/prisma/build/index.js', ['migrate', 'status']);
     run('node_modules/prisma/build/index.js', [
       'migrate',

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -7,7 +8,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRegistrationDto } from './dto/create-inscricao.dto';
 import { UpdateRegistrationDto } from './dto/update-inscricao.dto';
-import { RegistrationStatus } from '@prisma/client';
+import { Prisma, RegistrationStatus } from '@prisma/client';
 import { normalizeInstrument } from '../common/constants';
 
 @Injectable()
@@ -16,6 +17,9 @@ export class InscricaoService {
 
   async create(createRegistrationDto: CreateRegistrationDto, musicianId: string) {
     const instrument = normalizeInstrument(createRegistrationDto.instrument);
+    if (!instrument) {
+      throw new BadRequestException('Instrument is required');
+    }
 
     // Get the schedule to validate it exists and get jam info
     const schedule = await this.prisma.schedule.findUnique({
@@ -46,19 +50,28 @@ export class InscricaoService {
       );
     }
 
-    return this.prisma.registration.create({
-      data: {
-        musicianId,
-        jamId: schedule.jamId,
-        scheduleId: createRegistrationDto.scheduleId,
-        instrument,
-      },
-      include: {
-        musician: true,
-        jam: true,
-        schedule: true,
-      },
-    });
+    try {
+      return await this.prisma.registration.create({
+        data: {
+          musicianId,
+          jamId: schedule.jamId,
+          scheduleId: createRegistrationDto.scheduleId,
+          instrument,
+        },
+        include: {
+          musician: true,
+          jam: true,
+          schedule: true,
+        },
+      });
+    } catch (error) {
+      if (this.isRegistrationIdentityConflict(error)) {
+        throw new ConflictException(
+          'Musician already registered for this schedule with the same instrument',
+        );
+      }
+      throw error;
+    }
   }
 
   async update(id: string, updateRegistrationDto: UpdateRegistrationDto) {
@@ -77,23 +90,35 @@ export class InscricaoService {
     const updateData: { instrument?: string; status?: RegistrationStatus } = {};
 
     if (updateRegistrationDto.instrument !== undefined) {
-      updateData.instrument =
-        normalizeInstrument(updateRegistrationDto.instrument) ?? updateRegistrationDto.instrument;
+      const instrument = normalizeInstrument(updateRegistrationDto.instrument);
+      if (!instrument) {
+        throw new BadRequestException('Instrument is required');
+      }
+      updateData.instrument = instrument;
     }
 
     if (updateRegistrationDto.status !== undefined) {
       updateData.status = updateRegistrationDto.status;
     }
 
-    return this.prisma.registration.update({
-      where: { id },
-      data: updateData,
-      include: {
-        musician: true,
-        jam: true,
-        schedule: true,
-      },
-    });
+    try {
+      return await this.prisma.registration.update({
+        where: { id },
+        data: updateData,
+        include: {
+          musician: true,
+          jam: true,
+          schedule: true,
+        },
+      });
+    } catch (error) {
+      if (this.isRegistrationIdentityConflict(error)) {
+        throw new ConflictException(
+          'Musician already registered for this schedule with the same instrument',
+        );
+      }
+      throw error;
+    }
   }
 
   async remove(id: string, requestingMusicianId: string) {
@@ -125,5 +150,9 @@ export class InscricaoService {
     return this.prisma.registration.delete({
       where: { id },
     });
+  }
+
+  private isRegistrationIdentityConflict(error: unknown): boolean {
+    return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
   }
 }

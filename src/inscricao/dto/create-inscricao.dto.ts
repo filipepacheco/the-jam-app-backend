@@ -12,8 +12,8 @@ export class CreateRegistrationDto {
   @IsOptional()
   musicianId?: string;
 
-  @ApiProperty({ description: 'Instrument to play', required: false })
+  @ApiProperty({ description: 'Instrument to play' })
   @IsString()
-  @IsOptional()
-  instrument?: string;
+  @IsNotEmpty()
+  instrument: string;
 }

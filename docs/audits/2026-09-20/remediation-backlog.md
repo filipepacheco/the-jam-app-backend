@@ -21,29 +21,29 @@ The audit produced 21 findings plus three decision/investigation tickets. Three 
 - [ ] #15 — Deleted-jam commands and public relation guards (`0ce5cdf`).
 - [ ] #17 — Hermetic HTTP E2E baseline and bootstrap limitations (`0275672`).
 - [ ] #21 — Deployment environment files excluded from staging (`0275672`).
+- [ ] #11 — Registration identity is enforced per musician/scheduled slot/instrument, including concurrent create and update conflicts.
+- [ ] #14 — Playback transitions serialize on the jam and the database enforces one active schedule per jam.
+- [ ] #16 — Spotify imports are atomic; existing-event retries are naturally idempotent and new-event retries use an idempotency key.
+- [ ] #20 — Production dependency advisories reduced from 15 to zero with compatible updates and targeted overrides.
+- [ ] #22 — Portable verification guidance and generated OpenAPI are current; CI rejects OpenAPI drift.
 
 ### Partial
 
 - [ ] #8 — Feedback quota enforced per instance; shared serverless storage and trusted proxy identity unresolved.
-- [ ] #22 — Test documentation corrected; OpenAPI and portable repository guidance remain. Blocked by #23.
 
 ### Foundations — current focus
 
-- [ ] #23 — Authorization, participation and lifecycle decisions. Accepted: per-event owner-only/shared-host management option; generic schedule edits cannot transfer events or set playback status; current/completed deletion prohibited; unique queue positions with explicit reorder; registration identity per musician/slot/instrument; instrument counts are guidance; removal of an unplayed slot with registrations cancels it and preserves history. Remaining decisions are tracked in policy-decisions.md.
-- [ ] #18 — Reproducible schema and constraints. Repository inventory and staging-only read-only catalog inspection performed. Staging lacks unique queue positions and the one-IN_PROGRESS index; the playback-history schedule foreign key is present; migration ledger trails current columns. Current-schema clean-install baseline implemented locally with archived legacy SQL; the full 54-case HTTP suite now uses migrate deploy/status/schema comparison. Unique queue-order migration and concurrent HTTP writer checks now exist locally. Registration identity, the playback partial index, existing-target forward rollout and direct constraint-rejection checks remain outstanding. No real database migration authorized.
+- [ ] #23 — Per-event owner-only/shared-host management is implemented for playback, queue changes and approvals, with legacy events backfilled shared. Remaining participation, catalog/privacy, identity-linking and logout decisions are tracked in policy-decisions.md.
+- [ ] #18 — Reproducible schema and constraints. Clean installs now include queue order, registration identity, one-active-schedule, management-mode and Spotify identity migrations; the runner directly checks the PostgreSQL partial index. Existing-target row preflight, forward rollout and direct constraint-rejection checks remain outstanding. No real database migration authorized.
 
 ### Dependent domain repairs
 
 - [ ] #7 — Schedule lifecycle/identity safeguards implemented and verified locally; publication/closure pending. Per-event management mode remains separate #23 work.
 - [ ] #10 — Serialized append/import/reorder, unique queue-order migration and accepted partial-reorder behavior implemented and verified on disposable PostgreSQL. Existing-target migration transition remains under #18; publication/closure pending.
-- [ ] #11 — Registration identity and uniqueness. Blocked by #23 and #18.
-- [ ] #14 — Serialized playback transitions. Blocked by #18 and #7.
-- [ ] #16 — Atomic/retryable Spotify imports. Blocked by #5 and #10.
-- [ ] #19 — CI/release gates. Formal blocker #17 awaits closure reconciliation; test prerequisites exist locally.
+- [ ] #19 — Pull requests and `main` pushes run build, lint, unit, safety, disposable-PostgreSQL E2E and OpenAPI drift gates; production tag deployment depends on the reusable gate and pins its Vercel CLI. A real hosted CI run and publication/closure remain.
 
 ### Other remaining work
 
-- [ ] #20 — Dependency advisory triage and compatible updates.
 - [ ] #24 — Readiness and integration failure contracts; decisions needed.
 - [ ] #25 — Validate leftovers before deleting code; operational scripts are not presumed dead.
 

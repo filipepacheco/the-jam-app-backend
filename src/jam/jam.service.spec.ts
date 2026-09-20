@@ -7,6 +7,7 @@ import { JamService } from './jam.service';
 import { JamController } from './jam.controller';
 import { JamPlaybackService } from './jam-playback.service';
 import { JamLiveStateService } from './jam-live-state.service';
+import { JamManagementService } from './jam-management.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SupabaseJwtStrategy } from '../auth/strategies/supabase-jwt.strategy';
 import { TokenCacheService } from '../auth/services/token-cache.service';
@@ -38,6 +39,7 @@ describe('Jam editing permissions over HTTP', () => {
         JamService,
         JamPlaybackService,
         JamLiveStateService,
+        JamManagementService,
         ConfigService,
         SupabaseJwtStrategy,
         TokenCacheService,

@@ -203,3 +203,19 @@
 ## Database migration history
 
 Fresh disposable databases use the committed migration baseline through `npm run test:e2e`. Existing staging/production databases require a separate reviewed transition; see [the migration runbook](docs/database-migrations.md).
+
+## Development verification
+
+Use Node.js 20 or newer and install the locked dependency tree with `npm ci`. The repository's local and CI verification commands are:
+
+```bash
+npm run lint:check
+npm run build
+npm test -- --runInBand
+npm run test:safety
+npm run test:e2e
+```
+
+`npm run test:e2e` requires Docker. It creates an isolated PostgreSQL 16 container, applies every committed migration, checks migration status and schema drift, runs the HTTP suite, and removes the container. It refuses application database URLs and does not use staging or production.
+
+Generate the committed OpenAPI artifacts with `npm run swagger:generate`. Pull requests and pushes to `main` run the same quality checks and reject stale `swagger.json` or `swagger.yaml`. Production tag deployment waits for that reusable CI workflow to pass.

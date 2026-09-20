@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint:check
+      - run: npm run build
+      - run: npm run swagger:generate
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://docs:docs@127.0.0.1:1/docs
+          DIRECT_URL: postgresql://docs:docs@127.0.0.1:1/docs
+          JWT_SECRET: docs-only-placeholder-secret-32-characters
+          SUPABASE_URL: http://127.0.0.1:1
+          SUPABASE_ANON_KEY: docs-only
+          SUPABASE_SERVICE_ROLE_KEY: docs-only
+      - run: git diff --exit-code -- swagger.json swagger.yaml
+      - run: npm test -- --runInBand
+      - run: npm run test:safety
+      - run: npm run test:e2e

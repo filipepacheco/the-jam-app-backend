@@ -1276,6 +1276,9 @@
           },
           "401": {
             "description": "Unauthorized"
+          },
+          "409": {
+            "description": "Musician already applied for this instrument on this scheduled song"
           }
         },
         "security": [
@@ -1283,7 +1286,7 @@
             "bearer": []
           }
         ],
-        "summary": "Create a new registration",
+        "summary": "Apply to play an instrument on a scheduled song",
         "tags": [
           "Registrations"
         ]
@@ -1327,6 +1330,9 @@
           },
           "404": {
             "description": "Registration not found"
+          },
+          "409": {
+            "description": "Updated instrument would duplicate another application on the scheduled song"
           }
         },
         "security": [
@@ -1587,9 +1593,19 @@
     },
     "/spotify/import": {
       "post": {
-        "description": "If 'jamId' is provided, tracks are appended to the existing jam. If omitted, a new jam is created. When importing to an existing jam, tracks already present are skipped.",
+        "description": "If 'jamId' is provided, tracks are appended to the existing jam. If omitted, a new jam is created. Existing tracks are reported as duplicates. Database changes are atomic: any failure rolls back the complete import.",
         "operationId": "SpotifyController_importPlaylist",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Required when creating a new jam; 8-128 characters and stable across retries",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2221,6 +2237,13 @@
               "FINISHED"
             ]
           },
+          "managementMode": {
+            "type": "string",
+            "enum": [
+              "OWNER_ONLY",
+              "SHARED_HOSTS"
+            ]
+          },
           "spotifyPlaylistUrl": {
             "type": "string"
           },
@@ -2266,6 +2289,7 @@
           "id",
           "name",
           "status",
+          "managementMode",
           "createdAt",
           "updatedAt"
         ]
@@ -2364,6 +2388,7 @@
           "currentSong": {
             "nullable": true,
             "description": "Current song being played (IN_PROGRESS status)",
+            "type": "object",
             "allOf": [
               {
                 "$ref": "#/components/schemas/LiveStateSongDto"
@@ -2480,6 +2505,7 @@
           "currentSong": {
             "nullable": true,
             "description": "Current song being played (IN_PROGRESS status)",
+            "type": "object",
             "allOf": [
               {
                 "$ref": "#/components/schemas/DashboardSongDto"
@@ -2601,6 +2627,14 @@
               "INACTIVE",
               "LIVE",
               "FINISHED"
+            ]
+          },
+          "managementMode": {
+            "type": "string",
+            "description": "Who may manage playback, queue actions, and registration approvals. Only the event owner may change this setting.",
+            "enum": [
+              "OWNER_ONLY",
+              "SHARED_HOSTS"
             ]
           }
         }
@@ -2866,7 +2900,8 @@
           }
         },
         "required": [
-          "scheduleId"
+          "scheduleId",
+          "instrument"
         ]
       },
       "UpdateRegistrationDto": {
@@ -3137,7 +3172,7 @@
           },
           "skippedTracks": {
             "type": "number",
-            "description": "Number of tracks that failed to import"
+            "description": "Always zero for a successful atomic import"
           },
           "addedTracks": {
             "type": "number",
@@ -3150,13 +3185,6 @@
           "isExistingJam": {
             "type": "boolean",
             "description": "Whether an existing jam was used"
-          },
-          "errors": {
-            "description": "Error details for skipped tracks",
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
         },
         "required": [

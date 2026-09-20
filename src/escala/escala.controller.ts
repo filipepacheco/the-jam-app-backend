@@ -13,11 +13,15 @@ import { EscalaService } from './escala.service';
 import { CreateScheduleDto } from './dto/create-escala.dto';
 import { UpdateScheduleDto } from './dto/update-escala.dto';
 import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
+import { JamManagementService } from '../jam/jam-management.service';
 
 @ApiTags('Schedules')
 @Controller('escalas')
 export class EscalaController {
-  constructor(private readonly escalaService: EscalaService) {}
+  constructor(
+    private readonly escalaService: EscalaService,
+    private readonly jamManagementService: JamManagementService,
+  ) {}
 
   @Post()
   @ProtectedRoute('host', 'admin', 'user')
@@ -25,7 +29,17 @@ export class EscalaController {
   @ApiResponse({ status: 201, description: 'Schedule created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  create(@Body() createScheduleDto: CreateScheduleDto, @Request() req) {
+  async create(@Body() createScheduleDto: CreateScheduleDto, @Request() req) {
+    if (
+      req.musician?.isHost === true &&
+      createScheduleDto.status !== undefined &&
+      createScheduleDto.status !== 'SUGGESTED'
+    ) {
+      await this.jamManagementService.assertCanManageJam(
+        createScheduleDto.jamId,
+        req.user?.musicianId,
+      );
+    }
     return this.escalaService.create(createScheduleDto, req.musician?.isHost === true);
   }
 
@@ -40,7 +54,12 @@ export class EscalaController {
   @ApiResponse({ status: 400, description: 'Edit violates schedule lifecycle or identity' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - host only' })
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateScheduleDto: UpdateScheduleDto) {
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateScheduleDto: UpdateScheduleDto,
+    @Request() req,
+  ) {
+    await this.jamManagementService.assertCanManageSchedule(id, req.user?.musicianId);
     return this.escalaService.update(id, updateScheduleDto);
   }
 
@@ -55,7 +74,8 @@ export class EscalaController {
   @ApiResponse({ status: 400, description: 'Current or completed song cannot be removed' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - host only' })
-  remove(@Param('id', ParseUUIDPipe) id: string) {
+  async remove(@Param('id', ParseUUIDPipe) id: string, @Request() req) {
+    await this.jamManagementService.assertCanManageSchedule(id, req.user?.musicianId);
     return this.escalaService.remove(id);
   }
 }

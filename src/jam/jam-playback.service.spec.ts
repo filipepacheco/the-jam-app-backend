@@ -22,8 +22,10 @@ async function playbackFixture() {
       update: async ({ data }: { data: Partial<typeof jam> }) => ({ ...Object.assign(jam, data) }),
     },
     schedule: {
-      findFirst: async ({ where }: { where: { status: ScheduleStatus } }) =>
-        songs.find((s) => s.status === where.status),
+      findFirst: async ({ where }: { where: { id?: string; status?: ScheduleStatus } }) =>
+        where.id
+          ? songs.find((s) => s.id === where.id)
+          : songs.find((s) => s.status === where.status),
       findUnique: async ({ where }: { where: { id: string } }) =>
         songs.find((s) => s.id === where.id),
       update: async ({ where, data }: { where: { id: string }; data: object }) =>
@@ -33,6 +35,7 @@ async function playbackFixture() {
         ),
     },
     playbackHistory: { create: async () => ({}) },
+    $queryRaw: async () => [{ id: jam.id }],
   };
   const module = await Test.createTestingModule({
     providers: [

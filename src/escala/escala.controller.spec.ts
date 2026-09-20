@@ -7,6 +7,7 @@ import { EscalaService } from './escala.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SupabaseJwtStrategy } from '../auth/strategies/supabase-jwt.strategy';
 import { TokenCacheService } from '../auth/services/token-cache.service';
+import { JamManagementService } from '../jam/jam-management.service';
 
 const jamId = '11111111-1111-4111-8111-111111111111';
 const musicId = '22222222-2222-4222-8222-222222222222';
@@ -23,7 +24,14 @@ describe('Schedule creation permissions over HTTP', () => {
         }),
       },
       music: { findUnique: async () => ({ id: musicId }) },
-      jam: { findUnique: async () => ({ id: jamId }) },
+      jam: {
+        findUnique: async () => ({
+          id: jamId,
+          hostMusicianId: 'host',
+          managementMode: 'OWNER_ONLY',
+          deletedAt: null,
+        }),
+      },
       schedule: {
         findFirst: async () => null,
         create: async ({ data }: { data: object }) => ({ id: 'new', ...data }),
@@ -34,6 +42,7 @@ describe('Schedule creation permissions over HTTP', () => {
       controllers: [EscalaController],
       providers: [
         EscalaService,
+        JamManagementService,
         SupabaseJwtStrategy,
         TokenCacheService,
         {

@@ -23,4 +23,16 @@ For each separately authorized target:
 3. Take a recoverable backup and rehearse the transition on a clone, including migration-status checks and application smoke tests. Only resolve a migration after proving the exact objects it represents exist.
 4. Review and execute the approved release separately. Record recovery steps and evidence before enabling automatic migration deployment.
 
+## Existing-target constraint preflight
+
+Before applying migrations after the baseline to staging or production, run the read-only aggregate checks in `scripts/preflight-existing-migrations.sql` with a read-only database role:
+
+```bash
+psql "$DIRECT_URL" -v ON_ERROR_STOP=1 -f scripts/preflight-existing-migrations.sql
+```
+
+Every reported violation count must be zero. A nonzero result is a release stop: do not run `prisma migrate deploy`, and do not bypass the unique index with `IF NOT EXISTS`. Export the affected aggregate keys for review, prepare a separate reversible data-reconciliation migration, and rerun the preflight. Queue positions may be renumbered only under the accepted queue-order policy; registration rows and catalog songs must be merged only after their retained history and references are explicitly reviewed; multiple active schedules require choosing the event's authoritative current schedule. No automatic deletion is authorized.
+
+After a zero preflight, take a recovery snapshot, apply the migrations, run `prisma migrate status`, and verify the expected indexes through `pg_indexes`. The application rollout remains separate from migration authorization.
+
 See [schema foundations](audits/2026-09-20/schema-foundations.md) for staging evidence, unexecuted preflight templates and rollout/recovery requirements. [Archived SQL](audits/2026-09-20/legacy-migrations/README.md) preserves all ten former migration files with checksums; it is excluded from the active chain.

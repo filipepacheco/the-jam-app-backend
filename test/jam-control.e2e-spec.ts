@@ -126,6 +126,74 @@ describe('Live Jam Control HTTP contract (disposable PostgreSQL)', () => {
     await controlRequest('start', data.jam.id, 400);
   });
 
+  it('serializes concurrent start commands and records only one transition', async () => {
+    const start = () =>
+      request(app.getHttpServer())
+        .post(`/jams/${data.jam.id}/control/start`)
+        .set('Authorization', `Bearer ${data.hostMusician.token}`);
+
+    const responses = await Promise.all([start(), start()]);
+    expect(responses.map((response) => response.status).sort()).toEqual([200, 400]);
+
+    const live = (await state()).body;
+    expect(live).toMatchObject({
+      playbackState: 'PLAYING',
+      currentSong: { id: data.schedules[0].id, status: 'IN_PROGRESS' },
+    });
+    const detail = await request(app.getHttpServer()).get(`/jams/${data.jam.id}`).expect(200);
+    expect(
+      detail.body.schedules.filter((song: { status: string }) => song.status === 'IN_PROGRESS'),
+    ).toHaveLength(1);
+    expect(
+      (await history()).body.filter((entry: { action: string }) => entry.action === 'START_JAM'),
+    ).toHaveLength(1);
+  });
+
+  it('applies concurrent next commands in sequence instead of skipping the same song twice', async () => {
+    await controlRequest('start', data.jam.id);
+    const next = () =>
+      request(app.getHttpServer())
+        .post(`/jams/${data.jam.id}/control/next`)
+        .set('Authorization', `Bearer ${data.hostMusician.token}`);
+
+    const responses = await Promise.all([next(), next()]);
+    expect(responses.map((response) => response.status)).toEqual([200, 200]);
+
+    const live = (await state()).body;
+    expect(live).toMatchObject({
+      playbackState: 'PLAYING',
+      currentSong: { id: data.schedules[2].id, status: 'IN_PROGRESS' },
+    });
+    const detail = await request(app.getHttpServer()).get(`/jams/${data.jam.id}`).expect(200);
+    expect(
+      detail.body.schedules.filter((song: { status: string }) => song.status === 'IN_PROGRESS'),
+    ).toHaveLength(1);
+    expect(
+      (await history()).body
+        .filter((entry: { action: string }) => entry.action === 'SKIP_SONG')
+        .map((entry: { scheduleId: string }) => entry.scheduleId)
+        .sort(),
+    ).toEqual([data.schedules[0].id, data.schedules[1].id].sort());
+  });
+
+  it('rejects the second concurrent pause after the first one changes playback state', async () => {
+    await controlRequest('start', data.jam.id);
+    const pause = () =>
+      request(app.getHttpServer())
+        .post(`/jams/${data.jam.id}/control/pause`)
+        .set('Authorization', `Bearer ${data.hostMusician.token}`);
+
+    const responses = await Promise.all([pause(), pause()]);
+    expect(responses.map((response) => response.status).sort()).toEqual([200, 400]);
+    expect((await state()).body).toMatchObject({
+      playbackState: 'PAUSED',
+      currentSong: { id: data.schedules[0].id, status: 'IN_PROGRESS' },
+    });
+    expect(
+      (await history()).body.filter((entry: { action: string }) => entry.action === 'PAUSE_SONG'),
+    ).toHaveLength(1);
+  });
+
   it('rejects resume when playing', async () => {
     await controlRequest('start', data.jam.id);
     await controlRequest('resume', data.jam.id, 400);

@@ -15,12 +15,18 @@ import { ExportPlaylistDto } from './dto/export-playlist.dto';
 import { ExportResultDto } from './dto/export-result.dto';
 import { GetTrackDto } from './dto/get-track.dto';
 import { TrackMetadataDto } from './dto/track-metadata.dto';
-import { MusicStatus } from '@prisma/client';
+import { MusicStatus, Prisma } from '@prisma/client';
 import { SpotifyApiError } from './types/spotify.types';
 import { generateShortCode, generateSlug } from '../common/utils/slug';
 import { lockJamQueue } from '../escala/queue-lock';
 
 const MAX_QUEUE_ORDER = 2_147_483_647;
+const SPOTIFY_IMPORT_JAM_INCLUDE = {
+  jamMusics: { include: { music: true } },
+  schedules: { include: { music: true }, orderBy: { order: 'asc' as const } },
+} satisfies Prisma.JamInclude;
+
+type SpotifyImportJam = Prisma.JamGetPayload<{ include: typeof SPOTIFY_IMPORT_JAM_INCLUDE }>;
 
 @Injectable()
 export class SpotifyService {
@@ -31,7 +37,11 @@ export class SpotifyService {
     private readonly spotifyApi: SpotifyApiClient,
   ) {}
 
-  async importPlaylist(dto: ImportPlaylistDto, hostMusicianId: string): Promise<ImportResultDto> {
+  async importPlaylist(
+    dto: ImportPlaylistDto,
+    hostMusicianId: string,
+    idempotencyKey?: string,
+  ): Promise<ImportResultDto> {
     if (!this.spotifyApi.isConfigured) {
       throw new ServiceUnavailableException('Spotify integration is not configured');
     }
@@ -41,17 +51,37 @@ export class SpotifyService {
       throw new BadRequestException('Invalid Spotify playlist URL or URI');
     }
 
-    let jam;
-    let existingJamMusicIds = new Set<string>();
     const isExistingJam = !!dto.jamId;
+    const spotifyImportKey = idempotencyKey?.trim();
+
+    if (
+      !dto.jamId &&
+      (!spotifyImportKey || spotifyImportKey.length < 8 || spotifyImportKey.length > 128)
+    ) {
+      throw new BadRequestException(
+        'Idempotency-Key with 8 to 128 characters is required when creating a jam',
+      );
+    }
+
+    if (!dto.jamId) {
+      const replay = await this.prisma.jam.findUnique({
+        where: {
+          hostMusicianId_spotifyImportKey: {
+            hostMusicianId,
+            spotifyImportKey: spotifyImportKey!,
+          },
+        },
+        include: SPOTIFY_IMPORT_JAM_INCLUDE,
+      });
+      if (replay) {
+        return this.replayedNewJamImport(replay);
+      }
+    }
 
     if (dto.jamId) {
-      // Import to existing jam
-      jam = await this.prisma.jam.findUnique({
+      const jam = await this.prisma.jam.findUnique({
         where: { id: dto.jamId, deletedAt: null },
-        include: {
-          jamMusics: { select: { musicId: true } },
-        },
+        select: { hostMusicianId: true, status: true },
       });
 
       if (!jam) {
@@ -67,9 +97,6 @@ export class SpotifyService {
       if (jam.status !== 'ACTIVE' && jam.status !== 'LIVE') {
         throw new BadRequestException('Cannot import to a jam that is not active or live');
       }
-
-      // Get existing music IDs to avoid duplicates within the jam
-      existingJamMusicIds = new Set(jam.jamMusics.map((jm) => jm.musicId));
     }
 
     let token: string;
@@ -93,152 +120,151 @@ export class SpotifyService {
       this.handleSpotifyApiError(err, 'playlist');
     }
 
-    const errors: string[] = [];
-    let importedTracks = 0;
-    let reusedTracks = 0;
-    let skippedTracks = 0;
+    return this.prisma.$transaction(
+      async (tx) => {
+        let jam;
+        let existingJamMusicIds: Set<string>;
 
-    // Batch deduplication: find existing music by Spotify link
-    const allLinks = tracks.map((t) => t.spotifyUrl);
-    const existingMusic = await this.prisma.music.findMany({
-      where: { link: { in: allLinks } },
-    });
-    const linkToMusic = new Map(existingMusic.map((m) => [m.link, m]));
-
-    // Create missing music records
-    const musicIds: string[] = [];
-    for (const track of tracks) {
-      const existing = linkToMusic.get(track.spotifyUrl);
-      if (existing) {
-        musicIds.push(existing.id);
-        reusedTracks++;
-        continue;
-      }
-
-      try {
-        const created = await this.prisma.music.create({
-          data: {
-            title: track.name,
-            artist: track.artists.join(', '),
-            duration: Math.round(track.durationMs / 1000),
-            link: track.spotifyUrl,
-            status: MusicStatus.APPROVED,
-            // Default band setup: 1 vocal, 2 guitars, 1 bass, 1 drums
-            neededVocals: 1,
-            neededGuitars: 2,
-            neededBass: 1,
-            neededDrums: 1,
-            neededKeys: 0,
-          },
-        });
-        musicIds.push(created.id);
-        importedTracks++;
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        this.logger.warn(`Failed to create music for track ${track.name}: ${message}`);
-        errors.push(`Failed to import "${track.name}" by ${track.artists.join(', ')}`);
-        skippedTracks++;
-      }
-    }
-
-    if (!dto.jamId) {
-      // Create new jam with shortCode and slug
-      const shortCode = await generateShortCode(
-        async (code) =>
-          !!(await this.prisma.jam.findUnique({
-            where: { shortCode: code },
-            select: { id: true },
-          })),
-      );
-      const jamName = dto.name || playlistMeta.name;
-      const slug = dto.slug || generateSlug(jamName, shortCode);
-
-      jam = await this.prisma.jam.create({
-        data: {
-          name: jamName,
-          description: dto.description || playlistMeta.description || undefined,
-          date: dto.date ? new Date(dto.date) : undefined,
-          location: dto.location,
-          slug,
-          shortCode,
-          hostMusicianId,
-          spotifyPlaylistUrl: dto.playlistUrl,
-        },
-      });
-    }
-
-    // Track how many tracks were actually added vs skipped as duplicates
-    let addedTracks = 0;
-    let duplicateTracks = 0;
-
-    // Create JamMusic links and Schedule entries
-    for (let i = 0; i < musicIds.length; i++) {
-      const musicId = musicIds[i];
-
-      // Skip if music already exists in this jam (duplicate detection)
-      if (existingJamMusicIds.has(musicId)) {
-        duplicateTracks++;
-        continue;
-      }
-
-      try {
-        await this.prisma.$transaction(async (tx) => {
-          await lockJamQueue(tx, jam.id);
-          const lastSchedule = await tx.schedule.findFirst({
-            where: { jamId: jam.id },
-            orderBy: { order: 'desc' },
-            select: { order: true },
+        if (dto.jamId) {
+          await lockJamQueue(tx, dto.jamId);
+          jam = await tx.jam.findUnique({
+            where: { id: dto.jamId, deletedAt: null },
+            include: { jamMusics: { select: { musicId: true } } },
           });
+          if (!jam) {
+            throw new NotFoundException('Jam not found');
+          }
+          if (jam.hostMusicianId !== hostMusicianId) {
+            throw new ForbiddenException('You must be the jam host to import tracks');
+          }
+          if (jam.status !== 'ACTIVE' && jam.status !== 'LIVE') {
+            throw new BadRequestException('Cannot import to a jam that is not active or live');
+          }
+          existingJamMusicIds = new Set(jam.jamMusics.map((jamMusic) => jamMusic.musicId));
+        } else {
+          await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`spotify-import:${hostMusicianId}:${spotifyImportKey}`}, 0))::text AS locked`;
+          const replay = await tx.jam.findUnique({
+            where: {
+              hostMusicianId_spotifyImportKey: {
+                hostMusicianId,
+                spotifyImportKey: spotifyImportKey!,
+              },
+            },
+            include: SPOTIFY_IMPORT_JAM_INCLUDE,
+          });
+          if (replay) {
+            return this.replayedNewJamImport(replay);
+          }
+          const shortCode = await generateShortCode(
+            async (code) =>
+              !!(await tx.jam.findUnique({
+                where: { shortCode: code },
+                select: { id: true },
+              })),
+          );
+          const jamName = dto.name || playlistMeta.name;
+          jam = await tx.jam.create({
+            data: {
+              name: jamName,
+              description: dto.description || playlistMeta.description || undefined,
+              date: dto.date ? new Date(dto.date) : undefined,
+              location: dto.location,
+              slug: dto.slug || generateSlug(jamName, shortCode),
+              shortCode,
+              hostMusicianId,
+              spotifyPlaylistUrl: dto.playlistUrl,
+              spotifyImportKey,
+            },
+            include: { jamMusics: { select: { musicId: true } } },
+          });
+          existingJamMusicIds = new Set();
+        }
 
-          const lastOrder = Math.max(lastSchedule?.order ?? 0, 0);
+        const uniqueTracks = new Map(tracks.map((track) => [track.spotifyUrl, track]));
+        const links = [...uniqueTracks.keys()];
+        const existingMusic = await tx.music.findMany({ where: { link: { in: links } } });
+        const existingLinks = new Set(existingMusic.map((music) => music.link));
+        const missingTracks = [...uniqueTracks.values()].filter(
+          (track) => !existingLinks.has(track.spotifyUrl),
+        );
+        const importedTracks = missingTracks.length
+          ? (
+              await tx.music.createMany({
+                data: missingTracks.map((track) => ({
+                  title: track.name,
+                  artist: track.artists.join(', '),
+                  duration: Math.round(track.durationMs / 1000),
+                  link: track.spotifyUrl,
+                  status: MusicStatus.APPROVED,
+                  neededVocals: 1,
+                  neededGuitars: 2,
+                  neededBass: 1,
+                  neededDrums: 1,
+                  neededKeys: 0,
+                })),
+                skipDuplicates: true,
+              })
+            ).count
+          : 0;
+        const allMusic = await tx.music.findMany({ where: { link: { in: links } } });
+        const linkToMusic = new Map(allMusic.map((music) => [music.link, music]));
+        const musicIds = tracks.map((track) => linkToMusic.get(track.spotifyUrl)!.id);
+        const reusedTracks = tracks.length - importedTracks;
+
+        const lastSchedule = await tx.schedule.findFirst({
+          where: { jamId: jam.id },
+          orderBy: { order: 'desc' },
+          select: { order: true },
+        });
+        let lastOrder = Math.max(lastSchedule?.order ?? 0, 0);
+        let addedTracks = 0;
+        let duplicateTracks = 0;
+
+        for (const musicId of musicIds) {
+          if (existingJamMusicIds.has(musicId)) {
+            duplicateTracks++;
+            continue;
+          }
           if (lastOrder >= MAX_QUEUE_ORDER) {
             throw new BadRequestException('Queue order limit reached');
           }
-
-          await tx.jamMusic.create({
-            data: { jamId: jam.id, musicId },
-          });
+          lastOrder++;
+          await tx.jamMusic.create({ data: { jamId: jam.id, musicId } });
           await tx.schedule.create({
-            data: {
-              jamId: jam.id,
-              musicId,
-              order: lastOrder + 1,
-              status: 'SCHEDULED',
-            },
+            data: { jamId: jam.id, musicId, order: lastOrder, status: 'SCHEDULED' },
           });
+          existingJamMusicIds.add(musicId);
+          addedTracks++;
+        }
+
+        const fullJam = await tx.jam.findUnique({
+          where: { id: jam.id },
+          include: SPOTIFY_IMPORT_JAM_INCLUDE,
         });
 
-        existingJamMusicIds.add(musicId);
-        addedTracks++;
-      } catch (err: unknown) {
-        if (err instanceof BadRequestException) {
-          throw err;
-        }
-        const message = err instanceof Error ? err.message : String(err);
-        this.logger.warn(`Failed to add track to jam: ${message}`);
-        errors.push(`Failed to add track to jam`);
-        skippedTracks++;
-      }
-    }
-
-    // Fetch the full jam with relations
-    const fullJam = await this.prisma.jam.findUnique({
-      where: { id: jam.id },
-      include: {
-        jamMusics: { include: { music: true } },
-        schedules: { include: { music: true }, orderBy: { order: 'asc' } },
+        return {
+          jam: fullJam,
+          importedTracks,
+          reusedTracks,
+          skippedTracks: 0,
+          addedTracks,
+          duplicateTracks,
+          isExistingJam,
+        };
       },
-    });
+      { timeout: 60_000 },
+    );
+  }
 
+  private replayedNewJamImport(jam: SpotifyImportJam): ImportResultDto {
     return {
-      jam: fullJam,
-      importedTracks,
-      reusedTracks,
-      skippedTracks,
-      addedTracks,
-      duplicateTracks,
-      isExistingJam,
-      ...(errors.length > 0 ? { errors } : {}),
+      jam,
+      importedTracks: 0,
+      reusedTracks: 0,
+      skippedTracks: 0,
+      addedTracks: 0,
+      duplicateTracks: jam.jamMusics.length,
+      isExistingJam: false,
     };
   }
 
