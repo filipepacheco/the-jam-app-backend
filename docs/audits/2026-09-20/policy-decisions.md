@@ -27,28 +27,28 @@ Accepted by the user:
 
 - Generic edits cannot move songs between jams or change playback status; playback controls own those transitions.
 - Current/completed songs cannot be deleted.
+- Removing an unplayed song with registrations cancels the slot and preserves its registrations/history.
 - Queue positions remain unique; explicit reorder renumbers them.
 
 These decisions unblock the core behavior definition for #7/#10. The following elaborations remain proposals unless they directly restate those accepted rules:
 
 - Generic schedule PATCH cannot move a song to another event or set playback-owned statuses. Once referenced by registrations, replacing its music should also be refused unless an explicit migration flow is designed.
 - Playback controls own IN_PROGRESS/COMPLETED transitions. Queue approval/rejection should use explicitly allowed SUGGESTED/SCHEDULED/CANCELED transitions, not arbitrary enum assignment.
-- Refuse deleting current/completed songs. Removing an unplayed song with registrations should preserve an auditable cancellation rather than cascade away participation; this cancellation behavior still needs a decision.
+- The accepted cancellation rule preserves the slot and registrations; handling removal of an unplayed slot without registrations remains to be specified.
 - Queue positions are positive and unique per event. Allocation must work after gaps and under concurrent appends. Reorder explicitly assigns contiguous positions; whether cancellation compacts positions immediately remains a separate decision.
 - Do not create new participation on canceled/completed songs or finished/deleted events; exact event-status eligibility requires agreement.
 
 Current evidence: `UpdateScheduleDto` inherits jamId, musicId, order and status; `EscalaService.update` forwards it directly; create allocates count+1; generic remove deletes the row. Partial reorders exist, and their contract must remain compatible or be deliberately changed. Tickets #7/#10 must be refined before implementation.
 
-## Registration identity accepted; capacity still undecided
+## Registration identity and instrument-count guidance accepted
 
-Accepted by the user: one application per musician, scheduled song slot and instrument; multiple instrument applications on a slot are allowed. Repeated occurrences of a song are distinct schedule slots. Whether multiple applications may all be approved concurrently remains a separate capacity decision. Proposal, not yet accepted: require a supported canonical instrument for new applications and define a cleanup path for existing null/unknown values before adding constraints.
+Accepted by the user: one application per musician, scheduled song slot and instrument; multiple instrument applications on a slot are allowed. Repeated occurrences of a song are distinct schedule slots. Instrument counts are guidance, not hard approval limits: a host may approve more musicians than the stated count. Whether the same musician may hold multiple approved parts concurrently remains a separate decision. Proposal, not yet accepted: require a supported canonical instrument for new applications and define a cleanup path for existing null/unknown values before adding constraints.
 
 Pending decisions:
 
 1. Can one musician hold multiple approved instrument parts on the same song?
-2. Are Music instrument counts hard approval limits, suggested targets, or merely display data? If hard limits, serialize approval and define host override behavior.
-3. Is withdrawal from a currently performing song allowed? Can rejected applications be resubmitted or must hosts reopen them?
-4. Which transitions preserve historical participation, and which can remove records?
+2. Is withdrawal from a currently performing song allowed? Can rejected applications be resubmitted or must hosts reopen them?
+3. Beyond the accepted unplayed-song cancellation rule, which transitions preserve historical participation, and which can remove records?
 
 Current evidence: `InscricaoService.create` checks musician+jam+schedule+normalized instrument; the schema unique key instead uses musician+jam+nullable jamMusicId. Instrument normalization accepts unknown strings and null. Update can change status/instrument without equivalent duplicate checks. Decide semantics before #11 migrates existing rows.
 

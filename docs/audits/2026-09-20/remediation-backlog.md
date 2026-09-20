@@ -29,7 +29,7 @@ The audit produced 21 findings plus three decision/investigation tickets. Three 
 
 ### Foundations — current focus
 
-- [ ] #23 — Authorization, participation and lifecycle decisions. Accepted: per-event owner-only/shared-host management option; generic schedule edits cannot transfer events or set playback status; current/completed deletion prohibited; unique queue positions with explicit reorder; registration identity per musician/slot/instrument. Remaining decisions are tracked in policy-decisions.md.
+- [ ] #23 — Authorization, participation and lifecycle decisions. Accepted: per-event owner-only/shared-host management option; generic schedule edits cannot transfer events or set playback status; current/completed deletion prohibited; unique queue positions with explicit reorder; registration identity per musician/slot/instrument; instrument counts are guidance; removal of an unplayed slot with registrations cancels it and preserves history. Remaining decisions are tracked in policy-decisions.md.
 - [ ] #18 — Reproducible schema and constraints. Repository inventory and staging-only read-only catalog inspection performed. Staging lacks unique queue positions and the one-IN_PROGRESS index; the playback-history schedule foreign key is present; migration ledger trails current columns. Reproducible baseline/forward rollout and conflicting-write checks remain outstanding. No real database migration authorized.
 
 ### Dependent domain repairs
@@ -58,7 +58,7 @@ The audit produced 21 findings plus three decision/investigation tickets. Three 
 
 ## Fog
 
-Remaining capability boundaries, registration approval/capacity, lifecycle and privacy decisions remain under #23. Staging constraint drift is now catalog-verified under #18; production remains uninspected. Shared feedback storage/proxy identity remain under #8. Operational contracts remain under #24. No claim is made that historical ignored SQL has been applied to any deployed database.
+Remaining capability boundaries, same-musician simultaneous-part approval, remaining lifecycle and privacy decisions remain under #23. Staging constraint drift is now catalog-verified under #18; production remains uninspected. Shared feedback storage/proxy identity remain under #8. Operational contracts remain under #24. No claim is made that historical ignored SQL has been applied to any deployed database.
 
 ## Evidence
 
