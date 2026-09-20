@@ -1,11 +1,13 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { initializeApp, closeApp, testFixtures } from './test-helpers';
+import { initializeApp, createTestApp, closeApp, testFixtures } from './test-helpers';
 
 describe('Feedback rate limit over HTTP (disposable PostgreSQL)', () => {
   let app: INestApplication;
   beforeAll(async () => {
     app = await initializeApp();
+  });
+  beforeEach(async () => {
     await testFixtures.cleanup();
   });
   afterAll(async () => {
@@ -48,6 +50,29 @@ describe('Feedback rate limit over HTTP (disposable PostgreSQL)', () => {
       await request(app.getHttpServer()).post('/feedback').send({ rating: 3 }).expect(201);
     } finally {
       clock.mockRestore();
+    }
+  });
+
+  it('enforces one shared quota across application instances', async () => {
+    const secondApp = await createTestApp();
+    const clientIp = '203.0.113.10';
+
+    try {
+      const submissions = await Promise.all(
+        Array.from({ length: 6 }, (_, index) =>
+          request(index % 2 === 0 ? app.getHttpServer() : secondApp.getHttpServer())
+            .post('/feedback')
+            .set('X-Forwarded-For', index % 2 === 0 ? clientIp : `::ffff:${clientIp}`)
+            .send({ rating: 5 }),
+        ),
+      );
+
+      expect(submissions.map(({ status }) => status).sort()).toEqual([
+        201, 201, 201, 201, 201, 429,
+      ]);
+      expect(await testFixtures.getFeedbackCount()).toBe(5);
+    } finally {
+      await secondApp.close();
     }
   });
 });

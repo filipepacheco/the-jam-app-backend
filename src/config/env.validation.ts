@@ -7,6 +7,7 @@ export function validate(config: Record<string, unknown>) {
     DIRECT_URL: Joi.string().required(),
     PORT: Joi.number().default(3001),
     NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+    TRUST_PROXY_HOPS: Joi.number().integer().min(0).max(5).default(1),
 
     // Required Supabase
     SUPABASE_URL: Joi.string().uri().required(),

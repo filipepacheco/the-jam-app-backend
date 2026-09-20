@@ -7,7 +7,7 @@ The current branch starts at `689ccb25236d3c3472978a551e87b602420e79a7`. Prior a
 ## Acceptance criteria
 
 - Destructive seed entry points refuse an ordinary application database before initializing database access. Only explicit disposable/local targets are permitted, without a production override.
-- Feedback POST enforces the declared five-per-hour per-client limit, returns 429 on excess requests, and does not persist rejected submissions. Document multi-instance limitations without claiming fleet-wide protection.
+- Feedback POST enforces the declared five-per-hour per-client limit, returns 429 on excess requests, and does not persist rejected submissions.
 - Cached authentication never outlives token expiry or the five-minute cache TTL. Protected and optional HTTP paths respect expiry; provider verification remains authoritative for initial authentication. Invalid/missing expiry cannot create a permissive cache entry.
 - Preserve the first-batch behavior and database-safety tests. Typecheck during implementation, run focused regressions during TDD, and run the full test suites once after integration.
 - Independently review standards and spec compliance, then commit the scoped changes on the current branch. Do not push, deploy, migrate a real database, or close tickets based solely on local evidence.
@@ -16,7 +16,7 @@ The current branch starts at `689ccb25236d3c3472978a551e87b602420e79a7`. Prior a
 
 Both seed entry points now validate the strict disposable database configuration before Prisma construction. Ten command-boundary tests cover refusals and accepted disposable configuration. The documented workflow was also exercised against fresh Docker PostgreSQL: both seed commands succeeded and the container was removed. Seed fixture role labels/auth identities retain their existing demo-only limitations.
 
-Feedback runs the existing throttler before optional authentication; mixed anonymous/authenticated requests share the client-IP quota, excess writes are rejected, and eligibility returns after the block expires. Protection remains per process; shared storage and trusted proxy identity remain unresolved deployment decisions. See [feedback detail](remediation-pass-2-feedback.md). Do not close #8 as fleet-wide enforcement.
+Feedback uses a PostgreSQL-serialized rolling quota before optional authentication; mixed anonymous/authenticated requests share the client-IP quota, excess writes are rejected, and eligibility returns after the window expires. A two-instance HTTP regression verifies the shared behavior, and the trusted proxy hop count is explicit. See [feedback detail](remediation-pass-2-feedback.md).
 
 Token caching is capped at the earlier of five minutes or the provider-validated token’s expiry, including eviction at the exact boundary. Missing/malformed/nonfinite/past expiry claims are not cached. Eleven HTTP tests cover protected and optional authentication, TTL and invalid expiry behavior. Initial authentication still goes to Supabase; payload decoding only bounds cache lifetime. Revocation may remain delayed until that bounded cache lifetime ends, and logout remains an acknowledgement rather than provider revocation/cache invalidation. These policy questions remain in the backlog.
 
@@ -39,6 +39,6 @@ Independent review: zero findings. Changes preserve module boundaries and approv
 
 ## Spec review
 
-Independent review: zero outstanding findings for the scoped repairs. Seed entry-point guards, feedback quota/rejected-write behavior and token cache boundaries satisfy the bounded acceptance criteria. Per-instance feedback storage, proxy identity, revocation/logout policy, schema/concurrency work and uncommitted-to-published release steps are explicitly distinguished from completed behavior.
+Independent review: zero outstanding findings for the earlier scoped repairs. Seed entry-point guards, feedback quota/rejected-write behavior and token cache boundaries satisfy the bounded acceptance criteria. Shared feedback storage and proxy identity were completed in the later full sweep; revocation/logout policy, schema rollout and uncommitted-to-published release steps remain distinct work.
 
 Review result: Standards 0 findings; Spec 0 findings. Commit locally on the current branch; publishing, ticket closure and deployment remain separate steps.

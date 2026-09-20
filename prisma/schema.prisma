@@ -228,6 +228,7 @@ model Feedback {
 
   @@index([musicianId])
   @@index([createdAt])
+  @@index([ipAddress, createdAt])
   @@map("feedbacks")
 }
 

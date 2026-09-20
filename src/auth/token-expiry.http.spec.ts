@@ -25,6 +25,18 @@ describe('Authentication cache expiry over HTTP', () => {
     now = start;
     providerAccepts = true;
     jest.spyOn(Date, 'now').mockImplementation(() => now);
+    const feedback = {
+      findMany: async () => [],
+      create: async ({ data }: { data: object }) => ({
+        id: 'feedback',
+        ...data,
+        createdAt: new Date(start),
+      }),
+    };
+    const transactionClient = {
+      $queryRaw: async () => [{ lock: '' }],
+      feedback,
+    };
     const module = await Test.createTestingModule({
       imports: [PassportModule, ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }])],
       controllers: [AuthController, FeedbackController],
@@ -56,13 +68,9 @@ describe('Authentication cache expiry over HTTP', () => {
                 isHost: false,
               }),
             },
-            feedback: {
-              create: async ({ data }: { data: object }) => ({
-                id: 'feedback',
-                ...data,
-                createdAt: new Date(start),
-              }),
-            },
+            feedback,
+            $transaction: async (callback: (tx: typeof transactionClient) => unknown) =>
+              callback(transactionClient),
           },
         },
       ],

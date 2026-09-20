@@ -7,6 +7,7 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AllExceptionsFilter } from '../src/all-exceptions.filter';
+import { configureTrustedProxy } from '../src/common/client-identity';
 
 // The runner creates this database; repeat the guard immediately before deletion.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -18,6 +19,14 @@ const identities = new Map<string, { id: string; email: string }>();
 export async function initializeApp(): Promise<INestApplication> {
   assertTestDatabase();
   if (app) return app;
+  const candidate = await createTestApp();
+  prisma = candidate.get(PrismaService);
+  app = candidate;
+  return app;
+}
+
+export async function createTestApp(): Promise<INestApplication> {
+  assertTestDatabase();
   const module = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider('SUPABASE_SERVICE_CLIENT')
     .useValue({
@@ -30,13 +39,12 @@ export async function initializeApp(): Promise<INestApplication> {
     })
     .compile();
   const candidate = module.createNestApplication({ logger: false });
+  configureTrustedProxy(candidate, 1);
   candidate.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   candidate.useGlobalFilters(new AllExceptionsFilter());
   try {
     await candidate.init();
-    prisma = candidate.get(PrismaService);
-    app = candidate;
-    return app;
+    return candidate;
   } catch (error) {
     await candidate.close();
     throw error;
@@ -56,6 +64,9 @@ export function getPrismaService(): PrismaService {
 }
 
 export const testFixtures = {
+  async getFeedbackCount() {
+    return getPrismaService().feedback.count();
+  },
   async createMusician(data: Partial<Prisma.MusicianUncheckedCreateInput> = {}) {
     const id = randomUUID();
     const musician = await getPrismaService().musician.create({

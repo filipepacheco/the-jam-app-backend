@@ -29,9 +29,7 @@ The audit produced 21 findings plus three decision/investigation tickets. Three 
 - [ ] #24 — Liveness/readiness HTTP semantics, Spotify request deadlines and partial-export recovery details are implemented and verified locally.
 - [ ] #25 — Unused local JWT, anonymous Supabase client and analytics dependencies removed after reference validation; operational scripts retained intentionally.
 
-### Partial
-
-- [ ] #8 — Feedback quota enforced per instance; shared serverless storage and trusted proxy identity unresolved.
+- [ ] #8 — Feedback quota is serialized in PostgreSQL across API instances, rejects the sixth write with Retry-After, and uses an explicit trusted-proxy hop count. Publication/closure pending.
 
 ### Foundations — current focus
 
@@ -52,12 +50,12 @@ The audit produced 21 findings plus three decision/investigation tickets. Three 
 - Schedule/queue repair verification: full run passed 80 PostgreSQL HTTP tests, 27 regression tests and 18 safety checks (125). After the integer-limit review fix, 23 focused queue/lifecycle tests passed. Typecheck and lint pass, with one existing warning.
 - Current-schema baseline verification: all 54 PostgreSQL HTTP tests, 27 regression tests and 18 safety checks pass (99 total). Typecheck passes; lint retains one existing warning.
 - Standards and spec reviews have no remaining findings for the committed batches.
-- Feedback protection remains per instance. Token revocation/logout and deletion/write concurrency remain separate work.
+- Feedback protection is shared through PostgreSQL and verified across two application instances. Token revocation/logout and deletion/write concurrency remain separate work.
 - Close tickets only with acceptance evidence and a published reviewed commit/PR link. Publication, deployment and production migrations are distinct steps.
 
 ## Fog
 
-Remaining capability boundaries, same-musician simultaneous-part approval, remaining lifecycle and privacy decisions remain under #23. Staging constraint drift is now catalog-verified under #18; production remains uninspected. Shared feedback storage/proxy identity remain under #8. Operational contracts remain under #24. No claim is made that historical ignored SQL has been applied to any deployed database.
+Remaining capability boundaries, same-musician simultaneous-part approval, remaining lifecycle and privacy decisions remain under #23. Staging constraint drift is now catalog-verified under #18; production remains uninspected. Operational contracts remain under #24. No claim is made that historical ignored SQL has been applied to any deployed database.
 
 ## Evidence
 

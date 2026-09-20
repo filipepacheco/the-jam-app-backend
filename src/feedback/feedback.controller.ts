@@ -11,14 +11,12 @@ import {
   Ip,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { FeedbackService } from './feedback.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { FeedbackResponseDto } from './dto/feedback-response.dto';
 import { FeedbackQueryDto, FeedbackListResponseDto } from './dto/feedback-list.dto';
 import { OptionalJwtGuard } from '../auth/guards/optional-jwt.guard';
 import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
-import { FEEDBACK_RATE_LIMIT, FEEDBACK_RATE_WINDOW_MS } from '../common/constants';
 
 @ApiTags('Feedback')
 @Controller('feedback')
@@ -41,8 +39,7 @@ export class FeedbackController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(ThrottlerGuard, OptionalJwtGuard)
-  @Throttle({ default: { limit: FEEDBACK_RATE_LIMIT, ttl: FEEDBACK_RATE_WINDOW_MS } })
+  @UseGuards(OptionalJwtGuard)
   @ApiOperation({ summary: 'Submit feedback (authentication optional)' })
   @ApiResponse({ status: 201, description: 'Feedback submitted', type: FeedbackResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })

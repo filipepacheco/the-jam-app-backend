@@ -1,16 +1,17 @@
 # Feedback rate limiting — H07 / GitHub #8
 
-POST /feedback now runs Nest's ThrottlerGuard before optional authentication. The existing route policy (five submissions per hour) is enforced before feedback can be persisted. Anonymous and authenticated requests share the same client-IP bucket. GET /feedback retains its existing host authorization.
+POST /feedback enforces the existing five-submissions-per-hour policy in PostgreSQL before feedback can be persisted. Anonymous and authenticated requests share the same client-IP bucket. GET /feedback retains its existing host authorization.
 
-The selected storage for this bounded repair is the existing in-memory Nest throttler provider registered by AuthModule. Keys include the controller, handler, throttler name and Express `req.ip`, so the feedback bucket is separate from auth routes. The sixth request returns 429 and Retry-After; it starts a one-hour block under the installed throttler's default policy. Requests become eligible again after that block expires.
+Each submission takes a transaction-scoped PostgreSQL advisory lock for the normalized client-IP key, counts recent persisted submissions, and either inserts the new feedback or returns 429 with Retry-After. The transaction serializes concurrent requests across API instances, and the composite IP/timestamp index supports the rolling-window lookup. Requests become eligible again when their oldest submission leaves the one-hour window.
 
-This is per-process protection only. Counters disappear on restarts/cold starts and are not shared between serverless instances. It is not a fleet-wide five-per-hour guarantee. Express currently has no explicit trust-proxy configuration; deployment validation must establish which address `req.ip` represents before claiming distinct end-user buckets behind Vercel. Arbitrarily trusting client-supplied forwarding headers would allow bypasses and is not introduced here. Shared storage or platform-level enforcement, including trusted client identity, remains a deployment decision requiring separate agreement before provisioning.
+Express trusts an explicit number of proxy hops (`TRUST_PROXY_HOPS`, default 1), so the client identity comes from the platform proxy chain rather than treating arbitrary forwarded headers as trusted at every network depth. Deployments with a different topology must configure this value to match their trusted ingress path.
 
 ## Verification
 
-- Existing red evidence: [red evidence](evidence/remediation-feedback-red.log), sixth request returned 201 instead of 429 before the guard was installed.
+- Existing red evidence: [red evidence](evidence/remediation-feedback-red.log), sixth request returned 201 before the first bounded limiter repair.
 - `npm run test:e2e -- --testPathPattern=feedback`: passed using the real AppModule and disposable PostgreSQL; production databases were not used. Log: [passing run](evidence/pass2-feedback.log).
 - HTTP regression accepts four anonymous requests and one authenticated request, rejects both anonymous and authenticated subsequent requests with 429, checks Retry-After, and lists only the five accepted rows through the host API. Advancing the clock past the block permits another submission.
+- The later cross-instance regression submits equivalent IPv4 and IPv4-mapped IPv6 identities through the shared trusted-proxy configuration and verifies five accepted rows plus one 429 response.
 - TypeScript typecheck passed. Targeted ESLint passed after formatting the assertion.
 
-The issue should not be represented as fleet-wide enforcement. Review, commit linkage and any remaining storage/proxy decision must be recorded before closure.
+The fleet-wide storage and trusted-proxy decisions are implemented. Review, commit linkage and publication evidence remain required before closure.

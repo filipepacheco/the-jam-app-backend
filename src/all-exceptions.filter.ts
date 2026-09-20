@@ -34,6 +34,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let message: string | string[];
     let error: string;
     let details: unknown;
+    let retryAfter: number | undefined;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -44,6 +45,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = (responseObj.message as string | string[]) || exception.message;
         error = (responseObj.error as string) || exception.name;
         details = responseObj.details;
+        retryAfter = responseObj.retryAfter as number | undefined;
       } else {
         message = exception.message;
         error = exception.name;
@@ -89,6 +91,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
     if (details !== undefined) {
       errorResponse.details = details;
+    }
+    if (retryAfter !== undefined) {
+      response.setHeader('Retry-After', String(retryAfter));
     }
 
     response.status(status).json(errorResponse);
