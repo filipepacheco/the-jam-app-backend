@@ -1,0 +1,19 @@
+
+> karaoke-jam-backend@0.0.1 test:e2e
+> node scripts/test-e2e.cjs --testPathPattern=feedback
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "jam_test_df9208f17950478e39af6218", schema "public" at "127.0.0.1:55483"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 156ms
+
+PASS test/feedback.e2e-spec.ts
+  Feedback rate limit over HTTP (disposable PostgreSQL)
+    ✓ shares the five-submission limit across anonymous and authenticated requests from one client (112 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        4.682 s, estimated 7 s
+Ran all test suites matching /feedback/i.

@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { FeedbackResponseDto } from './dto/feedback-response.dto';
 import { FeedbackQueryDto, FeedbackListResponseDto } from './dto/feedback-list.dto';
+import { FEEDBACK_RATE_LIMIT, FEEDBACK_RATE_WINDOW_MS } from '../common/constants';
+import { normalizeClientIp } from '../common/client-identity';
 
 @Injectable()
 export class FeedbackService {
@@ -13,15 +15,52 @@ export class FeedbackService {
     musicianId: string | null,
     ipAddress: string,
   ): Promise<FeedbackResponseDto> {
-    const feedback = await this.prisma.feedback.create({
-      data: {
-        rating: dto.rating,
-        comment: dto.comment,
-        userAgent: dto.userAgent,
-        pageUrl: dto.pageUrl,
-        ipAddress,
-        musicianId,
-      },
+    const now = Date.now();
+    const windowStart = new Date(now - FEEDBACK_RATE_WINDOW_MS);
+    const clientIp = normalizeClientIp(ipAddress);
+    const quotaKey = `feedback:${clientIp}`;
+
+    const feedback = await this.prisma.$transaction(async (tx) => {
+      // Serialize submissions for this client across every API instance.
+      await tx.$queryRaw`
+        SELECT pg_advisory_xact_lock(hashtextextended(${quotaKey}, 0))::text AS lock
+      `;
+
+      const recent = await tx.feedback.findMany({
+        where: {
+          ipAddress: clientIp,
+          createdAt: { gte: windowStart },
+        },
+        orderBy: { createdAt: 'asc' },
+        take: FEEDBACK_RATE_LIMIT,
+        select: { createdAt: true },
+      });
+
+      if (recent.length >= FEEDBACK_RATE_LIMIT) {
+        const retryAfter = Math.max(
+          1,
+          Math.ceil((recent[0].createdAt.getTime() + FEEDBACK_RATE_WINDOW_MS - now) / 1000),
+        );
+        throw new HttpException(
+          {
+            message: 'Feedback submission limit exceeded',
+            error: 'Too Many Requests',
+            retryAfter,
+          },
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+
+      return tx.feedback.create({
+        data: {
+          rating: dto.rating,
+          comment: dto.comment,
+          userAgent: dto.userAgent,
+          pageUrl: dto.pageUrl,
+          ipAddress: clientIp,
+          musicianId,
+        },
+      });
     });
 
     return {

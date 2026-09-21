@@ -10,5 +10,6 @@
   "coverageDirectory": "../coverage-e2e",
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/../src/$1"
-  }
+  },
+  "setupFiles": ["<rootDir>/require-test-database.cjs"]
 }

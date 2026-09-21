@@ -1,0 +1,18 @@
+
+> karaoke-jam-backend@0.0.1 test:e2e
+> node scripts/test-e2e.cjs --runTestsByPath test/deleted-jams.e2e-spec.ts test/public-performers.e2e-spec.ts
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "jam_test_99f7eb23951e1f30d63a4831", schema "public" at "127.0.0.1:64102"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 272ms
+
+PASS test/deleted-jams.e2e-spec.ts (6.09 s)
+PASS test/public-performers.e2e-spec.ts
+
+Test Suites: 2 passed, 2 total
+Tests:       22 passed, 22 total
+Snapshots:   0 total
+Time:        7.195 s, estimated 13 s
+Ran all test suites within paths "test/deleted-jams.e2e-spec.ts", "test/public-performers.e2e-spec.ts".

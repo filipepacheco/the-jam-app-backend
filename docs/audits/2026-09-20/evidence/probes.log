@@ -1,0 +1,4 @@
+CONFIRMED: denied Spotify import writes 1 approved catalog song before authorization.
+CONFIRMED: feedback create guards: OptionalJwtGuard; no ThrottlerGuard. No global guard registered in AppModule/main.
+CONFIRMED: ordinary non-host passes role guard for global music update.
+CONFIRMED: cached authentication bypasses provider after token exp; TTL is independent of JWT expiry (mock provider).

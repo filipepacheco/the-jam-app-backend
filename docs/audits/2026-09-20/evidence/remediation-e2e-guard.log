@@ -1,0 +1,21 @@
+FAIL test/jam-control.e2e-spec.ts
+  ● Test suite failed to run
+
+    E2E requires an isolated database. Run npm run test:e2e (Docker required).
+
+      4 |     url = new URL(env.JAM_TEST_DATABASE_URL);
+      5 |   } catch {
+    > 6 |     throw new Error('E2E requires an isolated database. Run npm run test:e2e (Docker required).');
+        |           ^
+      7 |   }
+      8 |   if (
+      9 |     env.NODE_ENV !== 'test' ||
+
+      at assertTestDatabase (../scripts/test-database.cjs:6:11)
+      at Object.<anonymous> (require-test-database.cjs:2:1)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        0.235 s, estimated 17 s
+Ran all test suites.

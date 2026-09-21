@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { RegistrationStatus } from '@prisma/client';
 
@@ -12,11 +12,11 @@ export class UpdateRegistrationDto {
   instrument?: string;
 
   @ApiProperty({
-    description: 'Registration status',
+    description: 'Host-managed registration status. Use DELETE to withdraw an application.',
     enum: ['PENDING', 'APPROVED', 'REJECTED'],
     required: false,
   })
-  @IsEnum(RegistrationStatus)
+  @IsIn([RegistrationStatus.PENDING, RegistrationStatus.APPROVED, RegistrationStatus.REJECTED])
   @IsOptional()
   status?: RegistrationStatus;
 }

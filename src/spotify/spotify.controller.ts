@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiHeader } from '@nestjs/swagger';
 import { SpotifyService } from './spotify.service';
 import { ImportPlaylistDto } from './dto/import-playlist.dto';
 import { ImportResultDto } from './dto/import-result.dto';
@@ -19,7 +19,7 @@ export class SpotifyController {
   @ProtectedRoute()
   @ApiOperation({
     summary: 'Import a Spotify playlist as a new jam or append to existing jam',
-    description: `If 'jamId' is provided, tracks are appended to the existing jam. If omitted, a new jam is created. When importing to an existing jam, tracks already present are skipped.`,
+    description: `If 'jamId' is provided, tracks are appended to the existing jam. If omitted, a new jam is created. Existing tracks are reported as duplicates. Database changes are atomic: any failure rolls back the complete import.`,
   })
   @ApiResponse({ status: 201, description: 'Import completed successfully', type: ImportResultDto })
   @ApiResponse({ status: 400, description: 'Invalid playlist URL' })
@@ -27,11 +27,18 @@ export class SpotifyController {
   @ApiResponse({ status: 403, description: 'Forbidden - user is not the jam host' })
   @ApiResponse({ status: 404, description: 'Jam or playlist not found' })
   @ApiResponse({ status: 503, description: 'Spotify integration not configured' })
+  @ApiHeader({
+    name: 'Idempotency-Key',
+    required: false,
+    description: 'Required when creating a new jam; 8-128 characters and stable across retries',
+  })
   async importPlaylist(
     @Body() dto: ImportPlaylistDto,
     @Req() req: AuthenticatedRequest,
   ): Promise<ImportResultDto> {
-    return this.spotifyService.importPlaylist(dto, req.user.musicianId);
+    const header = req.headers?.['idempotency-key'];
+    const idempotencyKey = Array.isArray(header) ? header[0] : header;
+    return this.spotifyService.importPlaylist(dto, req.user.musicianId, idempotencyKey);
   }
 
   @Post('export')

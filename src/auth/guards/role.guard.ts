@@ -49,7 +49,6 @@ export class RoleGuard implements CanActivate {
         return false; // Can add admin flag to musician if needed in future
       }
       return role === 'user';
-
     });
 
     if (!hasRole) {

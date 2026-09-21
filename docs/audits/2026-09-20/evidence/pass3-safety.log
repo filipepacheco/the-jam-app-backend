@@ -1,0 +1,104 @@
+
+> karaoke-jam-backend@0.0.1 test:safety
+> node --test scripts/test-database.spec.cjs scripts/seed-safety.spec.cjs
+
+TAP version 13
+# Subtest: main seed refuses application configuration before constructing a database client
+ok 1 - main seed refuses application configuration before constructing a database client
+  ---
+  duration_ms: 865.439417
+  ...
+# Subtest: RBAC seed refuses application configuration before constructing a database client
+ok 2 - RBAC seed refuses application configuration before constructing a database client
+  ---
+  duration_ms: 320.261833
+  ...
+# Subtest: prisma/seed.ts rejects an ordinary database even with all target variables set
+ok 3 - prisma/seed.ts rejects an ordinary database even with all target variables set
+  ---
+  duration_ms: 348.51625
+  ...
+# Subtest: prisma/seed.ts rejects a mismatched direct target
+ok 4 - prisma/seed.ts rejects a mismatched direct target
+  ---
+  duration_ms: 390.29175
+  ...
+# Subtest: prisma/seed.ts refuses remote targets even with a disposable database name
+ok 5 - prisma/seed.ts refuses remote targets even with a disposable database name
+  ---
+  duration_ms: 375.966
+  ...
+# Subtest: prisma/seed.ts permits explicitly selected disposable local targets
+ok 6 - prisma/seed.ts permits explicitly selected disposable local targets
+  ---
+  duration_ms: 424.542625
+  ...
+# Subtest: prisma/seed-test-users.ts rejects an ordinary database even with all target variables set
+ok 7 - prisma/seed-test-users.ts rejects an ordinary database even with all target variables set
+  ---
+  duration_ms: 327.503
+  ...
+# Subtest: prisma/seed-test-users.ts rejects a mismatched direct target
+ok 8 - prisma/seed-test-users.ts rejects a mismatched direct target
+  ---
+  duration_ms: 346.511458
+  ...
+# Subtest: prisma/seed-test-users.ts refuses remote targets even with a disposable database name
+ok 9 - prisma/seed-test-users.ts refuses remote targets even with a disposable database name
+  ---
+  duration_ms: 563.028709
+  ...
+# Subtest: prisma/seed-test-users.ts permits explicitly selected disposable local targets
+ok 10 - prisma/seed-test-users.ts permits explicitly selected disposable local targets
+  ---
+  duration_ms: 379.747208
+  ...
+# Subtest: refuses application database configuration without an isolated test target
+ok 11 - refuses application database configuration without an isolated test target
+  ---
+  duration_ms: 1.395875
+  ...
+# Subtest: accepts an explicitly isolated loopback target
+ok 12 - accepts an explicitly isolated loopback target
+  ---
+  duration_ms: 0.278125
+  ...
+# Subtest: rejects non-test environment
+ok 13 - rejects non-test environment
+  ---
+  duration_ms: 0.080834
+  ...
+# Subtest: rejects different application database
+ok 14 - rejects different application database
+  ---
+  duration_ms: 0.062125
+  ...
+# Subtest: rejects different direct database
+ok 15 - rejects different direct database
+  ---
+  duration_ms: 0.132709
+  ...
+# Subtest: rejects remote host
+ok 16 - rejects remote host
+  ---
+  duration_ms: 0.054083
+  ...
+# Subtest: rejects ordinary database name
+ok 17 - rejects ordinary database name
+  ---
+  duration_ms: 0.087334
+  ...
+# Subtest: rejects schema override
+ok 18 - rejects schema override
+  ---
+  duration_ms: 0.058584
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4474.941125

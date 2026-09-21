@@ -58,13 +58,14 @@ export class JamService {
     private configService: ConfigService,
   ) {}
 
-  async create(createJamDto: CreateJamDto) {
+  async create(createJamDto: CreateJamDto, creatorMusicianId?: string) {
+    const hostMusicianId = createJamDto.hostMusicianId ?? creatorMusicianId;
     let hostName = createJamDto.hostName;
     let hostContact = createJamDto.hostContact;
 
-    if (createJamDto.hostMusicianId) {
+    if (hostMusicianId) {
       const hostMusician = await this.prisma.musician.findUnique({
-        where: { id: createJamDto.hostMusicianId },
+        where: { id: hostMusicianId },
       });
 
       if (!hostMusician) {
@@ -87,7 +88,7 @@ export class JamService {
         description: createJamDto.description,
         date: createJamDto.date ? new Date(createJamDto.date) : undefined,
         location: createJamDto.location,
-        hostMusicianId: createJamDto.hostMusicianId,
+        hostMusicianId,
         hostName,
         hostContact,
         status: createJamDto.status,
@@ -119,6 +120,7 @@ export class JamService {
     createdAt: true,
     updatedAt: true,
     hostName: true,
+    managementMode: true,
     playbackState: true,
     currentScheduleId: true,
     _count: {
@@ -261,6 +263,7 @@ export class JamService {
     hostName: true,
     hostContact: false,
     hostMusicianId: false,
+    managementMode: true,
     createdAt: true,
     updatedAt: false,
 
@@ -327,8 +330,11 @@ export class JamService {
     if (!jam) {
       throw new NotFoundException('Jam not found');
     }
-    if (musicianId && !isHost && jam.hostMusicianId && jam.hostMusicianId !== musicianId) {
+    if (!musicianId || (!isHost && jam.hostMusicianId !== musicianId)) {
       throw new ForbiddenException('Only the jam host can update this jam');
+    }
+    if (updateJamDto.managementMode !== undefined && jam.hostMusicianId !== musicianId) {
+      throw new ForbiddenException('Only the event owner can change management mode');
     }
 
     // Explicit field allowlist to prevent mass assignment of sensitive fields
@@ -343,6 +349,9 @@ export class JamService {
     if (updateJamDto.spotifyPlaylistUrl !== undefined)
       data.spotifyPlaylistUrl = updateJamDto.spotifyPlaylistUrl;
     if (updateJamDto.status !== undefined) data.status = updateJamDto.status;
+    if (updateJamDto.managementMode !== undefined) {
+      data.managementMode = updateJamDto.managementMode;
+    }
 
     // Handle slug: custom slug takes priority, otherwise regenerate on name change
     if (updateJamDto.slug !== undefined) {

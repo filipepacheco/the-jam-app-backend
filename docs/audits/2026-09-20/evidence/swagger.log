@@ -1,0 +1,18 @@
+{
+  "actualOperationCount": 42,
+  "savedOperationCount": 40,
+  "missingFromSaved": [
+    "GET /jams/{identifier}",
+    "GET /jams/{identifier}/live/state",
+    "GET /jams/{identifier}/live/dashboard",
+    "GET /musicos/{id}",
+    "PATCH /musicas/jam-music/{jamMusicId}/jam/{jamId}"
+  ],
+  "obsoleteSaved": [
+    "GET /jams/{id}",
+    "GET /jams/{id}/live/state",
+    "GET /jams/{id}/live/dashboard"
+  ],
+  "generatedSecuritySchemes": {},
+  "savedSecuritySchemes": {}
+}

@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './all-exceptions.filter';
 import { CORS_MAX_AGE } from './common/constants';
+import { configureTrustedProxy } from './common/client-identity';
 
 const DEV_ORIGINS = [
   'http://localhost:3000',
@@ -42,6 +43,8 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const nodeEnv = configService.get<string>('NODE_ENV', 'development');
   const isDevelopment = nodeEnv === 'development';
+  const trustProxyHops = configService.get<number>('TRUST_PROXY_HOPS', 1);
+  configureTrustedProxy(app, trustProxyHops);
 
   // Parse CORS_ORIGINS from env (comma-separated), merge with dev origins
   const corsOriginsEnv = configService.get<string>('CORS_ORIGINS', '');
@@ -104,7 +107,7 @@ async function bootstrap() {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    exposedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Type', 'Authorization', 'Retry-After'],
     maxAge: CORS_MAX_AGE,
   });
 

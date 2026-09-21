@@ -1,284 +1,78 @@
-# Live Jam Control System - E2E Tests
+# Backend tests
 
-This directory contains comprehensive end-to-end tests for the live jam control system implementation.
+## Regression tests without PostgreSQL
 
-## Overview
+```sh
+npm test -- --runInBand
+npm run test:safety
+```
 
-The E2E tests cover the complete lifecycle of jam playback control:
-- **Full Lifecycle**: start → next → pause → resume → previous → stop
-- **Individual Endpoints**: Tests for each control action
-- **Edge Cases**: Error handling, invalid state transitions, empty queues
-- **Database Verification**: Ensuring data consistency and constraints
+Tests in `src/**/*.spec.ts` exercise public domain operations and HTTP permissions. Database and external Supabase/Spotify adapters are replaced with local fixtures; application authorization and validation run normally. HTTP tests bind an ephemeral loopback port.
 
-## Test Files
+The safety suite checks that the E2E database guard refuses missing, mismatched, remote, non-test and schema-override targets.
 
-### `jam-control.e2e-spec.ts`
-Main test suite with 40+ test cases covering:
+## PostgreSQL E2E tests
 
-#### Lifecycle Tests
-- Complete lifecycle: start → next → pause → resume → previous → stop
-- Verifies state transitions at each step
-- Validates database consistency
-- Confirms action history recording
+Start Docker, then run:
 
-#### Start Jam Endpoint
-- ✅ Start jam with first scheduled song
-- ❌ Start jam with no scheduled songs
-- ❌ Start already playing jam
-
-#### Next Song Endpoint
-- ✅ Skip to next scheduled song
-- ✅ Stop jam when skipping last song (graceful termination)
-- ❌ Skip when jam is stopped
-
-#### Previous Song Endpoint
-- ✅ Go back to previous completed song
-- ✅ Start first song when no previous completed songs
-
-#### Pause/Resume Endpoints
-- ✅ Pause and resume song with state persistence
-- ✅ Pause preserves timeline for analytics
-- ❌ Pause when not playing
-- ❌ Resume when not paused
-
-#### Stop Jam Endpoint
-- ✅ Stop jam and complete current song
-- ❌ Stop already stopped jam
-
-#### Playback History Endpoint
-- ✅ Return complete action history (newest first)
-- ✅ Pagination support with limit parameter
-- ✅ Include song and musician details
-
-#### Live State Endpoint
-- ✅ Return updated state after actions
-- ✅ Include previous songs after skipping
-- ✅ Track timestamps and pause state
-
-#### Error Handling
-- ✅ Handle non-existent jam (404)
-- ✅ Require authentication (401)
-
-#### Database Consistency
-- ✅ Maintain state during operations
-- ✅ Prevent multiple IN_PROGRESS songs via unique index
-- ✅ Enforce unique constraint on [jamId, order]
-
-### `test-helpers.ts`
-Utility module providing:
-- Application initialization and cleanup
-- Test fixtures for creating musicians, songs, jams, schedules
-- Database cleanup helpers
-- Complete test data setup
-
-## Running Tests
-
-### Prerequisites
-1. Environment variables configured in `.env`
-2. Database must be accessible
-3. NestJS dependencies installed
-
-### Run All E2E Tests
-```bash
+```sh
 npm run test:e2e
 ```
 
-### Run Specific Test Suite
+The runner creates a fresh `postgres:16-alpine` container with a random database name, password and loopback port. It runs the versioned `prisma migrate deploy` path, checks migration status and checks the resulting database against `prisma/schema.prisma`, supplies dummy provider configuration, runs Jest serially, and removes the container on completion or handled interruption. It never selects the application's existing DATABASE_URL/DIRECT_URL. Initial execution may download the PostgreSQL image.
+
+An early setup guard rejects direct Jest execution unless the runner's isolated database configuration is present. Cleanup repeats this guard before deleting fixtures. Do not manually configure these internal variables to bypass isolation.
+
+Supabase user lookup is replaced with an in-memory identity provider; the real JWT strategy and role guard still run. No Supabase or Spotify credentials are needed. Fixture tokens are unique to each test. The app uses the normal validation pipe and exception filter; bootstrap CORS and other middleware remain outside this suite's coverage.
+
+The suite covers playback lifecycle, invalid transitions, authenticated history, authentication/role failures, public live state and reorder request validation. Assertions use HTTP 200 compact command results and GET projections, matching the current contract.
+
+The baseline reproduces the current Prisma declaration. A subsequent migration enforces unique queue positions, covered by concurrent append/reorder/import tests. The historical one-IN_PROGRESS index is not included pending its coordinated playback fix. This suite does **not** establish deployed partial-index guarantees or PostgreSQL concurrency correctness; those remain audit follow-ups. Destructive seed commands are separate from this runner and now require the same strict disposable database configuration before Prisma initializes.
+
+## Verification
+
+The rewritten PostgreSQL suite passed all 29 tests against a disposable PostgreSQL 16 container. The runner removed the container after completion. See [the recorded run](../docs/audits/2026-09-20/evidence/remediation-e2e.log). The schema and concurrency limitations above still apply.
+
+
+## Disposable seed workflow
+
+Both seed entry points refuse normal application database configuration. They require `NODE_ENV=test` and identical `DATABASE_URL`, `DIRECT_URL`, and `JAM_TEST_DATABASE_URL` values pointing to an explicit loopback port and a randomly named `jam_test_<24 hex characters>` database. There is no production override. Running `npm run seed` with an ordinary `.env` therefore fails before database access.
+
+For a temporary seeded database, run this from the repository root in Bash. The subshell keeps its variables out of your normal shell and removes its container on exit. Nothing here uses the configured application database. Keep Docker running; the first run may pull the image.
+
 ```bash
-npm run test:e2e -- --testNamePattern="Complete Lifecycle"
+bash <<'SH'
+set -euo pipefail
+seed_suffix=$(node -p "require('crypto').randomBytes(12).toString('hex')")
+seed_password=$(node -p "require('crypto').randomBytes(24).toString('hex')")
+seed_container="jam-seed-$seed_suffix"
+seed_database="jam_test_$seed_suffix"
+trap 'docker rm -fv "$seed_container" >/dev/null 2>&1 || true' EXIT
+docker run --detach --rm --name "$seed_container" --publish 127.0.0.1::5432 \
+  --env POSTGRES_USER=test --env "POSTGRES_PASSWORD=$seed_password" \
+  --env "POSTGRES_DB=$seed_database" postgres:16-alpine >/dev/null
+seed_ready=false
+for attempt in {1..60}; do
+  if docker exec "$seed_container" pg_isready -h 127.0.0.1 -U test -d "$seed_database" >/dev/null 2>&1; then
+    seed_ready=true
+    break
+  fi
+  sleep 0.5
+done
+[ "$seed_ready" = true ] || { echo 'Disposable PostgreSQL did not become ready.' >&2; exit 1; }
+seed_address=$(docker port "$seed_container" 5432/tcp)
+[[ "$seed_address" =~ ^127\.0\.0\.1:[0-9]+$ ]] || exit 1
+export NODE_ENV=test
+export JAM_TEST_DATABASE_URL="postgresql://test:$seed_password@$seed_address/$seed_database"
+export DATABASE_URL="$JAM_TEST_DATABASE_URL" DIRECT_URL="$JAM_TEST_DATABASE_URL"
+node -e "require('./scripts/require-seed-database.cjs')"
+node node_modules/prisma/build/index.js migrate deploy
+npm run seed
+# Alternatively use: node -r ts-node/register prisma/seed-test-users.ts
+# Perform any desired disposable-database inspection here, before the shell exits.
+SH
 ```
 
-### Run with Coverage
-```bash
-npm run test:e2e -- --coverage
-```
+The safety suite checks the seed command entry points with a database-access tripwire, so refusal is verified without contacting a database. The command guards are protection against accidental destructive runs, not a security boundary against someone deliberately impersonating the isolated runner configuration.
 
-### Watch Mode (for development)
-```bash
-npm run test:e2e -- --watch
-```
-
-### Debug Mode
-```bash
-npm run test:e2e -- --verbose
-```
-
-## Test Data Setup
-
-Each test automatically:
-1. Creates a host musician
-2. Creates 4 test songs
-3. Creates 1 jam session
-4. Creates 4 scheduled songs in the jam
-5. Creates musician registrations
-
-Cleanup happens after each test to ensure isolation.
-
-## Key Test Scenarios
-
-### Scenario 1: Full Lifecycle
-```
-1. START_JAM
-   - Song 1 → IN_PROGRESS
-   - playbackState → PLAYING
-   - startedAt set
-
-2. NEXT_SONG
-   - Song 1 → COMPLETED (completedAt set)
-   - Song 2 → IN_PROGRESS
-
-3. PAUSE_SONG
-   - Song 2 → pausedAt set
-   - playbackState → PAUSED
-
-4. RESUME_SONG
-   - Song 2 → pausedAt cleared
-   - playbackState → PLAYING
-
-5. PREVIOUS_SONG
-   - Song 2 → SCHEDULED
-   - Song 1 → IN_PROGRESS (completedAt cleared for replay)
-
-6. STOP_JAM
-   - Song 1 → COMPLETED
-   - playbackState → STOPPED
-   - currentScheduleId → null
-```
-
-### Scenario 2: Navigation to Last Song
-```
-1. START_JAM → Song 1 playing
-2. NEXT, NEXT, NEXT, NEXT → Song 4 playing
-3. NEXT → playbackState → STOPPED (graceful termination)
-```
-
-### Scenario 3: Multiple Pause/Resume Cycles
-```
-1. START_JAM → Song 1 playing
-2. PAUSE_SONG → pausedAt set
-3. RESUME_SONG → pausedAt cleared
-4. PAUSE_SONG → pausedAt set again
-5. RESUME_SONG → pausedAt cleared again
-```
-
-## Expected Test Output
-
-```
-Live Jam Control System E2E Tests
-  Complete Lifecycle: start → next → pause → resume → previous → stop
-    ✓ should execute full jam control lifecycle (XXXms)
-  Start Jam Endpoint
-    ✓ should start jam with first scheduled song (XXXms)
-    ✓ should fail to start jam with no scheduled songs (XXXms)
-    ✓ should fail to start already playing jam (XXXms)
-  Next Song Endpoint
-    ✓ should skip to next scheduled song (XXXms)
-    ✓ should stop jam when skipping last song (XXXms)
-    ✓ should fail to skip when jam is stopped (XXXms)
-  [... more test results ...]
-  
-Test Suites: 1 passed, 1 total
-Tests:       41 passed, 41 total
-Snapshots:   0 total
-Time:        5.432 s
-```
-
-## Continuous Integration
-
-For CI/CD pipelines:
-```bash
-# Run tests and fail on coverage below threshold
-npm run test:e2e -- --coverage --coverageThreshold='{"global":{"lines":80}}'
-```
-
-## Debugging Tests
-
-### Enable Verbose Logging
-```bash
-npm run test:e2e -- --verbose
-```
-
-### Run Single Test
-```bash
-npm run test:e2e -- --testNamePattern="should execute full jam control lifecycle"
-```
-
-### Debug with Node Inspector
-```bash
-node --inspect-brk -r ts-node/register node_modules/.bin/jest --config ./test/jest-e2e.json --runInBand
-```
-
-Then attach debugger to `chrome://inspect`
-
-## Known Limitations
-
-1. **Authentication**: Tests use mock JWT tokens. Real Supabase authentication integration requires additional setup.
-2. **Isolation**: Tests require fresh database state; running in parallel may cause conflicts.
-3. **Performance**: First test run generates Prisma client which may take 5-10 seconds.
-
-## Extending Tests
-
-To add new tests:
-
-1. Use `setupTestData()` to create standard test fixtures
-2. Use `testFixtures.cleanup()` in `afterEach()` for isolation
-3. Mock authentication with `process.env.TEST_AUTH_TOKEN`
-4. Verify database state using `getPrismaService()`
-
-Example:
-```typescript
-it('should test new feature', async () => {
-  const { jam, songs, hostMusician } = testData;
-  
-  const response = await request(app.getHttpServer())
-    .post(`/jams/${jam.id}/control/start`)
-    .set('Authorization', `Bearer ${process.env.TEST_AUTH_TOKEN || 'test'}`)
-    .expect(201);
-  
-  expect(response.body).toBeDefined();
-});
-```
-
-## Coverage Report
-
-Generated coverage reports available at:
-```
-./coverage-e2e/index.html
-```
-
-Open in browser to see:
-- Line coverage
-- Branch coverage
-- Function coverage
-- Uncovered lines
-
-## Performance Benchmarks
-
-Typical performance metrics:
-- Full lifecycle test: ~200-300ms
-- Single endpoint test: ~50-100ms
-- Complete test suite: ~5-10 seconds (depending on machine)
-
-## Troubleshooting
-
-### Tests Timeout
-- Increase Jest timeout: `jest.setTimeout(10000)`
-- Check database connection
-- Ensure no other instances running
-
-### Database Conflicts
-- Verify database is accessible
-- Run cleanup between tests: `await testFixtures.cleanup()`
-- Check for stale connections
-
-### Authentication Failures
-- Set `TEST_AUTH_TOKEN` environment variable
-- Verify guard configuration
-- Check request headers
-
-## Related Documentation
-
-- [Live Jam Control System Design](../CLAUDE.md)
-- [Jam Service Implementation](../src/jam/jam.service.ts)
-- [Jam Controller Endpoints](../src/jam/jam.controller.ts)
-- [Database Schema](../prisma/schema.prisma)
+Seed contents are demo data: synthetic Supabase IDs do not authenticate, and the legacy RBAC seed’s printed role names do not set `isHost`. Use the E2E identity fixtures for authorization tests.

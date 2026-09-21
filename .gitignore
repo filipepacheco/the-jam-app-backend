@@ -7,6 +7,8 @@ yarn-debug.log*
 .env
 .env.local
 .env.production
+.env.*
+!.env.example
 
 # Build output
 /dist
@@ -23,6 +25,8 @@ yarn-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Prisma migrations are versioned; legacy SQL is archived under docs/audits.
 
 /*/claude.md
 /**/claude.md

@@ -1,0 +1,137 @@
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "jam_test_642327b4e576113667392c92", schema "public" at "127.0.0.1:55853"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 211ms
+
+
+> karaoke-jam-backend@0.0.1 seed
+> ts-node prisma/seed.ts
+
+🌱 Starting database seed with realistic jam control data...
+🗑️  Clearing existing data...
+👨‍💼 Creating 5 host musicians...
+✓ Created 5 host musicians
+Creating 25 musicians...
+✓ Created 25 musicians
+Creating 55+ songs...
+✓ Created 56 songs
+🎸 Creating 5 jams with different playback states...
+✓ Created 5 jams with various states:
+  - Jam 1: ACTIVE, PLAYING (currently playing)
+  - Jam 2: ACTIVE, PAUSED (paused mid-session)
+  - Jam 3: ACTIVE, STOPPED (scheduled for future)
+  - Jam 4: INACTIVE, STOPPED (upcoming but not active)
+  - Jam 5: FINISHED, STOPPED (completed session)
+🎵 Creating schedules with realistic playback progression...
+✓ Created 46 schedules with timestamps
+✓ Created 193 registrations
+✓ Created 12 playback history entries
+
+✅ Database seed completed successfully!
+
+📊 SEED DATA SUMMARY
+═══════════════════════════════════════════════════════
+  Musicians: 25
+  Songs: 56
+  Jams: 5
+  Registrations: 193
+  Schedules: 46
+  Playback History Entries: 12
+═══════════════════════════════════════════════════════
+
+🎤 JAMMING SESSIONS (Playback States)
+───────────────────────────────────────────────────────
+  🟢 Jam 1 (Carlos Mendes) - PLAYING
+     └─ 2 songs completed, currently on song 2/10
+     └─ Perfect for testing: NEXT, PAUSE, RESUME, PREVIOUS
+
+  🟠 Jam 2 (Marina Oliveira) - PAUSED
+     └─ 1 song completed, paused during song 2
+     └─ Perfect for testing: RESUME, PREVIOUS, STOP
+
+  🔵 Jam 3 (Roberto Silva) - STOPPED
+     └─ No songs started yet, 10 songs in queue
+     └─ Perfect for testing: START_JAM lifecycle
+
+  ⚪ Jam 4 (Juliana Costa) - STOPPED
+     └─ No songs started yet, 10 songs in queue
+     └─ Perfect for testing: START_JAM and full navigation
+
+  ⚫ Jam 5 (Gustavo Ferreira) - FINISHED
+     └─ 6 completed songs from 24 hours ago
+     └─ Perfect for testing: PLAYBACK_HISTORY query
+
+🎮 QUICK TEST COMMANDS
+───────────────────────────────────────────────────────
+  # Get Jam 1 live state (PLAYING)
+  GET /api/jams/{jam1Id}/live/state
+
+  # Start Jam 3 (STOPPED → PLAYING)
+  POST /api/jams/{jam3Id}/control/start
+
+  # Skip to next song
+  POST /api/jams/{jamId}/control/next
+
+  # Pause current song
+  POST /api/jams/{jamId}/control/pause
+
+  # Resume paused song
+  POST /api/jams/{jamId}/control/resume
+
+  # Go back to previous song
+  POST /api/jams/{jamId}/control/previous
+
+  # Stop the jam completely
+  POST /api/jams/{jamId}/control/stop
+
+  # Get playback history
+  GET /api/jams/{jamId}/playback-history
+
+📚 ALL JAM IDs FOR TESTING
+───────────────────────────────────────────────────────
+  Jam 1 [PLAYING]: 19a01c5d-7aab-4186-939c-ce27a9718855
+  Jam 2 [PAUSED]: 8ac2d04f-deee-466b-908d-883d09efd834
+  Jam 3 [STOPPED]: 8b3d944f-90de-45ad-b2db-4310e9b49fe3
+  Jam 4 [STOPPED]: b279af9f-5e69-4415-938f-a8a172788262
+  Jam 5 [FINISHED]: c7b6ec2d-4a42-4ef5-bc1b-40df5f9c2876
+═══════════════════════════════════════════════════════
+
+🚀 Ready to test! Start the dev server with: npm run start:dev
+
+🌱 Seeding test data for RBAC testing...
+Cleared existing musicians
+✓ Created test musician: John Host (host@example.com)
+✓ Created test musician: Jane Admin (admin@example.com)
+✓ Created test musician: Bob User (user@example.com)
+✓ Created test musician: Alice User (alice@example.com)
+✓ Created test musician: Charlie User (charlie@example.com)
+
+✅ Test data seeded successfully!
+
+Test Users for RBAC Testing (Step 12):
+=====================================
+1. John Host
+   Email: host@example.com
+   Phone: +5511999999001
+   Role: host
+
+2. Jane Admin
+   Email: admin@example.com
+   Phone: +5511999999002
+   Role: admin
+
+3. Bob User
+   Email: user@example.com
+   Phone: +5511999999003
+   Role: user
+
+4. Alice User
+   Email: alice@example.com
+   Phone: +5511999999004
+   Role: user
+
+5. Charlie User
+   Email: charlie@example.com
+   Phone: +5511999999005
+   Role: user

@@ -1,0 +1,172 @@
+{
+  "tracking_issue": "https://github.com/filipepacheco/the-jam-app-backend/issues/1",
+  "audit_findings": 21,
+  "followups": 3,
+  "linked_subissues": 24,
+  "native_dependencies_created": true,
+  "labels_criteria_blocker_references_verified": true,
+  "issues": {
+    "H01": {
+      "number": 2,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/2",
+      "dependencies": [],
+      "status": "Partial: isolated Docker E2E provisioning and database guards are implemented locally; destructive seeds remain unguarded."
+    },
+    "H02": {
+      "number": 3,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/3",
+      "dependencies": [],
+      "status": "Implemented and verified locally; pending commit/review."
+    },
+    "H03": {
+      "number": 4,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/4",
+      "dependencies": [],
+      "status": "Implemented and verified locally; pending commit/review."
+    },
+    "H04": {
+      "number": 5,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/5",
+      "dependencies": [],
+      "status": "Implemented and verified locally; pending commit/review."
+    },
+    "H05": {
+      "number": 6,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/6",
+      "dependencies": [],
+      "status": "Implemented and verified locally; pending commit/review."
+    },
+    "H06": {
+      "number": 7,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/7",
+      "dependencies": [
+        "POLICY"
+      ],
+      "status": "Open; transition/removal policy must be agreed before implementation."
+    },
+    "H07": {
+      "number": 8,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/8",
+      "dependencies": [],
+      "status": "Regression reproduced locally (sixth submission 201 instead of 429); no fix yet."
+    },
+    "H08": {
+      "number": 9,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/9",
+      "dependencies": [],
+      "status": "Open; no fix implemented."
+    },
+    "H09": {
+      "number": 10,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/10",
+      "dependencies": [
+        "POLICY",
+        "H17"
+      ],
+      "status": "Open; order policy and reproducible constraints required."
+    },
+    "H10": {
+      "number": 11,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/11",
+      "dependencies": [
+        "POLICY",
+        "H17"
+      ],
+      "status": "Open; identity policy and migration design required."
+    },
+    "H11": {
+      "number": 12,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/12",
+      "dependencies": [],
+      "status": "Implemented and verified locally; pending commit/review."
+    },
+    "H12": {
+      "number": 13,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/13",
+      "dependencies": [],
+      "status": "Open."
+    },
+    "H13": {
+      "number": 14,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/14",
+      "dependencies": [
+        "H17",
+        "H06"
+      ],
+      "status": "Open; no real concurrency guarantees verified yet."
+    },
+    "H14": {
+      "number": 15,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/15",
+      "dependencies": [],
+      "status": "Open."
+    },
+    "H15": {
+      "number": 16,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/16",
+      "dependencies": [
+        "H04",
+        "H09"
+      ],
+      "status": "Open; target authorization is fixed locally under H04, atomicity is not."
+    },
+    "H16": {
+      "number": 17,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/17",
+      "dependencies": [],
+      "status": "Core repair verified locally: all 29 PostgreSQL E2E tests passed. Remaining scope is commit/review and accurate bootstrap coverage documentation."
+    },
+    "H17": {
+      "number": 18,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/18",
+      "dependencies": [],
+      "status": "Open; current E2E uses schema push and does not reproduce ignored historical SQL."
+    },
+    "H18": {
+      "number": 19,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/19",
+      "dependencies": [
+        "H16"
+      ],
+      "status": "Partial: regression and safety suites exist locally; CI/release gating remains open."
+    },
+    "H19": {
+      "number": 20,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/20",
+      "dependencies": [],
+      "status": "Open; audit snapshot reports 8 high, 6 moderate and 1 low affected production entries."
+    },
+    "H20": {
+      "number": 21,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/21",
+      "dependencies": [],
+      "status": "Implemented and verified locally; pending commit/review."
+    },
+    "H21": {
+      "number": 22,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/22",
+      "dependencies": [
+        "POLICY"
+      ],
+      "status": "Partial: test README corrected locally; OpenAPI and portable agent documentation remain open."
+    },
+    "POLICY": {
+      "number": 23,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/23",
+      "dependencies": [],
+      "status": "Decision work; current behavior is evidence, not automatically a vulnerability. No policy changes are authorized by this ticket alone."
+    },
+    "OPS": {
+      "number": 24,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/24",
+      "dependencies": [],
+      "status": "Follow-up observations; do not silently treat current health or provider semantics as agreed defects."
+    },
+    "CLEANUP": {
+      "number": 25,
+      "url": "https://github.com/filipepacheco/the-jam-app-backend/issues/25",
+      "dependencies": [],
+      "status": "Investigation backlog; candidate leftovers are not proven dead code."
+    }
+  }
+}

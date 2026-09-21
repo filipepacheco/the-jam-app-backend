@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   ParseUUIDPipe,
+  Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { MusicaService } from './musica.service';
@@ -16,11 +17,15 @@ import { UpdateMusicDto } from './dto/update-musica.dto';
 import { UpdateJamMusicDto } from './dto/update-jam-music.dto';
 import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { JamManagementService } from '../jam/jam-management.service';
 
 @ApiTags('Musicas')
 @Controller('musicas')
 export class MusicaController {
-  constructor(private readonly musicaService: MusicaService) {}
+  constructor(
+    private readonly musicaService: MusicaService,
+    private readonly jamManagementService: JamManagementService,
+  ) {}
 
   @Post()
   @ProtectedRoute('host', 'admin')
@@ -40,7 +45,7 @@ export class MusicaController {
   }
 
   @Patch(':id')
-  @ProtectedRoute('host', 'admin', 'user')
+  @ProtectedRoute('host', 'admin')
   @ApiOperation({ summary: 'Update music' })
   @ApiResponse({ status: 200, description: 'Music updated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -56,11 +61,13 @@ export class MusicaController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - host only' })
   @ApiResponse({ status: 404, description: 'Song not found in this jam' })
-  updateJamMusic(
+  async updateJamMusic(
     @Param('jamMusicId', ParseUUIDPipe) jamMusicId: string,
     @Param('jamId', ParseUUIDPipe) jamId: string,
     @Body() dto: UpdateJamMusicDto,
+    @Request() req,
   ) {
+    await this.jamManagementService.assertIsJamOwner(jamId, req.user?.musicianId);
     return this.musicaService.updateJamMusic(jamMusicId, jamId, dto);
   }
 
@@ -70,10 +77,12 @@ export class MusicaController {
   @ApiResponse({ status: 200, description: 'Music linked to jam successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  linkToJam(
+  async linkToJam(
     @Param('id', ParseUUIDPipe) musicaId: string,
     @Param('jamId', ParseUUIDPipe) jamId: string,
+    @Request() req,
   ) {
+    await this.jamManagementService.assertIsJamOwner(jamId, req.user?.musicianId);
     return this.musicaService.linkToJam(musicaId, jamId);
   }
 

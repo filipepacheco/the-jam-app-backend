@@ -1,0 +1,11 @@
+{
+  "scope": "Staging aggregate counts only. Repeatable-read, read-only transaction; no row keys or values read and no mutations performed.",
+  "checks": {
+    "duplicate_queue_positions": 0,
+    "duplicate_registration_identities": 0,
+    "multiple_in_progress_schedules": 0,
+    "duplicate_spotify_links": 1
+  },
+  "result": "blocked",
+  "reason": "The Spotify-link uniqueness migration must not run until the duplicate group is reviewed and reconciled."
+}

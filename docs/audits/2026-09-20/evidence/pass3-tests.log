@@ -1,0 +1,15 @@
+
+> karaoke-jam-backend@0.0.1 test
+> jest --runInBand --watchman=false
+
+PASS src/spotify/spotify.service.spec.ts (6.751 s)
+PASS src/escala/escala.controller.spec.ts
+PASS src/auth/token-expiry.http.spec.ts
+PASS src/jam/jam.service.spec.ts
+PASS src/jam/jam-playback.service.spec.ts
+
+Test Suites: 5 passed, 5 total
+Tests:       27 passed, 27 total
+Snapshots:   0 total
+Time:        14.912 s
+Ran all test suites.

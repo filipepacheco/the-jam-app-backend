@@ -13,13 +13,17 @@ export class CreateScheduleDto {
   @IsNotEmpty()
   musicId: string;
 
-  @ApiProperty({ description: 'Order in schedule' })
+  @ApiProperty({
+    description: 'Legacy input; allocation appends after the highest occupied position',
+    deprecated: true,
+  })
   @IsInt()
   @Min(0)
   order: number;
 
   @ApiProperty({
-    description: 'Performance status',
+    description:
+      'Initial queue status. Musicians may suggest; hosts may suggest, schedule or cancel. Playback-owned IN_PROGRESS/COMPLETED are rejected.',
     enum: ScheduleStatus,
     required: false,
   })
