@@ -1,3 +1,4 @@
+import '../scripts/require-seed-database.cjs';
 import { PrismaClient } from '@prisma/client';
 import * as QRCode from 'qrcode';
 

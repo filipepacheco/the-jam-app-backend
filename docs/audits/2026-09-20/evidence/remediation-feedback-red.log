@@ -1,0 +1,50 @@
+
+> karaoke-jam-backend@0.0.1 test:e2e
+> node scripts/test-e2e.cjs --testPathPattern=feedback
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "jam_test_b4926d7e1ff4108141c002a5", schema "public" at "127.0.0.1:52202"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 212ms
+
+┌─────────────────────────────────────────────────────────┐
+│  Update available 5.22.0 -> 8.0.0-rc.15                 │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+FAIL test/feedback.e2e-spec.ts (24.482 s)
+  Feedback rate limit over HTTP (disposable PostgreSQL)
+    ✕ accepts five submissions, rejects the sixth, and stores only accepted feedback (151 ms)
+
+  ● Feedback rate limit over HTTP (disposable PostgreSQL) › accepts five submissions, rejects the sixth, and stores only accepted feedback
+
+    expected 429 "Too Many Requests", got 201 "Created"
+
+      21 |       .post('/feedback')
+      22 |       .send({ rating: 1 })
+    > 23 |       .expect(429);
+         |        ^
+      24 |     expect(Number(rejected.headers['retry-after'])).toBeGreaterThan(0);
+      25 |     const host = await testFixtures.createMusician({ isHost: true });
+      26 |     const list = await request(app.getHttpServer())
+
+      at Object.<anonymous> (feedback.e2e-spec.ts:23:8)
+      ----
+      at Test._assertStatus (../node_modules/supertest/lib/test.js:252:14)
+      at ../node_modules/supertest/lib/test.js:308:13
+      at Test._assertFunction (../node_modules/supertest/lib/test.js:285:13)
+      at Test.assert (../node_modules/supertest/lib/test.js:164:23)
+      at Server.localAssert (../node_modules/supertest/lib/test.js:120:14)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 1 total
+Snapshots:   0 total
+Time:        25.577 s
+Ran all test suites matching /feedback/i.
+Test command failed (exit 1).

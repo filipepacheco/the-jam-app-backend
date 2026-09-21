@@ -15,6 +15,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JamService } from './jam.service';
 import { JamPlaybackService } from './jam-playback.service';
 import { JamLiveStateService } from './jam-live-state.service';
+import { JamManagementService } from './jam-management.service';
 import { CreateJamDto } from './dto/create-jam.dto';
 import { UpdateJamDto } from './dto/update-jam.dto';
 import { ReorderSchedulesDto } from './dto/reorder-schedules.dto';
@@ -32,6 +33,7 @@ export class JamController {
     private readonly jamService: JamService,
     private readonly jamPlaybackService: JamPlaybackService,
     private readonly jamLiveStateService: JamLiveStateService,
+    private readonly jamManagementService: JamManagementService,
   ) {}
 
   @Post()
@@ -44,8 +46,8 @@ export class JamController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  create(@Body() createJamDto: CreateJamDto, @Request() _req) {
-    return this.jamService.create(createJamDto);
+  create(@Body() createJamDto: CreateJamDto, @Request() req) {
+    return this.jamService.create(createJamDto, req.user?.musicianId);
   }
 
   @Get()
@@ -118,6 +120,7 @@ export class JamController {
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async startJam(@Param('id', ParseUUIDPipe) jamId: string, @Request() req) {
+    await this.jamManagementService.assertCanManageJam(jamId, req.user?.musicianId);
     return this.jamPlaybackService.startJam(jamId, req.user?.musicianId);
   }
 
@@ -130,6 +133,7 @@ export class JamController {
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async stopJam(@Param('id', ParseUUIDPipe) jamId: string, @Request() req) {
+    await this.jamManagementService.assertCanManageJam(jamId, req.user?.musicianId);
     return this.jamPlaybackService.stopJam(jamId, req.user?.musicianId);
   }
 
@@ -142,6 +146,7 @@ export class JamController {
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async nextSong(@Param('id', ParseUUIDPipe) jamId: string, @Request() req) {
+    await this.jamManagementService.assertCanManageJam(jamId, req.user?.musicianId);
     return this.jamPlaybackService.nextSong(jamId, req.user?.musicianId);
   }
 
@@ -154,6 +159,7 @@ export class JamController {
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async previousSong(@Param('id', ParseUUIDPipe) jamId: string, @Request() req) {
+    await this.jamManagementService.assertCanManageJam(jamId, req.user?.musicianId);
     return this.jamPlaybackService.previousSong(jamId, req.user?.musicianId);
   }
 
@@ -166,6 +172,7 @@ export class JamController {
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async pauseSong(@Param('id', ParseUUIDPipe) jamId: string, @Request() req) {
+    await this.jamManagementService.assertCanManageJam(jamId, req.user?.musicianId);
     return this.jamPlaybackService.pauseSong(jamId, req.user?.musicianId);
   }
 
@@ -178,6 +185,7 @@ export class JamController {
   @ApiResponse({ status: 403, description: 'Forbidden - not jam host' })
   @ApiResponse({ status: 404, description: 'Jam not found' })
   async resumeSong(@Param('id', ParseUUIDPipe) jamId: string, @Request() req) {
+    await this.jamManagementService.assertCanManageJam(jamId, req.user?.musicianId);
     return this.jamPlaybackService.resumeSong(jamId, req.user?.musicianId);
   }
 
@@ -195,6 +203,7 @@ export class JamController {
     @Body() dto: ReorderSchedulesDto,
     @Request() req,
   ) {
+    await this.jamManagementService.assertCanManageJam(jamId, req.user?.musicianId);
     return this.jamPlaybackService.reorderSchedules(jamId, dto.updates, req.user?.musicianId);
   }
 

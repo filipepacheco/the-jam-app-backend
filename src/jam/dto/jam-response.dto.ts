@@ -34,6 +34,9 @@ export class JamResponseDto {
   @ApiProperty({ enum: ['ACTIVE', 'INACTIVE', 'LIVE', 'FINISHED'] })
   status: string;
 
+  @ApiProperty({ enum: ['OWNER_ONLY', 'SHARED_HOSTS'] })
+  managementMode: string;
+
   @ApiProperty({ required: false })
   spotifyPlaylistUrl?: string | null;
 

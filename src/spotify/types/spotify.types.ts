@@ -5,6 +5,7 @@ export interface SpotifyApiError {
 }
 
 export interface AuthenticatedRequest {
+  headers?: Record<string, string | string[] | undefined>;
   user: {
     musicianId: string;
     id?: string;

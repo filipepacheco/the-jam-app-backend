@@ -1,0 +1,130 @@
+
+> karaoke-jam-backend@0.0.1 test
+> jest --runInBand --watchman=false --coverage
+
+PASS src/spotify/spotify.service.spec.ts (5.029 s)
+PASS src/escala/escala.controller.spec.ts
+PASS src/jam/jam-playback.service.spec.ts
+PASS src/jam/jam.service.spec.ts
+-----------------------------------|---------|----------|---------|---------|----------------------------------------------------------------
+File                               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+-----------------------------------|---------|----------|---------|---------|----------------------------------------------------------------
+All files                          |   27.86 |     9.82 |   16.21 |   28.21 |
+ src                               |       0 |        0 |       0 |       0 |
+  all-exceptions.filter.ts         |       0 |        0 |       0 |       0 | 1-117
+  app.controller.ts                |       0 |      100 |       0 |       0 | 1-49
+  app.module.ts                    |       0 |      100 |       0 |       0 | 1-40
+  app.service.ts                   |       0 |      100 |       0 |       0 | 1-50
+  main.ts                          |       0 |        0 |       0 |       0 | 1-153
+ src/auth                          |       0 |        0 |       0 |       0 |
+  auth.controller.ts               |       0 |        0 |       0 |       0 | 1-93
+  auth.module.ts                   |       0 |      100 |       0 |       0 | 1-43
+  auth.service.ts                  |       0 |        0 |       0 |       0 | 1-91
+ src/auth/decorators               |     100 |      100 |     100 |     100 |
+  roles.decorator.ts               |     100 |      100 |     100 |     100 |
+ src/auth/dto                      |       0 |      100 |     100 |       0 |
+  musician-profile-response.dto.ts |       0 |      100 |     100 |       0 | 1-56
+  update-profile.dto.ts            |       0 |      100 |     100 |       0 | 1-52
+ src/auth/guards                   |   45.45 |    28.57 |      60 |   43.33 |
+  optional-jwt.guard.ts            |       0 |        0 |       0 |       0 | 1-63
+  role.guard.ts                    |    86.2 |       60 |     100 |   85.18 | 21,28,37,55
+  supabase-jwt.guard.ts            |     100 |      100 |     100 |     100 |
+ src/auth/services                 |   37.77 |    11.11 |   66.66 |   33.33 |
+  token-cache.service.ts           |   37.77 |    11.11 |   66.66 |   33.33 | 22-31,37-44,56-74,79-81
+ src/auth/strategies               |      54 |    38.46 |      60 |   53.33 |
+  jwt.strategy.ts                  |       0 |        0 |       0 |       0 | 1-34
+  supabase-jwt.strategy.ts         |   77.14 |    41.66 |     100 |      75 | 31-32,46,74-90
+ src/common/constants              |   78.94 |        0 |       0 |   81.25 |
+  index.ts                         |     100 |      100 |       0 |     100 |
+  instruments.ts                   |   42.85 |        0 |       0 |      50 | 57-59
+ src/common/decorators             |     100 |      100 |     100 |     100 |
+  protected-route.decorator.ts     |     100 |      100 |     100 |     100 |
+ src/common/dto                    |   63.63 |      100 |       0 |   77.77 |
+  pagination.dto.ts                |   63.63 |      100 |       0 |   77.77 | 12,24
+ src/common/interceptors           |       0 |        0 |       0 |       0 |
+  logging.interceptor.ts           |       0 |        0 |       0 |       0 | 1-72
+ src/common/middleware             |       0 |        0 |       0 |       0 |
+  correlation-id.middleware.ts     |       0 |        0 |       0 |       0 | 1-19
+ src/common/utils                  |   26.08 |        0 |       0 |   31.57 |
+  slug.ts                          |   26.08 |        0 |       0 |   31.57 | 14-18,28-39,53-56
+ src/config                        |       0 |        0 |       0 |       0 |
+  env.validation.ts                |       0 |        0 |       0 |       0 | 1-41
+ src/escala                        |   61.22 |    44.44 |   55.55 |   60.46 |
+  escala.controller.ts             |    87.5 |      100 |      50 |   85.71 | 39,49
+  escala.module.ts                 |       0 |      100 |     100 |       0 | 1-12
+  escala.service.ts                |   61.53 |    44.44 |      60 |   58.33 | 25,34,59-87
+ src/escala/dto                    |     100 |      100 |     100 |     100 |
+  create-escala.dto.ts             |     100 |      100 |     100 |     100 |
+  update-escala.dto.ts             |     100 |      100 |     100 |     100 |
+ src/feedback                      |       0 |        0 |       0 |       0 |
+  feedback.controller.ts           |       0 |        0 |       0 |       0 | 1-56
+  feedback.module.ts               |       0 |      100 |     100 |       0 | 1-14
+  feedback.service.ts              |       0 |        0 |       0 |       0 | 1-59
+ src/feedback/dto                  |       0 |      100 |       0 |       0 |
+  create-feedback.dto.ts           |       0 |      100 |     100 |       0 | 1-25
+  feedback-list.dto.ts             |       0 |      100 |       0 |       0 | 1-59
+  feedback-response.dto.ts         |       0 |      100 |     100 |       0 | 1-17
+ src/inscricao                     |       0 |        0 |       0 |       0 |
+  inscricao.controller.ts          |       0 |        0 |       0 |       0 | 1-58
+  inscricao.module.ts              |       0 |      100 |     100 |       0 | 1-12
+  inscricao.service.ts             |       0 |        0 |       0 |       0 | 1-114
+ src/inscricao/dto                 |       0 |      100 |     100 |       0 |
+  create-inscricao.dto.ts          |       0 |      100 |     100 |       0 | 1-18
+  update-inscricao.dto.ts          |       0 |      100 |     100 |       0 | 1-21
+ src/jam                           |   39.46 |     12.5 |   23.07 |   40.78 |
+  jam-live-state.service.ts        |   18.91 |        0 |    7.14 |   17.85 | 12-146
+  jam-playback.service.ts          |   42.85 |    16.27 |   45.45 |      44 | 24,33,46,86-124,132,136,196-270,278,282,319,323,361-467
+  jam.controller.ts                |   63.15 |        0 |    12.5 |   64.15 | 48,73,81,93-94,108-109,121,133,145,157,169,181,198,211-214,238
+  jam.module.ts                    |       0 |      100 |     100 |       0 | 1-14
+  jam.service.ts                   |   32.67 |    12.72 |   15.38 |   32.96 | 62-103,134-247,301-316,328,344,349,356,366-376
+ src/jam/dto                       |   99.38 |      100 |       0 |   99.38 |
+  create-jam.dto.ts                |     100 |      100 |     100 |     100 |
+  jam-musica-response.dto.ts       |     100 |      100 |     100 |     100 |
+  jam-response.dto.ts              |     100 |      100 |     100 |     100 |
+  live-dashboard-response.dto.ts   |     100 |      100 |     100 |     100 |
+  live-state-response.dto.ts       |     100 |      100 |     100 |     100 |
+  musica-response.dto.ts           |     100 |      100 |     100 |     100 |
+  musician-response.dto.ts         |     100 |      100 |     100 |     100 |
+  registration-response.dto.ts     |     100 |      100 |     100 |     100 |
+  reorder-schedules.dto.ts         |   88.88 |      100 |       0 |   88.88 | 28
+  schedule-response.dto.ts         |     100 |      100 |     100 |     100 |
+  update-jam.dto.ts                |     100 |      100 |     100 |     100 |
+ src/musica                        |   15.51 |     37.5 |   13.33 |   13.46 |
+  musica.controller.ts             |       0 |      100 |       0 |       0 | 1-87
+  musica.module.ts                 |       0 |      100 |     100 |       0 | 1-12
+  musica.service.ts                |   33.33 |     37.5 |      25 |      28 | 12,46-93
+ src/musica/dto                    |       0 |      100 |     100 |       0 |
+  create-musica.dto.ts             |       0 |      100 |     100 |       0 | 1-88
+  update-jam-music.dto.ts          |       0 |      100 |     100 |       0 | 1-9
+  update-musica.dto.ts             |       0 |      100 |     100 |       0 | 1-4
+ src/musico                        |       0 |        0 |       0 |       0 |
+  musico.controller.ts             |       0 |      100 |       0 |       0 | 1-75
+  musico.module.ts                 |       0 |      100 |     100 |       0 | 1-12
+  musico.service.ts                |       0 |        0 |       0 |       0 | 1-139
+ src/musico/dto                    |       0 |        0 |       0 |       0 |
+  create-musico.dto.ts             |       0 |        0 |       0 |       0 | 1-35
+  update-musico.dto.ts             |       0 |      100 |     100 |       0 | 1-23
+ src/prisma                        |   33.33 |      100 |       0 |   27.27 |
+  prisma.module.ts                 |       0 |      100 |     100 |       0 | 1-9
+  prisma.service.ts                |      50 |      100 |       0 |    37.5 | 6-15
+ src/spotify                       |   12.04 |     7.79 |    6.45 |   11.45 |
+  spotify-api.client.ts            |    6.02 |        0 |       0 |    4.22 | 52-255
+  spotify.controller.ts            |       0 |      100 |       0 |       0 | 1-56
+  spotify.module.ts                |       0 |      100 |     100 |       0 | 1-12
+  spotify.service.ts               |   18.11 |    11.11 |   18.18 |   17.42 | 33,38,71-359
+ src/spotify/dto                   |       0 |      100 |     100 |       0 |
+  export-playlist.dto.ts           |       0 |      100 |     100 |       0 | 1-32
+  export-result.dto.ts             |       0 |      100 |     100 |       0 | 1-17
+  get-track.dto.ts                 |       0 |      100 |     100 |       0 | 1-11
+  import-playlist.dto.ts           |       0 |      100 |     100 |       0 | 1-65
+  import-result.dto.ts             |       0 |      100 |     100 |       0 | 1-27
+  track-metadata.dto.ts            |       0 |      100 |     100 |       0 | 1-23
+ src/supabase                      |       0 |        0 |       0 |       0 |
+  supabase.module.ts               |       0 |        0 |       0 |       0 | 1-52
+-----------------------------------|---------|----------|---------|---------|----------------------------------------------------------------
+
+Test Suites: 4 passed, 4 total
+Tests:       16 passed, 16 total
+Snapshots:   0 total
+Time:        10.5 s
+Ran all test suites.

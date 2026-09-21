@@ -1,0 +1,49 @@
+
+> karaoke-jam-backend@0.0.1 lint:check
+> eslint "{src,apps,libs,test}/**/*.ts"
+
+
+/Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/src/auth/guards/role.guard.ts
+  52:1  error  Delete `⏎`  prettier/prettier
+
+/Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/src/musica/musica.service.ts
+  18:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/jam-control.e2e-spec.ts
+   48:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   77:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   84:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  133:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  156:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  164:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  190:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  223:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  268:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  318:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  337:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  357:63  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  367:64  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  414:66  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  521:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  537:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  544:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  563:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  571:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  594:64  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  600:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  685:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  793:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  793:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  799:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/test/test-helpers.ts
+   53:39  warning  Unexpected any. Specify a different type                                                                                           @typescript-eslint/no-explicit-any
+   70:36  warning  Unexpected any. Specify a different type                                                                                           @typescript-eslint/no-explicit-any
+   85:59  warning  Unexpected any. Specify a different type                                                                                           @typescript-eslint/no-explicit-any
+  102:75  warning  Unexpected any. Specify a different type                                                                                           @typescript-eslint/no-explicit-any
+  128:78  warning  Unexpected any. Specify a different type                                                                                           @typescript-eslint/no-explicit-any
+  162:32  error    Replace `⏎··action:·string,⏎··jamId:·string,⏎··expectedStatus·=·201,⏎` with `action:·string,·jamId:·string,·expectedStatus·=·201`  prettier/prettier
+
+✖ 34 problems (2 errors, 32 warnings)
+  2 errors and 0 warnings potentially fixable with the `--fix` option.

@@ -1,0 +1,12 @@
+
+> karaoke-jam-backend@0.0.1 test:cov
+> jest --coverage --runInBand --watchman=false
+
+No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In /Users/e160069/WebstormProjects/jamapp/karaoke-jam-backend/src
+  85 files checked.
+  testMatch:  - 0 matches
+  testPathIgnorePatterns: /node_modules/ - 85 matches
+  testRegex: .*\.spec\.ts$ - 0 matches
+Pattern:  - 0 matches

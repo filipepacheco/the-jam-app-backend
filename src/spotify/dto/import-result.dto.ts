@@ -11,7 +11,7 @@ export class ImportResultDto {
   @ApiProperty({ description: 'Number of existing Music records reused' })
   reusedTracks: number;
 
-  @ApiProperty({ description: 'Number of tracks that failed to import' })
+  @ApiProperty({ description: 'Always zero for a successful atomic import' })
   skippedTracks: number;
 
   @ApiProperty({ description: 'Number of tracks added to the jam' })
@@ -22,7 +22,4 @@ export class ImportResultDto {
 
   @ApiProperty({ description: 'Whether an existing jam was used' })
   isExistingJam: boolean;
-
-  @ApiProperty({ description: 'Error details for skipped tracks', required: false })
-  errors?: string[];
 }

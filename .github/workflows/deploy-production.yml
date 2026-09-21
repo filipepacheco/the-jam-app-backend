@@ -10,14 +10,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  quality:
+    uses: ./.github/workflows/ci.yml
+
   deploy:
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - run: npx vercel --prod --yes --token=${{ env.VERCEL_TOKEN }}
+      - run: npx --yes vercel@59.23.2 --prod --yes --token=${{ env.VERCEL_TOKEN }}
 
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

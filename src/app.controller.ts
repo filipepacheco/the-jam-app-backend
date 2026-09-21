@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { AppService, HealthCheckResult } from './app.service';
+import { AppService, HealthCheckResult, ReadinessCheckResult } from './app.service';
 
 @ApiTags('Health Check')
 @Controller()
@@ -8,32 +8,25 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get('health')
-  @ApiOperation({ summary: 'Health check endpoint - includes database connectivity' })
+  @ApiOperation({ summary: 'Process liveness probe' })
   @ApiResponse({
     status: 200,
     description: 'Health check result',
     schema: {
       type: 'object',
       properties: {
-        status: { type: 'string', enum: ['ok', 'error'] },
+        status: { type: 'string', enum: ['ok'] },
         timestamp: { type: 'string', format: 'date-time' },
         uptime: { type: 'number', description: 'Server uptime in seconds' },
-        database: {
-          type: 'object',
-          properties: {
-            status: { type: 'string', enum: ['connected', 'disconnected'] },
-            latency: { type: 'number', description: 'Database query latency in ms' },
-          },
-        },
       },
     },
   })
-  async getHealth(): Promise<HealthCheckResult> {
+  getHealth(): HealthCheckResult {
     return this.appService.getHealth();
   }
 
   @Get('ready')
-  @ApiOperation({ summary: 'Readiness probe endpoint - lightweight check for load balancers' })
+  @ApiOperation({ summary: 'Database-backed readiness probe for load balancers' })
   @ApiResponse({
     status: 200,
     description: 'Server is ready to accept requests',
@@ -42,10 +35,18 @@ export class AppController {
       properties: {
         status: { type: 'string', example: 'ready' },
         timestamp: { type: 'string', format: 'date-time' },
+        database: {
+          type: 'object',
+          properties: {
+            status: { type: 'string', enum: ['connected'] },
+            latency: { type: 'number', description: 'Database query latency in ms' },
+          },
+        },
       },
     },
   })
-  getReady(): { status: 'ready'; timestamp: string } {
+  @ApiResponse({ status: 503, description: 'Database is unavailable' })
+  getReady(): Promise<ReadinessCheckResult> {
     return this.appService.getReady();
   }
 }

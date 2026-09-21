@@ -1,0 +1,275 @@
+{
+  "scope": "Staging PostgreSQL catalog metadata only. No application rows or migration logs read; no mutations. Connection credentials loaded privately from the explicitly selected staging configuration and not emitted.",
+  "transaction": "repeatable-read, read-only",
+  "tables": [
+    "escalas",
+    "feedbacks",
+    "inscricoes",
+    "jams",
+    "jamsmusics",
+    "musicas",
+    "musicos",
+    "playback_history"
+  ],
+  "columnNames": {
+    "escalas": [
+      "id",
+      "jamId",
+      "ordem",
+      "status",
+      "createdAt",
+      "atualizado_em",
+      "musicId",
+      "startedAt",
+      "completedAt",
+      "pausedAt"
+    ],
+    "feedbacks": [
+      "id",
+      "rating",
+      "comentario",
+      "userAgent",
+      "pageUrl",
+      "ipAddress",
+      "musicoId",
+      "criadoEm",
+      "atualizado_em"
+    ],
+    "inscricoes": [
+      "id",
+      "musicoId",
+      "jamId",
+      "status",
+      "createdAt",
+      "atualizado_em",
+      "jamMusicaId",
+      "instrumento",
+      "escalaId"
+    ],
+    "jams": [
+      "id",
+      "nome",
+      "descricao",
+      "data",
+      "qrCode",
+      "status",
+      "createdAt",
+      "updatedAt",
+      "hostContato",
+      "hostNome",
+      "hostMusicianId",
+      "local",
+      "currentScheduleId",
+      "playbackState",
+      "codigo_curto",
+      "excluido_em",
+      "slug",
+      "spotify_playlist_url"
+    ],
+    "jamsmusics": [
+      "jamId",
+      "id",
+      "musicId",
+      "observacoes"
+    ],
+    "musicas": [
+      "id",
+      "titulo",
+      "artista",
+      "genero",
+      "duracao",
+      "descricao",
+      "link",
+      "status",
+      "createdAt",
+      "atualizado_em",
+      "neededDrums",
+      "neededGuitars",
+      "neededVocals",
+      "neededBass",
+      "neededKeys",
+      "info"
+    ],
+    "musicos": [
+      "id",
+      "supabaseUserId",
+      "nome",
+      "instrumento",
+      "nivel",
+      "contato",
+      "createdAt",
+      "email",
+      "telefone",
+      "isHost",
+      "bio",
+      "outros_instrumentos"
+    ],
+    "playback_history": [
+      "id",
+      "jamId",
+      "scheduleId",
+      "acao",
+      "timestamp",
+      "userId",
+      "metadata"
+    ]
+  },
+  "constraintDefinitions": [
+    "escalas_jamId_fkey: FOREIGN KEY (\"jamId\") REFERENCES jams(id) ON UPDATE CASCADE ON DELETE CASCADE",
+    "escalas_musicId_fkey: FOREIGN KEY (\"musicId\") REFERENCES musicas(id) ON DELETE CASCADE",
+    "feedbacks_musicoId_fkey: FOREIGN KEY (\"musicoId\") REFERENCES musicos(id) ON UPDATE CASCADE ON DELETE SET NULL",
+    "inscricoes_escalaId_fkey: FOREIGN KEY (\"escalaId\") REFERENCES escalas(id) ON DELETE CASCADE",
+    "inscricoes_jamId_fkey: FOREIGN KEY (\"jamId\") REFERENCES jams(id) ON UPDATE CASCADE ON DELETE CASCADE",
+    "inscricoes_jamMusicaId_fkey: FOREIGN KEY (\"jamMusicaId\") REFERENCES jamsmusics(id) ON DELETE CASCADE",
+    "inscricoes_musicoId_fkey: FOREIGN KEY (\"musicoId\") REFERENCES musicos(id) ON UPDATE CASCADE ON DELETE CASCADE",
+    "jams_currentScheduleId_fkey: FOREIGN KEY (\"currentScheduleId\") REFERENCES escalas(id) ON UPDATE CASCADE ON DELETE SET NULL",
+    "jams_hostMusicianId_fkey: FOREIGN KEY (\"hostMusicianId\") REFERENCES musicos(id) ON UPDATE CASCADE ON DELETE SET NULL",
+    "jamsmusics_jamId_fkey: FOREIGN KEY (\"jamId\") REFERENCES jams(id) ON UPDATE CASCADE ON DELETE CASCADE",
+    "jamsmusics_musicId_fkey: FOREIGN KEY (\"musicId\") REFERENCES musicas(id) ON UPDATE CASCADE ON DELETE CASCADE",
+    "playback_history_jamId_fkey: FOREIGN KEY (\"jamId\") REFERENCES jams(id) ON UPDATE CASCADE ON DELETE CASCADE",
+    "playback_history_scheduleId_fkey: FOREIGN KEY (\"scheduleId\") REFERENCES escalas(id) ON UPDATE CASCADE ON DELETE CASCADE"
+  ],
+  "indexDefinitions": [
+    "CREATE INDEX \"escalas_jamId_status_ordem_idx\" ON public.escalas USING btree (\"jamId\", status, ordem)",
+    "CREATE INDEX \"escalas_musicId_idx\" ON public.escalas USING btree (\"musicId\")",
+    "CREATE INDEX \"feedbacks_criadoEm_idx\" ON public.feedbacks USING btree (\"criadoEm\")",
+    "CREATE INDEX \"feedbacks_musicoId_idx\" ON public.feedbacks USING btree (\"musicoId\")",
+    "CREATE INDEX \"inscricoes_musicoId_jamId_escalaId_idx\" ON public.inscricoes USING btree (\"musicoId\", \"jamId\", \"escalaId\")",
+    "CREATE UNIQUE INDEX \"inscricoes_musicoId_jamId_jamMusicaId_key\" ON public.inscricoes USING btree (\"musicoId\", \"jamId\", \"jamMusicaId\")",
+    "CREATE UNIQUE INDEX jams_codigo_curto_key ON public.jams USING btree (codigo_curto)",
+    "CREATE INDEX \"jams_currentScheduleId_idx\" ON public.jams USING btree (\"currentScheduleId\")",
+    "CREATE UNIQUE INDEX \"jams_currentScheduleId_key\" ON public.jams USING btree (\"currentScheduleId\")",
+    "CREATE UNIQUE INDEX jams_slug_key ON public.jams USING btree (slug)",
+    "CREATE UNIQUE INDEX \"jamsmusics_jamId_musicId_key\" ON public.jamsmusics USING btree (\"jamId\", \"musicId\")",
+    "CREATE INDEX \"jamsmusics_musicId_idx\" ON public.jamsmusics USING btree (\"musicId\")",
+    "CREATE UNIQUE INDEX musicos_email_key ON public.musicos USING btree (email)",
+    "CREATE UNIQUE INDEX \"musicos_supabaseUserId_key\" ON public.musicos USING btree (\"supabaseUserId\")",
+    "CREATE UNIQUE INDEX musicos_telefone_key ON public.musicos USING btree (telefone)",
+    "CREATE INDEX \"playback_history_jamId_timestamp_idx\" ON public.playback_history USING btree (\"jamId\", \"timestamp\")"
+  ],
+  "enumLabels": {
+    "AcaoReproducao": [
+      "INICIAR_JAM",
+      "PARAR_JAM",
+      "INICIAR_MUSICA",
+      "PAUSAR_MUSICA",
+      "RETOMAR_MUSICA",
+      "PULAR_MUSICA",
+      "MUSICA_ANTERIOR",
+      "REORDENAR_FILA"
+    ],
+    "EstadoReproducao": [
+      "PARADO",
+      "TOCANDO",
+      "PAUSADO"
+    ],
+    "NivelMusico": [
+      "INICIANTE",
+      "INTERMEDIARIO",
+      "AVANCADO",
+      "PROFISSIONAL"
+    ],
+    "StatusEscala": [
+      "SUGERIDO",
+      "AGENDADO",
+      "EM_ANDAMENTO",
+      "CONCLUIDO",
+      "CANCELADO"
+    ],
+    "StatusInscricao": [
+      "PENDENTE",
+      "APROVADA",
+      "REJEITADA"
+    ],
+    "StatusJam": [
+      "ATIVO",
+      "INATIVO",
+      "AO_VIVO",
+      "FINALIZADO"
+    ],
+    "StatusMusica": [
+      "SUGERIDA",
+      "APROVADA"
+    ]
+  },
+  "catalogResult": {
+    "allCurrentSchemaColumnsAndEnumsPresent": true,
+    "foreignKeysPresent": [
+      "escalas_jamId_fkey",
+      "escalas_musicId_fkey",
+      "feedbacks_musicoId_fkey",
+      "inscricoes_escalaId_fkey",
+      "inscricoes_jamId_fkey",
+      "inscricoes_jamMusicaId_fkey",
+      "inscricoes_musicoId_fkey",
+      "jams_currentScheduleId_fkey",
+      "jams_hostMusicianId_fkey",
+      "jamsmusics_jamId_fkey",
+      "jamsmusics_musicId_fkey",
+      "playback_history_jamId_fkey",
+      "playback_history_scheduleId_fkey"
+    ],
+    "ordinaryIndexesPresent": [
+      "escalas_jamId_status_ordem_idx",
+      "escalas_musicId_idx",
+      "feedbacks_criadoEm_idx",
+      "feedbacks_musicoId_idx",
+      "inscricoes_musicoId_jamId_escalaId_idx",
+      "jams_currentScheduleId_idx",
+      "jamsmusics_musicId_idx",
+      "playback_history_jamId_timestamp_idx"
+    ],
+    "uniqueIndexesPresent": [
+      "inscricoes_musicoId_jamId_jamMusicaId_key",
+      "jams_codigo_curto_key",
+      "jams_currentScheduleId_key",
+      "jams_slug_key",
+      "jamsmusics_jamId_musicId_key",
+      "musicos_email_key",
+      "musicos_supabaseUserId_key",
+      "musicos_telefone_key"
+    ],
+    "missingConstraints": [
+      "UNIQUE escalas (jamId, ordem)",
+      "UNIQUE partial index escalas (jamId) WHERE status = EM_ANDAMENTO"
+    ]
+  },
+  "prismaMigrationLedger": [
+    {
+      "migrationName": "20260117223655_add_playback_control_system",
+      "finished": false,
+      "rolledBack": true,
+      "appliedStepsCount": 0
+    },
+    {
+      "migrationName": "20260117223655_add_playback_control_system",
+      "finished": true,
+      "rolledBack": false,
+      "appliedStepsCount": 0
+    },
+    {
+      "migrationName": "20260122_add_indexes",
+      "finished": true,
+      "rolledBack": false,
+      "appliedStepsCount": 0
+    },
+    {
+      "migrationName": "20260127_add_feedback_model",
+      "finished": true,
+      "rolledBack": false,
+      "appliedStepsCount": 0
+    },
+    {
+      "migrationName": "20260207_add_ao_vivo_status",
+      "finished": true,
+      "rolledBack": false,
+      "appliedStepsCount": 0
+    },
+    {
+      "migrationName": "20260210_backend_improvements",
+      "finished": true,
+      "rolledBack": false,
+      "appliedStepsCount": 0
+    }
+  ]
+}

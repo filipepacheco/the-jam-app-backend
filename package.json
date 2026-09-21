@@ -19,37 +19,34 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e": "node scripts/test-e2e.cjs",
     "swagger:generate": "ts-node scripts/generate-swagger.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:format": "prisma format ",
     "prisma:studio": "prisma studio",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts",
+    "test:safety": "node --test scripts/test-database.spec.cjs scripts/seed-safety.spec.cjs"
   },
   "dependencies": {
-    "@nestjs/common": "^11.0.0",
-    "@nestjs/config": "^4.0.0",
-    "@nestjs/core": "^11.0.0",
-    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/common": "^11.2.5",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.2.5",
     "@nestjs/mapped-types": "^2.0.0",
     "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^11.0.0",
-    "@nestjs/swagger": "^11.0.0",
+    "@nestjs/platform-express": "^11.2.5",
+    "@nestjs/swagger": "^11.4.7",
     "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^5.22.0",
-    "@supabase/supabase-js": "^2.90.1",
-    "@vercel/analytics": "^1.6.1",
+    "@supabase/supabase-js": "2.90.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
-    "joi": "^18.0.2",
+    "joi": "^18.2.9",
     "passport": "^0.7.0",
     "passport-custom": "^1.1.1",
-    "passport-jwt": "^4.0.1",
     "qrcode": "^1.5.3",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.1",
-    "uuid": "^9.0.0"
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.14",
@@ -58,10 +55,8 @@
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.2",
     "@types/node": "^20.3.1",
-    "@types/passport-jwt": "^3.0.9",
     "@types/qrcode": "^1.5.0",
     "@types/supertest": "^2.0.12",
-    "@types/uuid": "^9.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.42.0",
@@ -95,6 +90,15 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "overrides": {
+    "body-parser": "2.3.0",
+    "multer": "2.4.0",
+    "qs": "6.16.0",
+    "ws": "8.21.0"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

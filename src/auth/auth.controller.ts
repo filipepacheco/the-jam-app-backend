@@ -7,6 +7,8 @@ import {
   UseGuards,
   Request,
   UseInterceptors,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
@@ -16,21 +18,34 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { LoggingInterceptor } from '../common/interceptors/logging.interceptor';
 import { ProtectedRoute } from '../common/decorators/protected-route.decorator';
 import { MusicianProfileResponseDto } from './dto/musician-profile-response.dto';
+import { TokenCacheService } from './services/token-cache.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
 @UseGuards(ThrottlerGuard)
 @UseInterceptors(LoggingInterceptor)
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly tokenCache: TokenCacheService,
+  ) {}
 
   @Post('logout')
+  @HttpCode(HttpStatus.OK)
   @ProtectedRoute()
-  @ApiOperation({ summary: 'Logout user' })
-  @ApiResponse({ status: 200, description: 'Logged out successfully' })
+  @ApiOperation({ summary: 'Clear local token validation cache before client provider sign-out' })
+  @ApiResponse({
+    status: 200,
+    description: 'Local cache cleared; provider sign-out still required',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
-  async logout(@Request() _req): Promise<{ message: string }> {
-    return { message: 'Logged out successfully' };
+  async logout(@Request() req): Promise<{ message: string; providerSignOutRequired: boolean }> {
+    const authorization = req.headers.authorization as string;
+    this.tokenCache.evict(authorization.slice('Bearer '.length));
+    return {
+      message: 'Local authentication cache cleared; complete sign-out with Supabase on the client',
+      providerSignOutRequired: true,
+    };
   }
 
   @Get('me')

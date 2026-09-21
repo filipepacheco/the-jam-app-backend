@@ -6,6 +6,8 @@ interface SpotifyToken {
   expiresAt: number;
 }
 
+const SPOTIFY_REQUEST_TIMEOUT_MS = 10_000;
+
 export interface SpotifyTrack {
   id: string;
   name: string;
@@ -77,6 +79,7 @@ export class SpotifyApiClient {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: 'grant_type=client_credentials',
+      signal: AbortSignal.timeout(SPOTIFY_REQUEST_TIMEOUT_MS),
     });
 
     if (!response.ok) {
@@ -153,6 +156,7 @@ export class SpotifyApiClient {
         description: description || '',
         public: isPublic,
       }),
+      signal: AbortSignal.timeout(SPOTIFY_REQUEST_TIMEOUT_MS),
     });
 
     await this.handleSpotifyError(response);
@@ -170,6 +174,7 @@ export class SpotifyApiClient {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ uris: batch }),
+        signal: AbortSignal.timeout(SPOTIFY_REQUEST_TIMEOUT_MS),
       });
 
       await this.handleSpotifyError(response);
@@ -234,6 +239,7 @@ export class SpotifyApiClient {
   private async spotifyFetch(url: string, token: string): Promise<SpotifyApiResponse> {
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(SPOTIFY_REQUEST_TIMEOUT_MS),
     });
 
     await this.handleSpotifyError(response);

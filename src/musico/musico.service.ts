@@ -11,8 +11,6 @@ const MUSICIAN_LIST_SELECT = {
   instrument: true,
   level: true,
   isHost: true,
-  contact: true,
-  phone: true,
   bio: true,
   otherInstruments: true,
   createdAt: true,
@@ -101,6 +99,11 @@ export class MusicoService {
     }
 
     const isUpdatingOwnProfile = authenticatedMusicianId === id;
+    const changesPrivateContact =
+      updateMusicianDto.phone !== undefined || updateMusicianDto.contact !== undefined;
+    if (!isUpdatingOwnProfile && changesPrivateContact) {
+      throw new ForbiddenException('Only musicians can update their own private contact details');
+    }
     if (!isUpdatingOwnProfile) {
       const authenticatedMusician = await this.prisma.musician.findUnique({
         where: { id: authenticatedMusicianId },
