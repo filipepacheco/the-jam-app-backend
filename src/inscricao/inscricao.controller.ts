@@ -34,10 +34,14 @@ export class InscricaoController {
     description: 'Musician already applied for this instrument on this scheduled song',
   })
   create(@Body() createRegistrationDto: CreateRegistrationDto, @Request() req) {
-    if (createRegistrationDto.musicianId !== undefined) {
+    const authenticatedMusicianId = req.user.musicianId;
+    if (
+      createRegistrationDto.musicianId !== undefined &&
+      createRegistrationDto.musicianId !== authenticatedMusicianId
+    ) {
       throw new ForbiddenException('Registrations must be created by the applying musician');
     }
-    return this.inscricaoService.create(createRegistrationDto, req.user.musicianId);
+    return this.inscricaoService.create(createRegistrationDto, authenticatedMusicianId);
   }
 
   @Patch(':id')

@@ -203,7 +203,7 @@ export class InscricaoService {
       [RegistrationStatus.PENDING]: [RegistrationStatus.APPROVED, RegistrationStatus.REJECTED],
       [RegistrationStatus.APPROVED]: [RegistrationStatus.REJECTED],
       [RegistrationStatus.REJECTED]: [RegistrationStatus.PENDING],
-      [RegistrationStatus.WITHDRAWN]: [],
+      [RegistrationStatus.WITHDRAWN]: [RegistrationStatus.APPROVED],
     };
 
     if (!allowedTransitions[currentStatus].includes(nextStatus)) {

@@ -72,6 +72,24 @@ describe('Registration identity (disposable PostgreSQL)', () => {
     ]);
   });
 
+  it('accepts a redundant musicianId when it matches the authenticated musician', async () => {
+    const registration = await request(app.getHttpServer())
+      .post('/inscricoes')
+      .set('Authorization', `Bearer ${data.musician.token}`)
+      .send({
+        scheduleId: data.schedules[0].id,
+        musicianId: data.musician.id,
+        instrument: 'guitar',
+      })
+      .expect(201);
+
+    expect(registration.body).toMatchObject({
+      musicianId: data.musician.id,
+      scheduleId: data.schedules[0].id,
+      instrument: 'guitars',
+    });
+  });
+
   it('treats repeated occurrences of the same song as distinct slots', async () => {
     const repeatedSlot = await getPrismaService().schedule.create({
       data: {
@@ -174,6 +192,30 @@ describe('Registration identity (disposable PostgreSQL)', () => {
       .delete(`/inscricoes/${registration.body.id}`)
       .set('Authorization', `Bearer ${anotherMusician.token}`)
       .expect(403);
+  });
+
+  it('allows an event manager to approve a withdrawn registration', async () => {
+    const registration = await request(app.getHttpServer())
+      .post('/inscricoes')
+      .set('Authorization', `Bearer ${data.musician.token}`)
+      .send({ scheduleId: data.schedules[0].id, instrument: 'guitar' })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .delete(`/inscricoes/${registration.body.id}`)
+      .set('Authorization', `Bearer ${data.musician.token}`)
+      .expect(200);
+
+    const restored = await request(app.getHttpServer())
+      .patch(`/inscricoes/${registration.body.id}`)
+      .set('Authorization', `Bearer ${data.hostMusician.token}`)
+      .send({ status: 'APPROVED' })
+      .expect(200);
+
+    expect(restored.body).toMatchObject({
+      id: registration.body.id,
+      status: 'APPROVED',
+    });
   });
 
   it('locks an approved registration instrument and preserves a withdrawal', async () => {
