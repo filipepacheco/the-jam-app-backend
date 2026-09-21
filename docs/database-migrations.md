@@ -33,6 +33,8 @@ psql "$DIRECT_URL" -v ON_ERROR_STOP=1 -f scripts/preflight-existing-migrations.s
 
 Every reported violation count must be zero. A nonzero result is a release stop: do not run `prisma migrate deploy`, and do not bypass the unique index with `IF NOT EXISTS`. Export the affected aggregate keys for review, prepare a separate reversible data-reconciliation migration, and rerun the preflight. Queue positions may be renumbered only under the accepted queue-order policy; registration rows and catalog songs must be merged only after their retained history and references are explicitly reviewed; multiple active schedules require choosing the event's authoritative current schedule. No automatic deletion is authorized.
 
+The authorized staging aggregate preflight on 2026-09-20 reported zero queue-position, registration-identity and multiple-active-schedule groups, plus one duplicate Spotify-link group. Staging rollout is therefore blocked. The aggregate evidence contains no row values; identifying and reconciling the affected catalog rows requires a separately reviewed data-repair step before rerunning this preflight.
+
 After a zero preflight, take a recovery snapshot, apply the migrations, run `prisma migrate status`, and verify the expected indexes through `pg_indexes`. The application rollout remains separate from migration authorization.
 
 See [schema foundations](audits/2026-09-20/schema-foundations.md) for staging evidence, unexecuted preflight templates and rollout/recovery requirements. [Archived SQL](audits/2026-09-20/legacy-migrations/README.md) preserves all ten former migration files with checksums; it is excluded from the active chain.

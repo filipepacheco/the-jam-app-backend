@@ -159,9 +159,10 @@ enum JamManagementMode {
 }
 
 enum RegistrationStatus {
-  PENDING  @map("PENDENTE")
-  APPROVED @map("APROVADA")
-  REJECTED @map("REJEITADA")
+  PENDING   @map("PENDENTE")
+  APPROVED  @map("APROVADA")
+  REJECTED  @map("REJEITADA")
+  WITHDRAWN @map("RETIRADA")
 
   @@map("StatusInscricao")
 }

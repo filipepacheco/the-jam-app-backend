@@ -4,7 +4,7 @@ Date: 2026-09-20. Repository inspection did not read an environment file or conn
 
 ## Clean-install implementation update
 
-The current-schema baseline is now implemented locally; see [the migration runbook](../../database-migrations.md). The repository evidence below describes the pre-baseline investigation. The ten historical SQL files now live in [legacy-migrations](legacy-migrations/README.md). Existing-target reconciliation, new constraint migrations, and conflicting-write verification remain outstanding.
+The current-schema baseline and forward constraints are now implemented locally; see [the migration runbook](../../database-migrations.md). The repository evidence below describes the pre-baseline investigation. The ten historical SQL files now live in [legacy-migrations](legacy-migrations/README.md). Direct conflicting-write verification now runs against disposable PostgreSQL. The staging aggregate row preflight is recorded in [staging-row-preflight.json](evidence/staging-row-preflight.json) and blocks rollout because one duplicate Spotify-link group remains.
 
 ## Repository evidence
 

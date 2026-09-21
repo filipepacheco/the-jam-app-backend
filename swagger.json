@@ -95,7 +95,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Logged out successfully"
+            "description": "Local cache cleared; provider sign-out still required"
           },
           "401": {
             "description": "Unauthorized - invalid or missing token"
@@ -106,7 +106,7 @@
             "bearer": []
           }
         ],
-        "summary": "Logout user",
+        "summary": "Clear local token validation cache before client provider sign-out",
         "tags": [
           "Authentication"
         ]
@@ -1287,7 +1287,7 @@
             "bearer": []
           }
         ],
-        "summary": "Apply to play an instrument on a scheduled song",
+        "summary": "Apply to play an instrument on a scheduled song as yourself",
         "tags": [
           "Registrations"
         ]
@@ -2893,7 +2893,8 @@
           },
           "musicianId": {
             "type": "string",
-            "description": "Musician ID (optional, only usable by hosts)"
+            "description": "Deprecated. Registrations must always be created by the authenticated musician.",
+            "deprecated": true
           },
           "instrument": {
             "type": "string",
@@ -2914,7 +2915,7 @@
           },
           "status": {
             "type": "string",
-            "description": "Registration status",
+            "description": "Host-managed registration status. Use DELETE to withdraw an application.",
             "enum": [
               "PENDING",
               "APPROVED",

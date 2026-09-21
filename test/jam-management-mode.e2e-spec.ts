@@ -152,6 +152,19 @@ describe('Jam management mode (disposable PostgreSQL)', () => {
       .expect(403);
   });
 
+  it('keeps withdrawals owner-only until sharing is enabled', async () => {
+    const registration = await request(app.getHttpServer())
+      .post('/inscricoes')
+      .set('Authorization', `Bearer ${data.musician.token}`)
+      .send({ scheduleId: data.schedules[0].id, instrument: 'guitar' })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .delete(`/inscricoes/${registration.body.id}`)
+      .set('Authorization', `Bearer ${otherHost.token}`)
+      .expect(403);
+  });
+
   it('does not extend shared management to deleting the event', async () => {
     await request(app.getHttpServer())
       .patch(`/jams/${data.jam.id}`)

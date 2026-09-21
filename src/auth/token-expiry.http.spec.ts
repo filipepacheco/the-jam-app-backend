@@ -93,6 +93,20 @@ describe('Authentication cache expiry over HTTP', () => {
     now = start + 1000;
     await request(app.getHttpServer()).get('/auth/me').auth(token, { type: 'bearer' }).expect(401);
   });
+
+  it('clears the local validation cache while leaving provider sign-out to the client', async () => {
+    const token = tokenWith({ exp: 1800003600 });
+    await request(app.getHttpServer()).get('/auth/me').auth(token, { type: 'bearer' }).expect(200);
+    providerAccepts = false;
+
+    await request(app.getHttpServer())
+      .post('/auth/logout')
+      .auth(token, { type: 'bearer' })
+      .expect(200)
+      .expect(({ body }) => expect(body.providerSignOutRequired).toBe(true));
+
+    await request(app.getHttpServer()).get('/auth/me').auth(token, { type: 'bearer' }).expect(401);
+  });
   it('submits expired credentials as anonymous feedback', async () => {
     const token = tokenWith({ exp: 1800000001 });
     const identified = await request(app.getHttpServer())

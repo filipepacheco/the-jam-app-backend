@@ -21,6 +21,16 @@ export class JamManagementService {
     throw new ForbiddenException('Only the event owner can manage this jam');
   }
 
+  async assertIsJamOwner(jamId: string, musicianId?: string): Promise<void> {
+    const jam = await this.prisma.jam.findUnique({
+      where: { id: jamId },
+      select: { deletedAt: true, hostMusicianId: true },
+    });
+    if (!jam || jam.deletedAt) throw new NotFoundException('Jam not found');
+    if (jam.hostMusicianId === musicianId) return;
+    throw new ForbiddenException('Only the event owner can change its catalog');
+  }
+
   async assertCanManageSchedule(scheduleId: string, musicianId?: string): Promise<void> {
     const schedule = await this.prisma.schedule.findUnique({
       where: { id: scheduleId },

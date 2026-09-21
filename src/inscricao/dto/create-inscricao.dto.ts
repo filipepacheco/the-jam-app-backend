@@ -7,7 +7,11 @@ export class CreateRegistrationDto {
   @IsNotEmpty()
   scheduleId: string;
 
-  @ApiProperty({ description: 'Musician ID (optional, only usable by hosts)', required: false })
+  @ApiProperty({
+    description: 'Deprecated. Registrations must always be created by the authenticated musician.',
+    required: false,
+    deprecated: true,
+  })
   @IsUUID()
   @IsOptional()
   musicianId?: string;

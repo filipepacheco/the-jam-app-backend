@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-custom';
 import { Request } from 'express';
@@ -46,14 +47,14 @@ export class SupabaseJwtStrategy extends PassportStrategy(Strategy, 'supabase-jw
       throw new UnauthorizedException('Invalid or expired Supabase token');
     }
 
-    // Cache validation result
+    // Find or create musician
+    const musician = await this.findOrCreateMusician(user.id, user.email);
+
+    // Cache only identities which were safely reconciled with the local account.
     this.tokenCache.set(token, {
       supabaseUserId: user.id,
       email: user.email || '',
     });
-
-    // Find or create musician
-    const musician = await this.findOrCreateMusician(user.id, user.email);
 
     return {
       musicianId: musician.id,
@@ -70,29 +71,34 @@ export class SupabaseJwtStrategy extends PassportStrategy(Strategy, 'supabase-jw
 
     if (musician) return musician;
 
-    // 2. Fallback: Find by email and link
+    // An email address is profile data, not a stable credential. Never attach a
+    // different provider subject to an existing local musician based on email.
     if (email) {
       musician = await this.prisma.musician.findUnique({
         where: { email },
       });
 
       if (musician) {
-        // Link existing musician to new Supabase identity (handles OAuth provider changes)
-        // This covers: email/password user switching to Google SSO, or vice versa
-        return this.prisma.musician.update({
-          where: { id: musician.id },
-          data: { supabaseUserId },
-        });
+        throw new UnauthorizedException('Unable to authenticate account');
       }
     }
 
-    // 3. Auto-create if doesn't exist
-    return this.prisma.musician.create({
-      data: {
-        supabaseUserId,
-        email,
-        name: email?.split('@')[0] || `User_${supabaseUserId.slice(-4)}`,
-      },
-    });
+    try {
+      return await this.prisma.musician.create({
+        data: {
+          supabaseUserId,
+          email,
+          name: email?.split('@')[0] || `User_${supabaseUserId.slice(-4)}`,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        // A concurrent first login may have created this subject after our initial lookup.
+        musician = await this.prisma.musician.findUnique({ where: { supabaseUserId } });
+        if (musician) return musician;
+      }
+
+      throw new UnauthorizedException('Unable to authenticate account');
+    }
   }
 }

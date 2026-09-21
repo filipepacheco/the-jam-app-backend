@@ -58,6 +58,10 @@ export class TokenCacheService implements OnModuleDestroy {
     });
   }
 
+  evict(token: string): void {
+    this.cache.delete(token);
+  }
+
   private readExpiry(token: string): number | null {
     try {
       const parts = token.split('.');

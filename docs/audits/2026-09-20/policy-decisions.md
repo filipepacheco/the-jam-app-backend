@@ -42,32 +42,24 @@ These decisions unblock the core behavior definition for #7/#10. The following e
 
 Historical audit evidence: `UpdateScheduleDto` inherited jamId, musicId, order and status; `EscalaService.update` forwarded it directly; create allocated count+1; generic remove deleted the row. The schedule/queue repair now guards those fields and serializes allocation and mutation. The accepted partial-reorder contract now moves supplied songs to the front and renumbers the whole queue; this deliberately replaces arbitrary sparse order assignment.
 
-## Registration identity and instrument-count guidance accepted
+## Registration identity and lifecycle
 
-Accepted by the user: one application per musician, scheduled song slot and instrument; multiple instrument applications on a slot are allowed. Repeated occurrences of a song are distinct schedule slots. Instrument counts are guidance, not hard approval limits: a host may approve more musicians than the stated count. Whether the same musician may hold multiple approved parts concurrently remains a separate decision. Proposal, not yet accepted: require a supported canonical instrument for new applications and define a cleanup path for existing null/unknown values before adding constraints.
+Accepted: one application per musician, scheduled song slot and instrument; multiple instrument applications and multiple approved parts on one slot are allowed. Repeated song occurrences remain distinct slots, and requested instrument counts are guidance rather than approval limits.
 
-Pending decisions:
+Applications are always created for the authenticated musician. New applications are refused for inactive, finished or deleted events and for canceled, in-progress or completed slots. Withdrawal preserves the registration as `WITHDRAWN`; it cannot be resubmitted as a new duplicate or changed afterward. Event managers use the explicit unplayed-slot transition matrix: pending applications may be approved or rejected, approved applications may be rejected, and rejected applications may be reopened to pending. Instrument changes stop after approval or withdrawal, and registration mutation stops when the slot starts. Event management mode governs manager actions.
 
-1. Can one musician hold multiple approved instrument parts on the same song?
-2. Is withdrawal from a currently performing song allowed? Can rejected applications be resubmitted or must hosts reopen them?
-3. Beyond the accepted unplayed-song cancellation rule, which transitions preserve historical participation, and which can remove records?
+## Shared catalog and privacy
 
-Current evidence: `InscricaoService.create` checks musician+jam+schedule+normalized instrument; the schema unique key instead uses musician+jam+nullable jamMusicId. Instrument normalization accepts unknown strings and null. Update can change status/instrument without equivalent duplicate checks. Decide semantics before #11 migrates existing rows.
+Accepted: phone and contact are self-only profile information. `/auth/me` retains them for the authenticated musician; `/musicos` and `/musicos/:id` omit them for every caller, including hosts. Public performer projections continue to expose only the limited performer fields needed by the live dashboard.
 
-## Shared catalog and privacy — still undecided
+Accepted: only hosts curate shared Music records. Event links and arrangement notes belong only to the event owner; the shared-host playback/queue/approval opt-in does not extend catalog authority. The public catalog uses an explicit projection and omits host contact, owner identity, QR data and import identity fields.
 
-Recommendation for discussion: musicians submit suggestions; event owners approve them for their event; global catalog editing/approval needs a separate defined capability. Editing a shared Music row affects multiple events, so event ownership alone should not silently confer global editing rights.
+## Identity linking and logout
 
-Public performer projections already expose only musician id, name and instrument. Public musician profile/list projections still include phone/contact (`MUSICIAN_LIST_SELECT` in `src/musico/musico.service.ts`). Decide whether these fields are public opt-in, authenticated-only, or owner-only. Do not remove them without recording the intended contract and frontend impact.
+Accepted: the provider subject is the immutable account identity. A login first resolves the local musician by `supabaseUserId`; a different provider subject that presents an existing email is rejected with a generic authentication error and never rebinds that musician. The same subject remains valid when the provider email changes. First-login uniqueness races re-read the subject and succeed only when the concurrent request created that same identity. Linking two existing accounts requires a separate, explicit verified recovery/linking flow.
 
-## Identity linking and logout — still undecided
-
-Current evidence: `SupabaseJwtStrategy.findOrCreateMusician` can rebind an existing email match to a new provider subject; the helper receives no verified-email flag. Provider verification and account-linking guarantees must be inspected before deciding a safe linking flow. This report makes no assertion about the deployed provider settings.
-
-Recommendation for discussion: use provider subject as the stable identity; require an explicit verified account-linking process rather than reassign a subject from email equality alone. Existing account reconciliation requires a migration/recovery design.
-
-`AuthController.logout` returns an acknowledgement; token cache eviction does not implement provider-wide revocation. Decide whether logout means current device, current token, or all sessions, and whether frontend/provider or backend owns the action. Cache expiry now respects token expiration, but revocation may remain delayed within that bounded lifetime.
+Accepted: the client/provider owns session revocation. `POST /auth/logout` evicts the presented token from this API instance's validation cache and explicitly returns `providerSignOutRequired: true`; it does not claim to revoke the Supabase token. Clients must complete provider sign-out. A subsequent request therefore returns to authoritative provider validation rather than treating cache eviction as revocation.
 
 ## Implementation gates
 
-Record each answer with its scope, then refine #7/#10/#11 and any additional authorization/privacy work before changing behavior. Do not mark all of #23 resolved after answering only ownership and schedule questions. Schema inventory can proceed while these product decisions remain pending.
+The accepted capability, lifecycle, privacy, identity and logout decisions are implemented locally. Publication, hosted verification and ticket closure remain release work.
