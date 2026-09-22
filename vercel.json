@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node scripts/apply-staging-auto-approve-default.cjs && npx prisma generate && npm run build",
+  "buildCommand": "npx prisma generate && npm run build",
   "outputDirectory": "dist",
   "framework": "nestjs",
   "env": {
