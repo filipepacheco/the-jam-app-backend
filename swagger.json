@@ -2398,6 +2398,7 @@
           "currentSong": {
             "nullable": true,
             "description": "Current song being played (IN_PROGRESS status)",
+            "type": "object",
             "allOf": [
               {
                 "$ref": "#/components/schemas/LiveStateSongDto"
@@ -2514,6 +2515,7 @@
           "currentSong": {
             "nullable": true,
             "description": "Current song being played (IN_PROGRESS status)",
+            "type": "object",
             "allOf": [
               {
                 "$ref": "#/components/schemas/DashboardSongDto"
