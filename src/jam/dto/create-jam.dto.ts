@@ -7,6 +7,7 @@ import {
   Matches,
   MaxLength,
   IsUrl,
+  IsBoolean,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { JamStatus } from '@prisma/client';
@@ -76,6 +77,15 @@ export class CreateJamDto {
   @IsOptional()
   @MaxLength(500)
   spotifyPlaylistUrl?: string | null;
+
+  @ApiProperty({
+    description: 'Whether new performance registrations should be approved automatically',
+    required: false,
+    default: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  autoApproveRegistrations?: boolean;
 
   @ApiProperty({
     description: 'Jam session status',
