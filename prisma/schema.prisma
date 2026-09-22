@@ -23,33 +23,33 @@ model JamMusic {
 }
 
 model Jam {
-  id                       String            @id @default(uuid())
-  name                     String            @map("nome")
-  description              String?           @map("descricao")
-  date                     DateTime?         @map("data")
-  qrCode                   String?
-  slug                     String?           @unique @map("slug")
-  shortCode                String?           @unique @map("codigo_curto")
-  status                   JamStatus         @default(ACTIVE) @map("status")
-  createdAt                DateTime          @default(now())
-  updatedAt                DateTime          @updatedAt
-  deletedAt                DateTime?         @map("excluido_em")
-  hostContact              String?           @map("hostContato")
-  hostName                 String?           @map("hostNome")
-  hostMusicianId           String?           @map("hostMusicianId")
-  managementMode           JamManagementMode @default(OWNER_ONLY) @map("modoGestao")
-  location                 String?           @map("local")
-  currentScheduleId        String?           @unique @map("currentScheduleId")
-  playbackState            PlaybackState     @default(STOPPED) @map("playbackState")
-  spotifyPlaylistUrl       String?           @map("spotify_playlist_url")
-  spotifyImportKey         String?           @map("spotify_import_key")
-  autoApproveRegistrations Boolean           @default(false) @map("auto_approve_registrations")
-  schedules                Schedule[]
-  registrations            Registration[]
-  jamMusics                JamMusic[]
-  playbackHistory          PlaybackHistory[]
-  hostMusician             Musician?         @relation(fields: [hostMusicianId], references: [id], onDelete: SetNull)
-  currentSchedule          Schedule?         @relation("CurrentSchedule", fields: [currentScheduleId], references: [id], onDelete: SetNull)
+  id                 String            @id @default(uuid())
+  name               String            @map("nome")
+  description        String?           @map("descricao")
+  date               DateTime?         @map("data")
+  qrCode             String?
+  slug               String?           @unique @map("slug")
+  shortCode          String?           @unique @map("codigo_curto")
+  status             JamStatus         @default(ACTIVE) @map("status")
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  deletedAt          DateTime?         @map("excluido_em")
+  hostContact        String?           @map("hostContato")
+  hostName           String?           @map("hostNome")
+  hostMusicianId     String?           @map("hostMusicianId")
+  managementMode     JamManagementMode @default(OWNER_ONLY) @map("modoGestao")
+  location           String?           @map("local")
+  currentScheduleId  String?           @unique @map("currentScheduleId")
+  playbackState      PlaybackState     @default(STOPPED) @map("playbackState")
+  spotifyPlaylistUrl String?           @map("spotify_playlist_url")
+  spotifyImportKey   String?           @map("spotify_import_key")
+  autoApproveRegistrations Boolean     @default(false) @map("auto_approve_registrations")
+  schedules          Schedule[]
+  registrations      Registration[]
+  jamMusics          JamMusic[]
+  playbackHistory    PlaybackHistory[]
+  hostMusician       Musician?         @relation(fields: [hostMusicianId], references: [id], onDelete: SetNull)
+  currentSchedule    Schedule?         @relation("CurrentSchedule", fields: [currentScheduleId], references: [id], onDelete: SetNull)
 
   @@unique([hostMusicianId, spotifyImportKey])
   @@index([currentScheduleId])
@@ -88,7 +88,7 @@ model Musician {
   contact          String?        @map("contato")
   createdAt        DateTime       @default(now())
   email            String?        @unique @map("email")
-  phone            String?        @unique @map("telefone")
+  phone            String?        @map("telefone")
   isHost           Boolean        @default(false) @map("isHost")
   bio              String?        @map("bio")
   otherInstruments String?        @map("outros_instrumentos")
