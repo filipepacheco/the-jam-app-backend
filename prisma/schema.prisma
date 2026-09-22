@@ -43,6 +43,7 @@ model Jam {
   playbackState      PlaybackState     @default(STOPPED) @map("playbackState")
   spotifyPlaylistUrl String?           @map("spotify_playlist_url")
   spotifyImportKey   String?           @map("spotify_import_key")
+  autoApproveRegistrations Boolean     @default(true) @map("auto_approve_registrations")
   schedules          Schedule[]
   registrations      Registration[]
   jamMusics          JamMusic[]
@@ -87,7 +88,7 @@ model Musician {
   contact          String?        @map("contato")
   createdAt        DateTime       @default(now())
   email            String?        @unique @map("email")
-  phone            String?        @unique @map("telefone")
+  phone            String?        @map("telefone")
   isHost           Boolean        @default(false) @map("isHost")
   bio              String?        @map("bio")
   otherInstruments String?        @map("outros_instrumentos")

@@ -40,6 +40,12 @@ export class JamResponseDto {
   @ApiProperty({ required: false })
   spotifyPlaylistUrl?: string | null;
 
+  @ApiProperty({
+    description: 'Whether new performance registrations are approved automatically',
+    required: false,
+  })
+  autoApproveRegistrations?: boolean;
+
   @ApiProperty({ enum: ['STOPPED', 'PLAYING', 'PAUSED'], required: false })
   playbackState?: string;
 

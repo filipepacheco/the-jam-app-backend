@@ -21,6 +21,10 @@ describe('Registration identity (disposable PostgreSQL)', () => {
   beforeEach(async () => {
     await testFixtures.cleanup();
     data = await setupTestData();
+    await getPrismaService().jam.update({
+      where: { id: data.jam.id },
+      data: { autoApproveRegistrations: false },
+    });
   });
 
   afterEach(() => testFixtures.cleanup());

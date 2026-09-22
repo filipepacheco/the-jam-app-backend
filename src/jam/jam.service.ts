@@ -94,6 +94,7 @@ export class JamService {
         status: createJamDto.status,
         shortCode,
         slug,
+        autoApproveRegistrations: createJamDto.autoApproveRegistrations,
       },
     });
 
@@ -123,6 +124,7 @@ export class JamService {
     managementMode: true,
     playbackState: true,
     currentScheduleId: true,
+    autoApproveRegistrations: true,
     _count: {
       select: {
         jamMusics: true,
@@ -259,6 +261,7 @@ export class JamService {
     slug: true,
     shortCode: true,
     spotifyPlaylistUrl: true,
+    autoApproveRegistrations: true,
     status: true,
     hostName: true,
     hostContact: false,
@@ -348,6 +351,8 @@ export class JamService {
     if (updateJamDto.hostContact !== undefined) data.hostContact = updateJamDto.hostContact;
     if (updateJamDto.spotifyPlaylistUrl !== undefined)
       data.spotifyPlaylistUrl = updateJamDto.spotifyPlaylistUrl;
+    if (updateJamDto.autoApproveRegistrations !== undefined)
+      data.autoApproveRegistrations = updateJamDto.autoApproveRegistrations;
     if (updateJamDto.status !== undefined) data.status = updateJamDto.status;
     if (updateJamDto.managementMode !== undefined) {
       data.managementMode = updateJamDto.managementMode;

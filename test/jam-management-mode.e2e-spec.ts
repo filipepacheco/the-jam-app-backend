@@ -1,6 +1,12 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { closeApp, initializeApp, setupTestData, testFixtures } from './test-helpers';
+import {
+  closeApp,
+  getPrismaService,
+  initializeApp,
+  setupTestData,
+  testFixtures,
+} from './test-helpers';
 
 describe('Jam management mode (disposable PostgreSQL)', () => {
   let app: INestApplication;
@@ -16,6 +22,10 @@ describe('Jam management mode (disposable PostgreSQL)', () => {
   beforeEach(async () => {
     await testFixtures.cleanup();
     data = await setupTestData();
+    await getPrismaService().jam.update({
+      where: { id: data.jam.id },
+      data: { autoApproveRegistrations: false },
+    });
     otherHost = await testFixtures.createMusician({ name: 'Another Host', isHost: true });
   });
 

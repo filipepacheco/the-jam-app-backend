@@ -62,6 +62,9 @@ export class InscricaoService {
           jamId: schedule.jamId,
           scheduleId: createRegistrationDto.scheduleId,
           instrument,
+          status: schedule.jam.autoApproveRegistrations
+            ? RegistrationStatus.APPROVED
+            : RegistrationStatus.PENDING,
         },
         include: {
           musician: true,
