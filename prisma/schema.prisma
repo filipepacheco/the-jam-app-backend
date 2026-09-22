@@ -43,7 +43,7 @@ model Jam {
   playbackState      PlaybackState     @default(STOPPED) @map("playbackState")
   spotifyPlaylistUrl String?           @map("spotify_playlist_url")
   spotifyImportKey   String?           @map("spotify_import_key")
-  autoApproveRegistrations Boolean     @default(false) @map("auto_approve_registrations")
+  autoApproveRegistrations Boolean     @default(true) @map("auto_approve_registrations")
   schedules          Schedule[]
   registrations      Registration[]
   jamMusics          JamMusic[]

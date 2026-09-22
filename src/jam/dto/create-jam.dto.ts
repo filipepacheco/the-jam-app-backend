@@ -81,7 +81,7 @@ export class CreateJamDto {
   @ApiProperty({
     description: 'Whether new performance registrations should be approved automatically',
     required: false,
-    default: false,
+    default: true,
   })
   @IsBoolean()
   @IsOptional()
