@@ -1937,6 +1937,11 @@
             "type": "string",
             "description": "Spotify playlist URL"
           },
+          "autoApproveRegistrations": {
+            "type": "boolean",
+            "description": "Whether new performance registrations should be approved automatically",
+            "default": true
+          },
           "status": {
             "type": "string",
             "description": "Jam session status",
@@ -2248,6 +2253,10 @@
           "spotifyPlaylistUrl": {
             "type": "string"
           },
+          "autoApproveRegistrations": {
+            "type": "boolean",
+            "description": "Whether new performance registrations are approved automatically"
+          },
           "playbackState": {
             "type": "string",
             "enum": [
@@ -2389,7 +2398,6 @@
           "currentSong": {
             "nullable": true,
             "description": "Current song being played (IN_PROGRESS status)",
-            "type": "object",
             "allOf": [
               {
                 "$ref": "#/components/schemas/LiveStateSongDto"
@@ -2506,7 +2514,6 @@
           "currentSong": {
             "nullable": true,
             "description": "Current song being played (IN_PROGRESS status)",
-            "type": "object",
             "allOf": [
               {
                 "$ref": "#/components/schemas/DashboardSongDto"
@@ -2619,6 +2626,11 @@
           "spotifyPlaylistUrl": {
             "type": "string",
             "description": "Spotify playlist URL"
+          },
+          "autoApproveRegistrations": {
+            "type": "boolean",
+            "description": "Whether new performance registrations should be approved automatically",
+            "default": true
           },
           "status": {
             "type": "string",
