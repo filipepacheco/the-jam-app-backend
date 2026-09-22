@@ -90,3 +90,41 @@ describe('Jam editing permissions over HTTP', () => {
     }
   });
 });
+
+describe('Jam list musician count', () => {
+  it('keeps the registration total separate from distinct active musicians', async () => {
+    const prismaMock = {
+      jam: {
+        findMany: jest.fn().mockResolvedValue([
+          { id: 'jam-1', _count: { registrations: 5, schedules: 2, jamMusics: 1 } },
+          { id: 'jam-2', _count: { registrations: 0, schedules: 0, jamMusics: 0 } },
+        ]),
+        count: jest.fn().mockResolvedValue(2),
+      },
+      registration: {
+        groupBy: jest.fn().mockResolvedValue([
+          { jamId: 'jam-1', musicianId: 'musician-1' },
+          { jamId: 'jam-1', musicianId: 'musician-2' },
+        ]),
+      },
+    };
+    const service = new JamService(prismaMock as unknown as PrismaService, {} as ConfigService);
+
+    const result = await service.findAll();
+
+    expect(result.data[0]).toMatchObject({
+      registeredMusicianCount: 2,
+      _count: { registrations: 5 },
+    });
+    expect(result.data[1]).toMatchObject({ registeredMusicianCount: 0 });
+    expect(prismaMock.registration.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        by: ['jamId', 'musicianId'],
+        where: {
+          jamId: { in: ['jam-1', 'jam-2'] },
+          status: { in: ['PENDING', 'APPROVED'] },
+        },
+      }),
+    );
+  });
+});

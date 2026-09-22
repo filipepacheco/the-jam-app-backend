@@ -66,4 +66,10 @@ export class JamResponseDto {
 
   @ApiProperty({ type: [ScheduleResponseDto], required: false })
   schedules?: ScheduleResponseDto[];
+
+  @ApiProperty({
+    description: 'Distinct musicians with a pending or approved registration in this jam',
+    required: false,
+  })
+  registeredMusicianCount?: number;
 }

@@ -2293,6 +2293,10 @@
             "items": {
               "$ref": "#/components/schemas/ScheduleResponseDto"
             }
+          },
+          "registeredMusicianCount": {
+            "type": "number",
+            "description": "Distinct musicians with a pending or approved registration in this jam"
           }
         },
         "required": [

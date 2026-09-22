@@ -5,6 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { RegistrationStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateJamDto } from './dto/create-jam.dto';
 import { UpdateJamDto } from './dto/update-jam.dto';
@@ -146,9 +147,25 @@ export class JamService {
       }),
       this.prisma.jam.count({ where }),
     ]);
+    const activeMusicians = data.length
+      ? await this.prisma.registration.groupBy({
+          by: ['jamId', 'musicianId'],
+          where: {
+            jamId: { in: data.map((jam) => jam.id) },
+            status: { in: [RegistrationStatus.PENDING, RegistrationStatus.APPROVED] },
+          },
+        })
+      : [];
+    const musicianCounts = new Map<string, number>();
+    for (const { jamId } of activeMusicians) {
+      musicianCounts.set(jamId, (musicianCounts.get(jamId) ?? 0) + 1);
+    }
 
     return {
-      data,
+      data: data.map((jam) => ({
+        ...jam,
+        registeredMusicianCount: musicianCounts.get(jam.id) ?? 0,
+      })),
       meta: {
         total,
         skip,
