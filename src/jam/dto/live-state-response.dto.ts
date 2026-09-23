@@ -37,6 +37,9 @@ export class LiveStateSongDto {
   })
   completedAt?: Date | null;
 
+  @ApiProperty({ nullable: true })
+  pausedAt?: Date | null;
+
   @ApiProperty({ type: LiveStateMusicDto })
   music: LiveStateMusicDto;
 
@@ -48,6 +51,18 @@ export class LiveStateSongDto {
 }
 
 export class LiveStateResponseDto {
+  @ApiProperty({ description: 'Opaque revision for atomic queue reorders' })
+  queueRevision: string;
+
+  @ApiProperty({ description: 'Play will select the first unfinished song after a paused reorder' })
+  resumeFromQueue: boolean;
+
+  @ApiProperty({
+    type: [LiveStateSongDto],
+    description: 'Complete saved Schedule, including completed, canceled and suggested songs',
+  })
+  allSongs: LiveStateSongDto[];
+
   @ApiProperty({
     type: LiveStateSongDto,
     nullable: true,

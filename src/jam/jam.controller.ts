@@ -204,7 +204,12 @@ export class JamController {
     @Request() req,
   ) {
     await this.jamManagementService.assertCanManageJam(jamId, req.user?.musicianId);
-    return this.jamPlaybackService.reorderSchedules(jamId, dto.updates, req.user?.musicianId);
+    return this.jamPlaybackService.reorderSchedules(
+      jamId,
+      dto.updates,
+      req.user?.musicianId,
+      dto.expectedRevision,
+    );
   }
 
   @Get(':id/playback-history')

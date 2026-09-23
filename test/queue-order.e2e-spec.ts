@@ -27,11 +27,11 @@ describe('Jam queue ordering HTTP contract (disposable PostgreSQL)', () => {
     await testFixtures.cleanup();
   });
 
-  it('moves supplied songs to the front and preserves the omitted songs relative order', async () => {
+  it('swaps supplied absolute positions and keeps omitted positions unchanged', async () => {
     await controlRequest(data.hostMusician.token, 'reorder', data.jam.id, 200, {
       updates: [
-        { scheduleId: data.schedules[2].id, order: 2 },
-        { scheduleId: data.schedules[0].id, order: 1 },
+        { scheduleId: data.schedules[2].id, order: 1 },
+        { scheduleId: data.schedules[0].id, order: 3 },
       ],
     });
 
@@ -40,9 +40,9 @@ describe('Jam queue ordering HTTP contract (disposable PostgreSQL)', () => {
       .expect(200);
 
     expect(state.body.nextSongs.map((song: { id: string }) => song.id)).toEqual([
-      data.schedules[0].id,
       data.schedules[2].id,
       data.schedules[1].id,
+      data.schedules[0].id,
       data.schedules[3].id,
     ]);
     expect(state.body.nextSongs.map((song: { order: number }) => song.order)).toEqual([1, 2, 3, 4]);
@@ -98,12 +98,12 @@ describe('Jam queue ordering HTTP contract (disposable PostgreSQL)', () => {
       .expect(400);
   });
 
-  it('keeps a concurrent append when a partial reorder renumbers the queue', async () => {
+  it('keeps a concurrent append when a partial reorder swaps occupied positions', async () => {
     const music = await testFixtures.createMusic();
     const reorder = controlRequest(data.hostMusician.token, 'reorder', data.jam.id, 200, {
       updates: [
-        { scheduleId: data.schedules[2].id, order: 2 },
-        { scheduleId: data.schedules[0].id, order: 1 },
+        { scheduleId: data.schedules[2].id, order: 1 },
+        { scheduleId: data.schedules[0].id, order: 3 },
       ],
     });
     const append = request(app.getHttpServer())
@@ -118,9 +118,9 @@ describe('Jam queue ordering HTTP contract (disposable PostgreSQL)', () => {
       .get(`/jams/${data.jam.id}/live/state`)
       .expect(200);
     expect(state.body.nextSongs.map((song: { id: string }) => song.id)).toEqual([
-      data.schedules[0].id,
       data.schedules[2].id,
       data.schedules[1].id,
+      data.schedules[0].id,
       data.schedules[3].id,
       expect.any(String),
     ]);
@@ -171,7 +171,7 @@ describe('Jam queue ordering HTTP contract (disposable PostgreSQL)', () => {
       1, 2, 3, 4, 5, 6,
     ]);
   });
-  it('renumbers a legacy queue at both PostgreSQL integer limits', async () => {
+  it('swaps a legacy queue at both PostgreSQL integer limits without overflow', async () => {
     const jam = await testFixtures.createJam(data.hostMusician.id);
     const first = await getPrismaService().schedule.create({
       data: {
@@ -185,7 +185,10 @@ describe('Jam queue ordering HTTP contract (disposable PostgreSQL)', () => {
       data: { jamId: jam.id, musicId: data.songs[1].id, order: 2_147_483_647, status: 'SCHEDULED' },
     });
     await controlRequest(data.hostMusician.token, 'reorder', jam.id, 200, {
-      updates: [{ scheduleId: last.id, order: 1 }],
+      updates: [
+        { scheduleId: last.id, order: -2_147_483_648 },
+        { scheduleId: first.id, order: 2_147_483_647 },
+      ],
     });
     const response = await request(app.getHttpServer()).get(`/jams/${jam.id}`).expect(200);
     expect(
@@ -194,8 +197,8 @@ describe('Jam queue ordering HTTP contract (disposable PostgreSQL)', () => {
         order: slot.order,
       })),
     ).toEqual([
-      { id: last.id, order: 1 },
-      { id: first.id, order: 2 },
+      { id: last.id, order: -2_147_483_648 },
+      { id: first.id, order: 2_147_483_647 },
     ]);
   });
 });

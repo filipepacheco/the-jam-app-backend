@@ -1,0 +1,1 @@
+ALTER TABLE "jams" ADD COLUMN "resumeFromQueue" BOOLEAN NOT NULL DEFAULT false;

@@ -40,6 +40,7 @@ model Jam {
   managementMode     JamManagementMode @default(OWNER_ONLY) @map("modoGestao")
   location           String?           @map("local")
   currentScheduleId  String?           @unique @map("currentScheduleId")
+  resumeFromQueue Boolean @default(false)
   playbackState      PlaybackState     @default(STOPPED) @map("playbackState")
   spotifyPlaylistUrl String?           @map("spotify_playlist_url")
   spotifyImportKey   String?           @map("spotify_import_key")

@@ -32,6 +32,11 @@ async function setupPublicPerformers() {
     data: { status: 'IN_PROGRESS' },
   });
 
+  await getPrismaService().jam.update({
+    where: { id: jam.id },
+    data: { playbackState: 'PLAYING', currentScheduleId: currentSchedule.id },
+  });
+
   await getPrismaService().registration.createMany({
     data: [
       {

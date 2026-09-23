@@ -8,6 +8,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PlaybackState, PlaybackAction, ScheduleStatus, Prisma, JamStatus } from '@prisma/client';
 import { DEFAULT_HISTORY_LIMIT } from '../common/constants';
 import { lockJamQueue } from '../escala/queue-lock';
+import { queueRevision } from './queue-revision';
+import { writeQueueOrder } from './queue-order';
 
 /** Minimal fields needed for playback state checks */
 const PLAYBACK_JAM_SELECT = {
@@ -15,6 +17,7 @@ const PLAYBACK_JAM_SELECT = {
   status: true,
   playbackState: true,
   currentScheduleId: true,
+  resumeFromQueue: true,
 } as const;
 
 type PlaybackJam = Prisma.JamGetPayload<{ select: typeof PLAYBACK_JAM_SELECT }>;
@@ -55,14 +58,17 @@ export class JamPlaybackService {
     return schedule;
   }
 
-  private async assertNoActiveSchedule(tx: Prisma.TransactionClient, jam: PlaybackJam) {
-    const activeSchedule = await tx.schedule.findFirst({
-      where: { jamId: jam.id, status: ScheduleStatus.IN_PROGRESS },
-      select: { id: true },
+  private async releaseInactiveSchedules(tx: Prisma.TransactionClient, jam: PlaybackJam) {
+    await tx.schedule.updateMany({
+      where: {
+        jamId: jam.id,
+        status: ScheduleStatus.IN_PROGRESS,
+        ...(jam.playbackState !== PlaybackState.STOPPED && jam.currentScheduleId
+          ? { id: { not: jam.currentScheduleId } }
+          : {}),
+      },
+      data: { status: ScheduleStatus.SCHEDULED, pausedAt: null },
     });
-    if (activeSchedule || jam.currentScheduleId) {
-      throw new ConflictException('Playback state is inconsistent; repair required');
-    }
   }
 
   async startJam(jamId: string, userId?: string) {
@@ -73,7 +79,7 @@ export class JamPlaybackService {
       if (jam.playbackState === PlaybackState.PAUSED) {
         throw new BadRequestException('Jam is paused; resume the current song');
       }
-      await this.assertNoActiveSchedule(tx, jam);
+      await this.releaseInactiveSchedules(tx, jam);
       const firstSchedule = await tx.schedule.findFirst({
         where: { jamId, status: ScheduleStatus.SCHEDULED },
         orderBy: { order: 'asc' },
@@ -90,6 +96,7 @@ export class JamPlaybackService {
         where: { id: jamId },
         data: {
           status: 'LIVE',
+          resumeFromQueue: false,
           playbackState: PlaybackState.PLAYING,
           currentScheduleId: firstSchedule.id,
         },
@@ -131,6 +138,7 @@ export class JamPlaybackService {
         where: { id: jamId },
         data: {
           status: 'FINISHED',
+          resumeFromQueue: false,
           playbackState: PlaybackState.STOPPED,
           currentScheduleId: null,
         },
@@ -183,6 +191,7 @@ export class JamPlaybackService {
       const updatedJam = await tx.jam.update({
         where: { id: jamId },
         data: {
+          resumeFromQueue: false,
           playbackState: newPlaybackState,
           currentScheduleId: newScheduleId,
           ...(nextSchedule ? {} : { status: JamStatus.FINISHED }),
@@ -252,7 +261,11 @@ export class JamPlaybackService {
 
       const updatedJam = await tx.jam.update({
         where: { id: jamId },
-        data: { playbackState: PlaybackState.PLAYING, currentScheduleId: newScheduleId },
+        data: {
+          playbackState: PlaybackState.PLAYING,
+          currentScheduleId: newScheduleId,
+          resumeFromQueue: false,
+        },
         select: {
           id: true,
           playbackState: true,
@@ -282,7 +295,7 @@ export class JamPlaybackService {
 
       const updatedJam = await tx.jam.update({
         where: { id: jamId },
-        data: { playbackState: PlaybackState.PAUSED },
+        data: { playbackState: PlaybackState.PAUSED, resumeFromQueue: false },
         select: {
           id: true,
           playbackState: true,
@@ -309,29 +322,44 @@ export class JamPlaybackService {
       if (jam.playbackState !== PlaybackState.PAUSED) {
         throw new BadRequestException('Jam is not paused');
       }
-      const currentSong = await this.readCurrentActiveSchedule(tx, jam);
+      const currentSong = jam.resumeFromQueue
+        ? await tx.schedule.findFirst({
+            where: {
+              jamId,
+              status: { in: [ScheduleStatus.SCHEDULED, ScheduleStatus.IN_PROGRESS] },
+            },
+            orderBy: { order: 'asc' },
+          })
+        : await this.readCurrentActiveSchedule(tx, jam);
+      if (!currentSong) throw new BadRequestException('No unfinished songs to play');
+      await tx.schedule.updateMany({
+        where: { jamId, status: ScheduleStatus.IN_PROGRESS, id: { not: currentSong.id } },
+        data: { status: ScheduleStatus.SCHEDULED, pausedAt: null },
+      });
       await tx.schedule.update({
         where: { id: currentSong.id },
-        data: { pausedAt: null },
-      });
-
-      const updatedJam = await tx.jam.update({
-        where: { id: jamId },
-        data: { playbackState: PlaybackState.PLAYING },
-        select: {
-          id: true,
-          playbackState: true,
-          currentScheduleId: true,
-          updatedAt: true,
+        data: {
+          status: ScheduleStatus.IN_PROGRESS,
+          pausedAt: null,
+          ...(currentSong.id === jam.currentScheduleId ? {} : { startedAt: new Date() }),
         },
       });
-
+      const updatedJam = await tx.jam.update({
+        where: { id: jamId },
+        data: {
+          playbackState: PlaybackState.PLAYING,
+          currentScheduleId: currentSong.id,
+          resumeFromQueue: false,
+        },
+        select: { id: true, playbackState: true, currentScheduleId: true, updatedAt: true },
+      });
       await tx.playbackHistory.create({
         data: {
           jamId,
           scheduleId: currentSong.id,
           action: PlaybackAction.RESUME_SONG,
           userId,
+          metadata: { fromSavedOrder: jam.resumeFromQueue },
         },
       });
 
@@ -343,6 +371,7 @@ export class JamPlaybackService {
     jamId: string,
     updates: { scheduleId: string; order: number }[],
     userId?: string,
+    expectedRevision?: string,
   ): Promise<boolean> {
     if (updates.length === 0) {
       throw new BadRequestException('Updates array cannot be empty');
@@ -356,7 +385,12 @@ export class JamPlaybackService {
 
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     for (const u of updates) {
-      if (!uuidRegex.test(u.scheduleId) || !Number.isInteger(u.order) || u.order < 1) {
+      if (
+        !uuidRegex.test(u.scheduleId) ||
+        !Number.isInteger(u.order) ||
+        u.order < -2_147_483_648 ||
+        u.order > MAX_QUEUE_ORDER
+      ) {
         throw new BadRequestException('Invalid schedule ID or order value');
       }
     }
@@ -372,11 +406,18 @@ export class JamPlaybackService {
       const [jam, schedules] = await Promise.all([
         tx.jam.findUniqueOrThrow({
           where: { id: jamId },
-          select: { currentScheduleId: true },
+          select: PLAYBACK_JAM_SELECT,
         }),
         tx.schedule.findMany({
           where: { jamId },
-          select: { id: true, order: true },
+          select: {
+            id: true,
+            order: true,
+            status: true,
+            startedAt: true,
+            completedAt: true,
+            pausedAt: true,
+          },
           orderBy: { order: 'asc' },
         }),
       ]);
@@ -386,48 +427,50 @@ export class JamPlaybackService {
         throw new BadRequestException(`Invalid schedule IDs: ${invalidIds.join(', ')}`);
       }
 
+      if (expectedRevision && queueRevision(jam, schedules) !== expectedRevision) {
+        throw new ConflictException('The Live Queue changed. Reload it and reapply your order.');
+      }
       const requestedIds = new Set(scheduleIds);
-      const requestedSchedules = [...updates]
-        .sort((left, right) => left.order - right.order)
-        .map((update) => schedulesById.get(update.scheduleId)!);
-      const omittedSchedules = schedules.filter((schedule) => !requestedIds.has(schedule.id));
-      const reorderedSchedules = [...requestedSchedules, ...omittedSchedules];
-
-      // Use unoccupied temporary positions so immediate uniqueness checks permit
-      // swaps, including legacy queues already at either PostgreSQL integer limit.
-      const occupiedOrders = new Set(schedules.map((schedule) => schedule.order));
-      let temporaryOrder = -2_147_483_648;
-      const temporaryCases = reorderedSchedules.map((schedule) => {
-        while (
-          occupiedOrders.has(temporaryOrder) ||
-          (temporaryOrder >= 1 && temporaryOrder <= reorderedSchedules.length)
-        ) {
-          temporaryOrder++;
-        }
-        if (temporaryOrder > MAX_QUEUE_ORDER) {
-          throw new BadRequestException('No temporary queue positions available');
-        }
-        const position = temporaryOrder++;
-        return Prisma.sql`WHEN "id" = ${schedule.id} THEN ${position}`;
+      const omittedOrders = new Set(
+        schedules.filter((s) => !requestedIds.has(s.id)).map((s) => s.order),
+      );
+      if (updates.some((u) => omittedOrders.has(u.order))) {
+        throw new BadRequestException(
+          'Requested position belongs to an omitted song; include it in the reorder',
+        );
+      }
+      const activeUpdate = updates.find((u) => u.scheduleId === jam.currentScheduleId);
+      if (
+        jam.playbackState === PlaybackState.PLAYING &&
+        activeUpdate &&
+        activeUpdate.order !== schedulesById.get(activeUpdate.scheduleId)!.order
+      ) {
+        throw new ConflictException('The playing song must keep its saved position');
+      }
+      const changed = updates.filter((u) => schedulesById.get(u.scheduleId)!.order !== u.order);
+      await this.releaseInactiveSchedules(tx, jam);
+      await writeQueueOrder(tx, jamId, changed, schedules);
+      await tx.jam.update({
+        where: { id: jamId },
+        data: {
+          ...(changed.length && jam.playbackState === PlaybackState.PAUSED
+            ? { resumeFromQueue: true }
+            : {}),
+          ...(jam.playbackState === PlaybackState.STOPPED ? { currentScheduleId: null } : {}),
+        },
       });
-      await tx.$executeRaw(
-        Prisma.sql`UPDATE "escalas" SET "ordem" = CASE ${Prisma.join(temporaryCases, ' ')} END WHERE "jamId" = ${jamId}`,
-      );
-
-      const cases = reorderedSchedules.map(
-        (schedule, index) => Prisma.sql`WHEN "id" = ${schedule.id} THEN ${index + 1}`,
-      );
-      await tx.$executeRaw(
-        Prisma.sql`UPDATE "escalas" SET "ordem" = CASE ${Prisma.join(cases, ' ')} END WHERE "jamId" = ${jamId}`,
-      );
-
       await tx.playbackHistory.create({
         data: {
           jamId,
-          scheduleId: jam.currentScheduleId || reorderedSchedules[0].id,
+          scheduleId: jam.currentScheduleId || updates[0].scheduleId,
           action: PlaybackAction.REORDER_QUEUE,
           userId,
-          metadata: { updates, totalUpdates: updates.length },
+          metadata: {
+            contractVersion: 2,
+            before: schedules.map(({ id, order }) => ({ scheduleId: id, order })),
+            updates,
+            totalUpdates: updates.length,
+          },
         },
       });
     });

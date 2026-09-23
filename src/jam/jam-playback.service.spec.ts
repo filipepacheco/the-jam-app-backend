@@ -10,6 +10,7 @@ async function playbackFixture() {
     status: 'ACTIVE',
     playbackState: PlaybackState.STOPPED,
     currentScheduleId: null as string | null,
+    resumeFromQueue: false,
   };
   const songs = [1, 2].map((order) => ({
     id: `song-${order}`,
@@ -22,6 +23,18 @@ async function playbackFixture() {
       update: async ({ data }: { data: Partial<typeof jam> }) => ({ ...Object.assign(jam, data) }),
     },
     schedule: {
+      updateMany: async ({
+        where,
+        data,
+      }: {
+        where: { status: ScheduleStatus; id?: { not: string } };
+        data: object;
+      }) => {
+        songs
+          .filter((song) => song.status === where.status && song.id !== where.id?.not)
+          .forEach((song) => Object.assign(song, data));
+        return {};
+      },
       findFirst: async ({ where }: { where: { id?: string; status?: ScheduleStatus } }) =>
         where.id
           ? songs.find((s) => s.id === where.id)

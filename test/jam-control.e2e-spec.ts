@@ -246,9 +246,10 @@ describe('Live Jam Control HTTP contract (disposable PostgreSQL)', () => {
 
   it('reorders the queue without changing the current song', async () => {
     await controlRequest('start', data.jam.id);
-    const updates = [...data.schedules]
-      .reverse()
-      .map((s, i) => ({ scheduleId: s.id, order: i + 1 }));
+    const updates = [data.schedules[0], ...data.schedules.slice(1).reverse()].map((s, i) => ({
+      scheduleId: s.id,
+      order: i + 1,
+    }));
     await controlRequest('reorder', data.jam.id, 200, { updates });
     const live = (await state()).body;
     expect(live.currentSong.id).toBe(data.schedules[0].id);
@@ -262,19 +263,21 @@ describe('Live Jam Control HTTP contract (disposable PostgreSQL)', () => {
       expect.arrayContaining([
         expect.objectContaining({
           action: 'REORDER_QUEUE',
-          metadata: { updates, totalUpdates: 4 },
+          metadata: expect.objectContaining({ updates, totalUpdates: 4, contractVersion: 2 }),
         }),
       ]),
     );
   });
 
-  it('moves partial-reorder selections to the front and renumbers the queue', async () => {
+  it('honors explicit positions without moving omitted entries', async () => {
     await controlRequest('reorder', data.jam.id, 200, {
       updates: [{ scheduleId: data.schedules[0].id, order: 5 }],
     });
     const songs = (await state()).body.nextSongs;
-    expect(songs.map((song: { id: string }) => song.id)).toEqual(data.schedules.map((s) => s.id));
-    expect(songs.map((song: { order: number }) => song.order)).toEqual([1, 2, 3, 4]);
+    expect(songs.map((song: { id: string }) => song.id)).toEqual(
+      [1, 2, 3, 0].map((index) => data.schedules[index].id),
+    );
+    expect(songs.map((song: { order: number }) => song.order)).toEqual([2, 3, 4, 5]);
   });
 
   it('rejects empty reorder updates', async () => {

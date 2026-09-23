@@ -92,7 +92,12 @@ describe('Jam management mode (disposable PostgreSQL)', () => {
     await request(app.getHttpServer())
       .post(`/jams/${data.jam.id}/control/reorder`)
       .set('Authorization', `Bearer ${otherHost.token}`)
-      .send({ updates: [{ scheduleId: data.schedules[1].id, order: 1 }] })
+      .send({
+        updates: [
+          { scheduleId: data.schedules[1].id, order: 1 },
+          { scheduleId: data.schedules[0].id, order: 2 },
+        ],
+      })
       .expect(200);
     await request(app.getHttpServer())
       .patch(`/escalas/${data.schedules[2].id}`)
@@ -134,7 +139,12 @@ describe('Jam management mode (disposable PostgreSQL)', () => {
     await request(app.getHttpServer())
       .post(`/jams/${data.jam.id}/control/reorder`)
       .set('Authorization', `Bearer ${otherHost.token}`)
-      .send({ updates: [{ scheduleId: data.schedules[1].id, order: 1 }] })
+      .send({
+        updates: [
+          { scheduleId: data.schedules[1].id, order: 1 },
+          { scheduleId: data.schedules[0].id, order: 2 },
+        ],
+      })
       .expect(403);
     await request(app.getHttpServer())
       .patch(`/escalas/${data.schedules[2].id}`)

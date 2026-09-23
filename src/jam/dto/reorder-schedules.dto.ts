@@ -1,6 +1,17 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayNotEmpty, IsArray, IsInt, IsUUID, Min, ValidateNested } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsInt,
+  IsUUID,
+  Min,
+  Max,
+  IsOptional,
+  IsString,
+  Matches,
+  ValidateNested,
+} from 'class-validator';
 
 export class ScheduleOrderUpdateDto {
   @ApiProperty({ description: 'Schedule ID', format: 'uuid' })
@@ -8,18 +19,28 @@ export class ScheduleOrderUpdateDto {
   scheduleId: string;
 
   @ApiProperty({
-    description: 'Relative rank among supplied songs (positive, unique integer)',
-    minimum: 1,
+    description: 'Saved absolute position; omitted songs keep their positions',
+    minimum: -2_147_483_648,
+    maximum: 2_147_483_647,
   })
   @IsInt()
-  @Min(1)
+  @Min(-2_147_483_648)
+  @Max(2_147_483_647)
   order: number;
 }
 
 export class ReorderSchedulesDto {
+  @ApiPropertyOptional({
+    description: 'Opaque queueRevision returned by live/state. Stale writes return 409.',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^[a-f0-9]{64}$/)
+  expectedRevision?: string;
+
   @ApiProperty({
     description:
-      'Move supplied songs to the front by rank; omitted songs retain relative order. The entire queue is renumbered from 1.',
+      'Assign exact saved positions. Omitted songs remain fixed; include every displaced song. The actively playing song cannot move.',
     type: [ScheduleOrderUpdateDto],
     example: [
       { scheduleId: '123e4567-e89b-12d3-a456-426614174000', order: 1 },

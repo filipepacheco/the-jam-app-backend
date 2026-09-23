@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { queueRevision } from './queue-revision';
 import { PrismaService } from '../prisma/prisma.service';
-import { RegistrationStatus, ScheduleStatus } from '@prisma/client';
+import { Prisma, RegistrationStatus, ScheduleStatus } from '@prisma/client';
 import { LiveStateResponseDto, LiveStateSongDto } from './dto/live-state-response.dto';
 import { LiveDashboardResponseDto, DashboardSongDto } from './dto/live-dashboard-response.dto';
 
@@ -9,69 +10,94 @@ export class JamLiveStateService {
   constructor(private prisma: PrismaService) {}
 
   async getLiveState(jamId: string): Promise<LiveStateResponseDto> {
-    const jam = await this.prisma.jam.findUnique({
-      where: { id: jamId, deletedAt: null },
-      select: { id: true, status: true, playbackState: true },
-    });
-
-    if (!jam) {
-      throw new NotFoundException(`Jam with ID ${jamId} not found`);
-    }
-
-    const schedules = await this.prisma.schedule.findMany({
-      where: { jamId },
-      select: {
-        id: true,
-        order: true,
-        status: true,
-        startedAt: true,
-        completedAt: true,
-        music: {
-          select: { title: true, artist: true, duration: true, link: true },
-        },
-        registrations: {
-          where: { status: RegistrationStatus.APPROVED },
+    return this.prisma.$transaction(
+      async (tx) => {
+        const jam = await tx.jam.findUnique({
+          where: { id: jamId, deletedAt: null },
           select: {
-            instrument: true,
-            musician: { select: { id: true, name: true } },
+            id: true,
+            status: true,
+            playbackState: true,
+            currentScheduleId: true,
+            resumeFromQueue: true,
           },
-        },
+        });
+
+        if (!jam) {
+          throw new NotFoundException(`Jam with ID ${jamId} not found`);
+        }
+
+        const schedules = await tx.schedule.findMany({
+          where: { jamId },
+          select: {
+            id: true,
+            order: true,
+            status: true,
+            startedAt: true,
+            completedAt: true,
+            pausedAt: true,
+            music: {
+              select: { title: true, artist: true, duration: true, link: true },
+            },
+            registrations: {
+              where: { status: RegistrationStatus.APPROVED },
+              select: {
+                instrument: true,
+                musician: { select: { id: true, name: true } },
+              },
+            },
+          },
+          orderBy: { order: 'asc' },
+        });
+
+        const songs: LiveStateSongDto[] = schedules.map((s) => ({
+          id: s.id,
+          order: s.order,
+          status: s.status,
+          startedAt: s.startedAt,
+          completedAt: s.completedAt,
+          pausedAt: s.pausedAt,
+          music: {
+            title: s.music.title,
+            artist: s.music.artist,
+            duration: s.music.duration,
+            link: s.music.link,
+          },
+          musicians: s.registrations.map((reg) => ({
+            id: reg.musician.id,
+            name: reg.musician.name,
+            instrument: reg.instrument,
+          })),
+        }));
+
+        const currentSong =
+          jam.playbackState !== 'STOPPED'
+            ? songs.find(
+                (s) => s.id === jam.currentScheduleId && s.status === ScheduleStatus.IN_PROGRESS,
+              ) || null
+            : null;
+        const nextSongs = songs.filter(
+          (s) =>
+            s.id !== currentSong?.id &&
+            (s.status === ScheduleStatus.SCHEDULED || s.status === ScheduleStatus.IN_PROGRESS),
+        );
+        const previousSongs = songs.filter((s) => s.status === ScheduleStatus.COMPLETED);
+        const suggestedSongs = songs.filter((s) => s.status === ScheduleStatus.SUGGESTED);
+
+        return {
+          queueRevision: queueRevision(jam, schedules),
+          resumeFromQueue: jam.resumeFromQueue,
+          allSongs: songs,
+          currentSong,
+          nextSongs,
+          previousSongs,
+          suggestedSongs,
+          jamStatus: jam.status,
+          playbackState: jam.playbackState || 'STOPPED',
+        };
       },
-      orderBy: { order: 'asc' },
-    });
-
-    const songs: LiveStateSongDto[] = schedules.map((s) => ({
-      id: s.id,
-      order: s.order,
-      status: s.status,
-      startedAt: s.startedAt,
-      completedAt: s.completedAt,
-      music: {
-        title: s.music.title,
-        artist: s.music.artist,
-        duration: s.music.duration,
-        link: s.music.link,
-      },
-      musicians: s.registrations.map((reg) => ({
-        id: reg.musician.id,
-        name: reg.musician.name,
-        instrument: reg.instrument,
-      })),
-    }));
-
-    const currentSong = songs.find((s) => s.status === ScheduleStatus.IN_PROGRESS) || null;
-    const nextSongs = songs.filter((s) => s.status === ScheduleStatus.SCHEDULED);
-    const previousSongs = songs.filter((s) => s.status === ScheduleStatus.COMPLETED);
-    const suggestedSongs = songs.filter((s) => s.status === ScheduleStatus.SUGGESTED);
-
-    return {
-      currentSong,
-      nextSongs,
-      previousSongs,
-      suggestedSongs,
-      jamStatus: jam.status,
-      playbackState: jam.playbackState || 'STOPPED',
-    };
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
   }
 
   async getLiveDashboard(jamId: string): Promise<LiveDashboardResponseDto> {
