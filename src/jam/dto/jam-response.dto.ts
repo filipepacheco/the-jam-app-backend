@@ -13,6 +13,12 @@ export class JamResponseDto {
   @ApiProperty({ required: false })
   hostName?: string;
 
+  @ApiProperty({ required: false, description: 'Jam-specific contact supplied by the host' })
+  hostContact?: string | null;
+
+  @ApiProperty({ required: false, description: 'Musician profile owning the jam' })
+  hostMusicianId?: string | null;
+
   @ApiProperty({ required: false })
   description?: string | null;
 

@@ -117,6 +117,9 @@ describe('Jam list musician count', () => {
       _count: { registrations: 5 },
     });
     expect(result.data[1]).toMatchObject({ registeredMusicianCount: 0 });
+    expect(prismaMock.jam.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ select: expect.objectContaining({ location: true }) }),
+    );
     expect(prismaMock.registration.groupBy).toHaveBeenCalledWith(
       expect.objectContaining({
         by: ['jamId', 'musicianId'],
@@ -126,5 +129,31 @@ describe('Jam list musician count', () => {
         },
       }),
     );
+  });
+});
+
+describe('Public Jam detail', () => {
+  it('selects the saved host contact and owner profile ID for UUID and slug routes', async () => {
+    const prismaMock = {
+      jam: {
+        findFirst: jest.fn().mockResolvedValue({
+          id: jamId,
+          hostName: 'Ana',
+          hostContact: 'ana@example.test',
+          hostMusicianId: 'host-1',
+          schedules: [],
+        }),
+      },
+    };
+    const service = new JamService(prismaMock as unknown as PrismaService, {} as ConfigService);
+
+    const byId = await service.findOne(jamId);
+    const bySlug = await service.findByIdentifier('ana-jam');
+
+    expect(byId).toMatchObject({ hostContact: 'ana@example.test', hostMusicianId: 'host-1' });
+    expect(bySlug).toMatchObject({ hostContact: 'ana@example.test', hostMusicianId: 'host-1' });
+    for (const [call] of prismaMock.jam.findFirst.mock.calls) {
+      expect(call.select).toMatchObject({ hostContact: true, hostMusicianId: true });
+    }
   });
 });

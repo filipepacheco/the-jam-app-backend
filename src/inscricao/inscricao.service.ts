@@ -49,6 +49,28 @@ export class InscricaoService {
       },
     });
 
+    const initialStatus = schedule.jam.autoApproveRegistrations
+      ? RegistrationStatus.APPROVED
+      : RegistrationStatus.PENDING;
+
+    if (existingRegistration?.status === RegistrationStatus.WITHDRAWN) {
+      // A withdrawn row keeps its unique musician/slot/instrument identity.
+      // Reapplying restores that same row under the jam's current approval rule.
+      const restored = await this.prisma.registration.updateMany({
+        where: { id: existingRegistration.id, status: RegistrationStatus.WITHDRAWN },
+        data: { status: initialStatus },
+      });
+      if (restored.count === 0) {
+        throw new ConflictException(
+          'Musician already registered for this schedule with the same instrument',
+        );
+      }
+      return this.prisma.registration.findUniqueOrThrow({
+        where: { id: existingRegistration.id },
+        include: { musician: true, jam: true, schedule: true },
+      });
+    }
+
     if (existingRegistration) {
       throw new ConflictException(
         'Musician already registered for this schedule with the same instrument',
@@ -62,9 +84,7 @@ export class InscricaoService {
           jamId: schedule.jamId,
           scheduleId: createRegistrationDto.scheduleId,
           instrument,
-          status: schedule.jam.autoApproveRegistrations
-            ? RegistrationStatus.APPROVED
-            : RegistrationStatus.PENDING,
+          status: initialStatus,
         },
         include: {
           musician: true,

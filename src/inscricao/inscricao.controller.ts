@@ -26,8 +26,14 @@ export class InscricaoController {
 
   @Post()
   @ProtectedRoute()
-  @ApiOperation({ summary: 'Apply to play an instrument on a scheduled song as yourself' })
-  @ApiResponse({ status: 201, description: 'Registration created successfully' })
+  @ApiOperation({
+    summary:
+      'Apply to play an instrument on a scheduled song as yourself; restore your withdrawn registration when one exists',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Registration created or withdrawn registration restored successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({
     status: 409,

@@ -222,7 +222,43 @@ describe('Registration identity (disposable PostgreSQL)', () => {
     });
   });
 
-  it('locks an approved registration instrument and preserves a withdrawal', async () => {
+  it.each([
+    [false, 'PENDING'],
+    [true, 'APPROVED'],
+  ])(
+    'restores an owner-withdrawn registration on reapplication when auto-approval is %s',
+    async (autoApprove, expectedStatus) => {
+      await getPrismaService().jam.update({
+        where: { id: data.jam.id },
+        data: { autoApproveRegistrations: autoApprove },
+      });
+      const apply = () =>
+        request(app.getHttpServer())
+          .post('/inscricoes')
+          .set('Authorization', `Bearer ${data.musician.token}`)
+          .send({ scheduleId: data.schedules[0].id, instrument: 'guitar' });
+
+      const first = await apply().expect(201);
+      await request(app.getHttpServer())
+        .delete(`/inscricoes/${first.body.id}`)
+        .set('Authorization', `Bearer ${data.musician.token}`)
+        .expect(200);
+
+      const restored = await apply().expect(201);
+      expect(restored.body).toMatchObject({ id: first.body.id, status: expectedStatus });
+      expect(
+        await getPrismaService().registration.count({
+          where: {
+            musicianId: data.musician.id,
+            scheduleId: data.schedules[0].id,
+            instrument: 'guitars',
+          },
+        }),
+      ).toBe(1);
+    },
+  );
+
+  it('locks an approved instrument and restores a withdrawn application on reapply', async () => {
     const registration = await request(app.getHttpServer())
       .post('/inscricoes')
       .set('Authorization', `Bearer ${data.musician.token}`)
@@ -248,11 +284,13 @@ describe('Registration identity (disposable PostgreSQL)', () => {
 
     expect(withdrawal.body).toMatchObject({ id: registration.body.id, status: 'WITHDRAWN' });
 
-    await request(app.getHttpServer())
+    const reapplied = await request(app.getHttpServer())
       .post('/inscricoes')
       .set('Authorization', `Bearer ${data.musician.token}`)
       .send({ scheduleId: data.schedules[0].id, instrument: 'guitar' })
-      .expect(409);
+      .expect(201);
+
+    expect(reapplied.body).toMatchObject({ id: registration.body.id, status: 'PENDING' });
   });
 
   it('allows the event manager to reopen rejected applications, but not to mutate started slots', async () => {
