@@ -65,6 +65,9 @@ export class LiveDashboardResponseDto {
   })
   jamStatus: string;
 
+  @ApiProperty({ enum: ['STOPPED', 'PLAYING', 'PAUSED'] })
+  playbackState: string;
+
   @ApiProperty({
     type: DashboardSongDto,
     nullable: true,

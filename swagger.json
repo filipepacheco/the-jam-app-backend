@@ -1273,7 +1273,7 @@
         },
         "responses": {
           "201": {
-            "description": "Registration created successfully"
+            "description": "Registration created or withdrawn registration restored successfully"
           },
           "401": {
             "description": "Unauthorized"
@@ -1287,7 +1287,7 @@
             "bearer": []
           }
         ],
-        "summary": "Apply to play an instrument on a scheduled song as yourself",
+        "summary": "Apply to play an instrument on a scheduled song as yourself; restore your withdrawn registration when one exists",
         "tags": [
           "Registrations"
         ]
@@ -2215,6 +2215,14 @@
           "hostName": {
             "type": "string"
           },
+          "hostContact": {
+            "type": "string",
+            "description": "Jam-specific contact supplied by the host"
+          },
+          "hostMusicianId": {
+            "type": "string",
+            "description": "Musician profile owning the jam"
+          },
           "description": {
             "type": "string"
           },
@@ -2516,6 +2524,14 @@
             "type": "string",
             "description": "Current jam status"
           },
+          "playbackState": {
+            "type": "string",
+            "enum": [
+              "STOPPED",
+              "PLAYING",
+              "PAUSED"
+            ]
+          },
           "currentSong": {
             "nullable": true,
             "description": "Current song being played (IN_PROGRESS status)",
@@ -2541,6 +2557,7 @@
           "slug",
           "shortCode",
           "jamStatus",
+          "playbackState",
           "currentSong",
           "nextSongs"
         ]

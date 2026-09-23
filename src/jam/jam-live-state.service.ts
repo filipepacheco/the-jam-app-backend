@@ -77,7 +77,15 @@ export class JamLiveStateService {
   async getLiveDashboard(jamId: string): Promise<LiveDashboardResponseDto> {
     const jam = await this.prisma.jam.findUnique({
       where: { id: jamId, deletedAt: null },
-      select: { id: true, name: true, qrCode: true, slug: true, shortCode: true, status: true },
+      select: {
+        id: true,
+        name: true,
+        qrCode: true,
+        slug: true,
+        shortCode: true,
+        status: true,
+        playbackState: true,
+      },
     });
 
     if (!jam) {
@@ -121,6 +129,7 @@ export class JamLiveStateService {
       slug: jam.slug,
       shortCode: jam.shortCode,
       jamStatus: jam.status,
+      playbackState: jam.playbackState,
       currentSong,
       nextSongs,
     };

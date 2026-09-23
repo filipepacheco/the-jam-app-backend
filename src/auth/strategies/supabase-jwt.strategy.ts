@@ -48,7 +48,10 @@ export class SupabaseJwtStrategy extends PassportStrategy(Strategy, 'supabase-jw
     }
 
     // Find or create musician
-    const musician = await this.findOrCreateMusician(user.id, user.email);
+    const metadataName = [user.user_metadata?.full_name, user.user_metadata?.name]
+      .find((value): value is string => typeof value === 'string' && Boolean(value.trim()))
+      ?.trim();
+    const musician = await this.findOrCreateMusician(user.id, user.email, metadataName);
 
     // Cache only identities which were safely reconciled with the local account.
     this.tokenCache.set(token, {
@@ -63,7 +66,11 @@ export class SupabaseJwtStrategy extends PassportStrategy(Strategy, 'supabase-jw
     };
   }
 
-  private async findOrCreateMusician(supabaseUserId: string, email?: string) {
+  private async findOrCreateMusician(
+    supabaseUserId: string,
+    email?: string,
+    metadataName?: string,
+  ) {
     // 1. Find by supabaseUserId
     let musician = await this.prisma.musician.findUnique({
       where: { supabaseUserId },
@@ -88,7 +95,7 @@ export class SupabaseJwtStrategy extends PassportStrategy(Strategy, 'supabase-jw
         data: {
           supabaseUserId,
           email,
-          name: email?.split('@')[0] || `User_${supabaseUserId.slice(-4)}`,
+          name: metadataName || email?.split('@')[0] || `User_${supabaseUserId.slice(-4)}`,
         },
       });
     } catch (error) {

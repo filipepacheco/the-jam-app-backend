@@ -62,11 +62,17 @@ describe('Live Jam Control HTTP contract (disposable PostgreSQL)', () => {
       ]),
     );
     expect((await controlRequest('pause', id)).body.playbackState).toBe('PAUSED');
+    expect(
+      (await request(app.getHttpServer()).get(`/jams/${id}/live/dashboard`).expect(200)).body,
+    ).toMatchObject({ playbackState: 'PAUSED', currentSong: { id: data.schedules[1].musicId } });
     expect((await scheduleDetail(second)).pausedAt).toEqual(expect.any(String));
     expect((await controlRequest('resume', id)).body).toMatchObject({
       playbackState: 'PLAYING',
       currentScheduleId: second,
     });
+    expect(
+      (await request(app.getHttpServer()).get(`/jams/${id}/live/dashboard`).expect(200)).body,
+    ).toMatchObject({ playbackState: 'PLAYING', currentSong: { id: data.schedules[1].musicId } });
     expect((await scheduleDetail(second)).pausedAt).toBeNull();
     expect((await controlRequest('previous', id)).body.currentScheduleId).toBe(first);
     expect((await scheduleDetail(first)).completedAt).toBeNull();
