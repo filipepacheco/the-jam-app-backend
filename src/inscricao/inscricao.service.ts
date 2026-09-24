@@ -19,7 +19,15 @@ export class InscricaoService {
     private readonly jamManagementService: JamManagementService,
   ) {}
 
-  async create(createRegistrationDto: CreateRegistrationDto, musicianId: string) {
+  async create(
+    createRegistrationDto: CreateRegistrationDto,
+    requestingMusicianId: string,
+    requestingMusicianIsHost = false,
+  ) {
+    const musicianId = createRegistrationDto.musicianId ?? requestingMusicianId;
+    if (musicianId !== requestingMusicianId && !requestingMusicianIsHost) {
+      throw new ForbiddenException('Registrations must be created by the applying musician');
+    }
     const instrument = normalizeInstrument(createRegistrationDto.instrument);
     if (!instrument) {
       throw new BadRequestException('Instrument is required');
@@ -37,7 +45,13 @@ export class InscricaoService {
     if (schedule.jam.deletedAt) {
       throw new NotFoundException('Jam not found');
     }
-    this.assertCanCreateForSchedule(schedule.jam.status, schedule.status);
+    const canManage =
+      requestingMusicianIsHost &&
+      this.jamManagementService.canHostManageJam(schedule.jam, requestingMusicianId);
+    if (musicianId !== requestingMusicianId && !canManage) {
+      throw new ForbiddenException('Only the event owner can manage this jam');
+    }
+    this.assertCanCreateForSchedule(schedule.jam.status, schedule.status, canManage);
 
     // Check if musician is already registered for this schedule with the same instrument
     const existingRegistration = await this.prisma.registration.findFirst({
@@ -102,7 +116,7 @@ export class InscricaoService {
     }
   }
 
-  async update(id: string, updateRegistrationDto: UpdateRegistrationDto) {
+  async update(id: string, updateRegistrationDto: UpdateRegistrationDto, canManage = false) {
     const registration = await this.prisma.registration.findUnique({
       where: { id },
       include: { jam: true, schedule: true },
@@ -114,7 +128,11 @@ export class InscricaoService {
     if (registration.jam.deletedAt) {
       throw new NotFoundException('Jam not found');
     }
-    this.assertCanModifyRegistration(registration.jam.status, registration.schedule?.status);
+    this.assertCanModifyRegistration(
+      registration.jam.status,
+      registration.schedule?.status,
+      canManage,
+    );
 
     const updateData: { instrument?: string; status?: RegistrationStatus } = {};
 
@@ -171,7 +189,9 @@ export class InscricaoService {
     if (registration.jam.deletedAt) {
       throw new NotFoundException('Jam not found');
     }
-    this.assertCanModifyRegistration(registration.jam.status, registration.schedule?.status);
+    const canManage =
+      requestingMusicianIsHost &&
+      this.jamManagementService.canHostManageJam(registration.jam, requestingMusicianId);
 
     const isOwner = registration.musicianId === requestingMusicianId;
     if (!isOwner) {
@@ -179,8 +199,15 @@ export class InscricaoService {
         throw new ForbiddenException('Can only withdraw your own registrations');
       }
 
-      await this.jamManagementService.assertCanManageRegistration(id, requestingMusicianId);
+      if (!canManage) {
+        throw new ForbiddenException('Only the event owner can manage this jam');
+      }
     }
+    this.assertCanModifyRegistration(
+      registration.jam.status,
+      registration.schedule?.status,
+      canManage,
+    );
 
     if (registration.status === RegistrationStatus.WITHDRAWN) {
       throw new BadRequestException('Registration has already been withdrawn');
@@ -197,15 +224,20 @@ export class InscricaoService {
     });
   }
 
-  private assertCanCreateForSchedule(jamStatus: JamStatus, scheduleStatus: ScheduleStatus) {
+  private assertCanCreateForSchedule(
+    jamStatus: JamStatus,
+    scheduleStatus: ScheduleStatus,
+    canManage = false,
+  ) {
     if (jamStatus !== JamStatus.ACTIVE && jamStatus !== JamStatus.LIVE) {
       throw new BadRequestException('Registrations are only available for active events');
     }
 
     if (
-      scheduleStatus === ScheduleStatus.CANCELED ||
-      scheduleStatus === ScheduleStatus.IN_PROGRESS ||
-      scheduleStatus === ScheduleStatus.COMPLETED
+      !canManage &&
+      (scheduleStatus === ScheduleStatus.CANCELED ||
+        scheduleStatus === ScheduleStatus.IN_PROGRESS ||
+        scheduleStatus === ScheduleStatus.COMPLETED)
     ) {
       throw new BadRequestException('Registrations are closed for this scheduled song');
     }
@@ -214,8 +246,13 @@ export class InscricaoService {
   private assertCanModifyRegistration(
     jamStatus: JamStatus,
     scheduleStatus?: ScheduleStatus | null,
+    canManage = false,
   ) {
-    this.assertCanCreateForSchedule(jamStatus, scheduleStatus ?? ScheduleStatus.CANCELED);
+    this.assertCanCreateForSchedule(
+      jamStatus,
+      scheduleStatus ?? ScheduleStatus.CANCELED,
+      canManage,
+    );
   }
 
   private assertAllowedHostStatusTransition(

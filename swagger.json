@@ -1278,6 +1278,9 @@
           "401": {
             "description": "Unauthorized"
           },
+          "403": {
+            "description": "Only authorized jam hosts can register other musicians"
+          },
           "409": {
             "description": "Musician already applied for this instrument on this scheduled song"
           }
@@ -1287,7 +1290,7 @@
             "bearer": []
           }
         ],
-        "summary": "Apply to play an instrument on a scheduled song as yourself; restore your withdrawn registration when one exists",
+        "summary": "Create or restore a registration for yourself, or for another musician as an authorized jam host",
         "tags": [
           "Registrations"
         ]
@@ -2957,8 +2960,7 @@
           },
           "musicianId": {
             "type": "string",
-            "description": "Deprecated. Registrations must always be created by the authenticated musician.",
-            "deprecated": true
+            "description": "Defaults to the authenticated musician. Authorized jam hosts may register another musician."
           },
           "instrument": {
             "type": "string",

@@ -7,7 +7,6 @@ import {
   Patch,
   Request,
   ParseUUIDPipe,
-  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { InscricaoService } from './inscricao.service';
@@ -28,7 +27,7 @@ export class InscricaoController {
   @ProtectedRoute()
   @ApiOperation({
     summary:
-      'Apply to play an instrument on a scheduled song as yourself; restore your withdrawn registration when one exists',
+      'Create or restore a registration for yourself, or for another musician as an authorized jam host',
   })
   @ApiResponse({
     status: 201,
@@ -36,18 +35,19 @@ export class InscricaoController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({
+    status: 403,
+    description: 'Only authorized jam hosts can register other musicians',
+  })
+  @ApiResponse({
     status: 409,
     description: 'Musician already applied for this instrument on this scheduled song',
   })
   create(@Body() createRegistrationDto: CreateRegistrationDto, @Request() req) {
-    const authenticatedMusicianId = req.user.musicianId;
-    if (
-      createRegistrationDto.musicianId !== undefined &&
-      createRegistrationDto.musicianId !== authenticatedMusicianId
-    ) {
-      throw new ForbiddenException('Registrations must be created by the applying musician');
-    }
-    return this.inscricaoService.create(createRegistrationDto, authenticatedMusicianId);
+    return this.inscricaoService.create(
+      createRegistrationDto,
+      req.user.musicianId,
+      req.user.isHost === true,
+    );
   }
 
   @Patch(':id')
@@ -76,7 +76,7 @@ export class InscricaoController {
     musicianId?: string,
   ) {
     await this.jamManagementService.assertCanManageRegistration(id, musicianId);
-    return this.inscricaoService.update(id, updateRegistrationDto);
+    return this.inscricaoService.update(id, updateRegistrationDto, true);
   }
 
   @Delete(':id')

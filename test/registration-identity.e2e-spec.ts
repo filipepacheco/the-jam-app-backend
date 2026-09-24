@@ -135,8 +135,8 @@ describe('Registration identity (disposable PostgreSQL)', () => {
       .expect(409);
   });
 
-  it('does not let a host apply on behalf of another musician', async () => {
-    await request(app.getHttpServer())
+  it('lets the jam host apply on behalf of another musician', async () => {
+    const registration = await request(app.getHttpServer())
       .post('/inscricoes')
       .set('Authorization', `Bearer ${data.hostMusician.token}`)
       .send({
@@ -144,7 +144,13 @@ describe('Registration identity (disposable PostgreSQL)', () => {
         musicianId: data.musician.id,
         instrument: 'guitar',
       })
-      .expect(403);
+      .expect(201);
+
+    expect(registration.body).toMatchObject({
+      musicianId: data.musician.id,
+      scheduleId: data.schedules[0].id,
+      status: 'PENDING',
+    });
   });
 
   it('rejects applications for canceled, started, and completed slots', async () => {
@@ -163,6 +169,41 @@ describe('Registration identity (disposable PostgreSQL)', () => {
         .expect(400);
     }
   });
+
+  it.each(['CANCELED', 'IN_PROGRESS', 'COMPLETED'] as const)(
+    'lets the jam host register, approve, and withdraw another musician on a %s slot',
+    async (status) => {
+      await getPrismaService().schedule.update({
+        where: { id: data.schedules[0].id },
+        data: { status },
+      });
+
+      const registration = await request(app.getHttpServer())
+        .post('/inscricoes')
+        .set('Authorization', `Bearer ${data.hostMusician.token}`)
+        .send({
+          scheduleId: data.schedules[0].id,
+          musicianId: data.musician.id,
+          instrument: 'guitar',
+        })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .patch(`/inscricoes/${registration.body.id}`)
+        .set('Authorization', `Bearer ${data.hostMusician.token}`)
+        .send({ status: 'APPROVED' })
+        .expect(200);
+
+      await request(app.getHttpServer())
+        .delete(`/inscricoes/${registration.body.id}`)
+        .set('Authorization', `Bearer ${data.hostMusician.token}`)
+        .expect(200);
+
+      expect(
+        await getPrismaService().registration.findUnique({ where: { id: registration.body.id } }),
+      ).toMatchObject({ musicianId: data.musician.id, status: 'WITHDRAWN' });
+    },
+  );
 
   it('rejects applications when the event is inactive or finished', async () => {
     for (const [index, status] of (['INACTIVE', 'FINISHED'] as const).entries()) {
@@ -293,7 +334,7 @@ describe('Registration identity (disposable PostgreSQL)', () => {
     expect(reapplied.body).toMatchObject({ id: registration.body.id, status: 'PENDING' });
   });
 
-  it('allows the event manager to reopen rejected applications, but not to mutate started slots', async () => {
+  it('allows the event manager to reopen rejected applications and approve started slots', async () => {
     const registration = await request(app.getHttpServer())
       .post('/inscricoes')
       .set('Authorization', `Bearer ${data.musician.token}`)
@@ -321,6 +362,6 @@ describe('Registration identity (disposable PostgreSQL)', () => {
       .patch(`/inscricoes/${registration.body.id}`)
       .set('Authorization', `Bearer ${data.hostMusician.token}`)
       .send({ status: 'APPROVED' })
-      .expect(400);
+      .expect(200);
   });
 });

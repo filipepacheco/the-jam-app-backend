@@ -768,13 +768,15 @@ paths:
           description: Registration created or withdrawn registration restored successfully
         '401':
           description: Unauthorized
+        '403':
+          description: Only authorized jam hosts can register other musicians
         '409':
           description: Musician already applied for this instrument on this scheduled song
       security:
         - bearer: []
       summary: >-
-        Apply to play an instrument on a scheduled song as yourself; restore
-        your withdrawn registration when one exists
+        Create or restore a registration for yourself, or for another musician
+        as an authorized jam host
       tags: &ref_5
         - Registrations
   /inscricoes/{id}:
@@ -1978,9 +1980,8 @@ components:
         musicianId:
           type: string
           description: >-
-            Deprecated. Registrations must always be created by the
-            authenticated musician.
-          deprecated: true
+            Defaults to the authenticated musician. Authorized jam hosts may
+            register another musician.
         instrument:
           type: string
           description: Instrument to play

@@ -8,9 +8,9 @@ export class CreateRegistrationDto {
   scheduleId: string;
 
   @ApiProperty({
-    description: 'Deprecated. Registrations must always be created by the authenticated musician.',
+    description:
+      'Defaults to the authenticated musician. Authorized jam hosts may register another musician.',
     required: false,
-    deprecated: true,
   })
   @IsUUID()
   @IsOptional()

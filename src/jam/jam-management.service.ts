@@ -1,10 +1,21 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { JamManagementMode } from '@prisma/client';
+import { Jam, JamManagementMode } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class JamManagementService {
   constructor(private readonly prisma: PrismaService) {}
+
+  // Callers must verify the host role before using this management policy.
+  canHostManageJam(
+    jam: Pick<Jam, 'hostMusicianId' | 'managementMode'>,
+    musicianId?: string,
+  ): boolean {
+    return Boolean(
+      musicianId &&
+      (jam.hostMusicianId === musicianId || jam.managementMode === JamManagementMode.SHARED_HOSTS),
+    );
+  }
 
   async assertCanManageJam(jamId: string, musicianId?: string): Promise<void> {
     const jam = await this.prisma.jam.findUnique({
@@ -12,10 +23,7 @@ export class JamManagementService {
       select: { deletedAt: true, hostMusicianId: true, managementMode: true },
     });
     if (!jam || jam.deletedAt) throw new NotFoundException('Jam not found');
-    if (
-      jam.hostMusicianId === musicianId ||
-      jam.managementMode === JamManagementMode.SHARED_HOSTS
-    ) {
+    if (this.canHostManageJam(jam, musicianId)) {
       return;
     }
     throw new ForbiddenException('Only the event owner can manage this jam');
