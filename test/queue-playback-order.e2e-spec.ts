@@ -42,6 +42,26 @@ describe('Saved Schedule and playback independence (PostgreSQL)', () => {
       })
     ).map(({ id, order, status }) => ({ id, order, status }));
 
+  it('keeps the playing song in its saved position on public detail by ID and slug', async () => {
+    const slug = `public-order-${data.jam.id}`;
+    await getPrismaService().jam.update({ where: { id: data.jam.id }, data: { slug } });
+    const before = (await saved()).map(({ id, order }) => ({ id, order }));
+    for (const action of ['start', 'next', 'pause', 'resume']) {
+      await control(action);
+      const live = await state();
+      for (const identifier of [data.jam.id, slug]) {
+        const detail = (await request(app.getHttpServer()).get(`/jams/${identifier}`).expect(200))
+          .body;
+        expect(
+          detail.schedules.map(({ id, order }: { id: string; order: number }) => ({ id, order })),
+        ).toEqual(before);
+        expect(
+          detail.schedules.find(({ id }: { id: string }) => id === live.currentSong.id),
+        ).toMatchObject({ order: live.currentSong.order, status: 'IN_PROGRESS' });
+      }
+    }
+  });
+
   it('preserves every position across play, pause and resume without reordering', async () => {
     const before = await saved();
     await control('start');
@@ -225,5 +245,12 @@ describe('Saved Schedule and playback independence (PostgreSQL)', () => {
     expect((await state()).playbackState).toBe('PAUSED');
     expect((await run('--apply')).stdout).toContain('No unambiguous displaced order');
     expect(await saved()).toEqual(restored);
+    await control('resume');
+    const detail = (await request(app.getHttpServer()).get(`/jams/${data.jam.id}`).expect(200))
+      .body;
+    expect(
+      detail.schedules.map(({ id, order }: { id: string; order: number }) => ({ id, order })),
+    ).toEqual(restored.map(({ id, order }) => ({ id, order })));
+    expect(detail.schedules[1]).toMatchObject({ id: data.schedules[1].id, status: 'IN_PROGRESS' });
   }, 60000);
 });
