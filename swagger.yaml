@@ -1539,6 +1539,10 @@ components:
           type: string
           nullable: true
           description: When the song was completed
+        pausedAt:
+          format: date-time
+          type: string
+          nullable: true
         music:
           $ref: '#/components/schemas/LiveStateMusicDto'
         musicians:
@@ -1552,11 +1556,25 @@ components:
         - status
         - startedAt
         - completedAt
+        - pausedAt
         - music
         - musicians
     LiveStateResponseDto:
       type: object
       properties:
+        queueRevision:
+          type: string
+          description: Opaque revision for atomic queue reorders
+        resumeFromQueue:
+          type: boolean
+          description: Play will select the first unfinished song after a paused reorder
+        allSongs:
+          description: >-
+            Complete saved Schedule, including completed, canceled and suggested
+            songs
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveStateSongDto'
         currentSong:
           nullable: true
           description: Current song being played (IN_PROGRESS status)
@@ -1589,6 +1607,9 @@ components:
             - PAUSED
           description: Current playback state
       required:
+        - queueRevision
+        - resumeFromQueue
+        - allSongs
         - currentSong
         - nextSongs
         - jamStatus
@@ -1678,18 +1699,24 @@ components:
           format: uuid
         order:
           type: number
-          description: Relative rank among supplied songs (positive, unique integer)
-          minimum: 1
+          description: Saved absolute position; omitted songs keep their positions
+          minimum: -2147483648
+          maximum: 2147483647
       required:
         - scheduleId
         - order
     ReorderSchedulesDto:
       type: object
       properties:
+        expectedRevision:
+          type: string
+          description: >-
+            Opaque queueRevision returned by live/state. Stale writes return
+            409.
         updates:
           description: >-
-            Move supplied songs to the front by rank; omitted songs retain
-            relative order. The entire queue is renumbered from 1.
+            Assign exact saved positions. Omitted songs remain fixed; include
+            every displaced song. The actively playing song cannot move.
           example:
             - scheduleId: 123e4567-e89b-12d3-a456-426614174000
               order: 1
